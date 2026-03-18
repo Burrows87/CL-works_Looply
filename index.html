@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Chi è libero questo weekend?</title>
+<style>
+body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
+h1 { text-align: center; }
+form, .match { margin-top: 20px; padding: 15px; border-radius: 15px; background: #f0f0f0; }
+input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; }
+button { background: #4CAF50; color: white; border: none; cursor: pointer; }
+button:hover { background: #45a049; }
+</style>
+</head>
+<body>
+<h1>Chi è libero questo weekend? 🤙</h1>
+<p>Scegli il tuo slot e vedrai chi è libero nello stesso momento.</p>
+
+<form id="formDisponibilita">
+<input type="text" id="nome" placeholder="Il tuo nome" required>
+<input type="text" id="telefono" placeholder="Telefono (+39 …)" required>
+<select id="giorno" required>
+  <option value="">Scegli il giorno</option>
+  <option>Venerdì</option>
+  <option>Sabato</option>
+  <option>Domenica</option>
+</select>
+<select id="fascia" required>
+  <option value="">Scegli l'orario</option>
+  <option>Pomeriggio</option>
+  <option>Sera</option>
+</select>
+<button type="submit">Unisciti al Loop</button>
+</form>
+
+<div class="match">
+<h2>Slot liberi</h2>
+<ul id="listaMatch"></ul>
+</div>
+
+<script>
+// Inserisci qui il link CSV pubblicato del tuo Google Sheet
+const sheetCSV = https://docs.google.com/spreadsheets/d/e/2PACX-1vRVLUIHOP2mSaElPf1El2pziDaygDAv-C_I8c5pJs-ZReVyJcrMrXp8QNxrF4rYK1l92d25nl2xZH24/pub?output=csv;
+
+async function caricaDati() {
+    const res = await fetch(sheetCSV);
+    const txt = await res.text();
+    const righe = txt.split("\n").slice(1); 
+    const dati = righe.map(r => r.split(","));
+    return dati.filter(r => r.length >= 4);
+}
+
+async function mostraMatch() {
+    const dati = await caricaDati();
+    const gruppi = {};
+    dati.forEach(r => {
+        const chiave = r[2]+"|"+r[3];
+        if (!gruppi[chiave]) gruppi[chiave] = [];
+        gruppi[chiave].push(r);
+    });
+    const lista = document.getElementById("listaMatch");
+    lista.innerHTML = "";
+    for (let k in gruppi) {
+        if (gruppi[k].length >= 2) {
+            const [giorno, fascia] = k.split("|");
+            const nomi = gruppi[k].map(x=>x[0]).join(", ");
+            const telefono = gruppi[k][0][1]; 
+            const li = document.createElement("li");
+            li.innerHTML = `${giorno} ${fascia}: ${nomi} 
+            <a href="https://wa.me/${telefono}?text=Ciao ${nomi}! Siamo liberi ${giorno} ${fascia}. Ci organizziamo?" target="_blank">Invita su WhatsApp</a>`;
+            lista.appendChild(li);
+        }
+    }
+}
+
+document.getElementById("formDisponibilita").addEventListener("submit", function(e){
+    e.preventDefault();
+    alert("Perfetto! Il tuo slot è stato registrato. (Aggiornamento reale via Google Sheet se connesso)"); 
+});
+
+mostraMatch();
+</script>
+</body>
+</html>
