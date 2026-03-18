@@ -87,6 +87,11 @@ document.getElementById("formDisponibilita").addEventListener("submit", async fu
         fascia: document.getElementById("fascia").value
     };
 
+if (!data.nome || !data.telefono) {
+    alert("Compila tutti i campi");
+    return;
+}
+
     await fetch(scriptURL, {
         method: "POST",
         mode: "no-cors",
