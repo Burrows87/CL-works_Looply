@@ -5,86 +5,22 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Looply</title>
 
-<!-- Manifest PWA -->
 <link rel="manifest" href="manifest.json">
 <meta name="theme-color" content="#10b981">
-
-<!-- Font moderno -->
 <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
 
 <style>
-/* Body generale */
-body {
-  font-family: 'Inter', sans-serif;
-  background: #f9fafb;
-  color: #1f2937;
-  margin: 0;
-  padding: 0;
-}
-
-/* Titoli */
-h1 {
-  text-align: center;
-  font-size: 2rem;
-  margin-top: 30px;
-}
-
-h3 {
-  margin-bottom: 10px;
-}
-
-/* Box principali */
-.box {
-  background: #ffffff;
-  padding: 20px;
-  margin: 20px auto;
-  border-radius: 20px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  max-width: 500px;
-}
-
-/* Input e select */
-input, select {
-  width: 100%;
-  padding: 12px;
-  margin: 8px 0;
-  border-radius: 12px;
-  border: 1px solid #d1d5db;
-  font-size: 1rem;
-}
-
-/* Pulsanti */
-button {
-  width: 100%;
-  padding: 12px;
-  margin: 10px 0;
-  border-radius: 12px;
-  border: none;
-  background: #10b981;
-  color: white;
-  font-weight: bold;
-  font-size: 1rem;
-  cursor: pointer;
-  transition: background 0.2s;
-}
-
-button:hover {
-  background: #059669;
-}
-
-/* Link WhatsApp */
-ul li a {
-  color: #3b82f6;
-  font-weight: 500;
-  text-decoration: none;
-}
-
-ul li a:hover {
-  text-decoration: underline;
-}
-
-/* Nascondi pagine */
-.hidden { display: none; }
+body { font-family: 'Inter', sans-serif; background:#f9fafb; color:#1f2937; margin:0; padding:0; transition: background 0.3s, color 0.3s;}
+h1{text-align:center; font-size:2rem; margin-top:30px;}
+h3{margin-bottom:10px;}
+.box{background:#fff; padding:20px; margin:20px auto; border-radius:20px; box-shadow:0 4px 12px rgba(0,0,0,0.1); max-width:500px; transition: background 0.3s, color 0.3s;}
+input, select { width:100%; padding:12px; margin:8px 0; border-radius:12px; border:1px solid #d1d5db; font-size:1rem; }
+button{width:100%; padding:12px; margin:10px 0; border-radius:12px; border:none; background:#10b981; color:white; font-weight:bold; cursor:pointer; transition:background 0.3s;}
+button:hover{background:#059669;}
+ul li a {color:#3b82f6; font-weight:500; text-decoration:none;}
+ul li a:hover{text-decoration:underline;}
+.hidden{display:none;}
+.checkbox-group label{display:block; margin:5px 0;}
 </style>
 </head>
 <body>
@@ -102,129 +38,175 @@ ul li a:hover {
 
 <!-- PAGINA 2: APP -->
 <div id="paginaApp" class="hidden">
+
+  <!-- Personalizzazione -->
+  <div class="box">
+    <h3>Personalizza</h3>
+    <label>Colore sfondo: <input type="color" id="coloreSfondo" value="#f9fafb"></label>
+    <label>Colore pulsante: <input type="color" id="colorePulsante" value="#10b981"></label>
+    <label>Colore testo: <input type="color" id="coloreTesto" value="#1f2937"></label>
+    <button onclick="applicaPersonalizzazione()">Applica</button>
+  </div>
+
+  <!-- Disponibilità -->
   <div class="box">
     <h3>Disponibilità</h3>
-    <select id="giorno">
-      <option value="">Giorno</option>
-      <option>Venerdì</option>
-      <option>Sabato</option>
-      <option>Domenica</option>
-    </select>
+    <div class="checkbox-group">
+      <label><input type="checkbox" class="giorni" value="Venerdì"> Venerdì</label>
+      <label><input type="checkbox" class="giorni" value="Sabato"> Sabato</label>
+      <label><input type="checkbox" class="giorni" value="Domenica"> Domenica</label>
+    </div>
     <select id="fascia">
       <option value="">Orario</option>
       <option>Pomeriggio</option>
       <option>Sera</option>
     </select>
     <button onclick="inviaDati()">Salva</button>
+    <button onclick="resetManuale()">Reset manuale (solo test)</button>
   </div>
 
+  <!-- Match -->
   <div class="box">
     <h3>Match trovati</h3>
     <ul id="listaMatch"></ul>
   </div>
+
 </div>
 
 <script>
-// Links da sostituire con i tuoi
+// ---------------- CONFIG ----------------
 const scriptURL = "https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec";
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRVLUIHOP2mSaElPf1El2pziDaygDAv-C_I8c5pJs-ZReVyJcrMrXp8QNxrF4rYK1l92d25nl2xZH24/pub?output=csv";
 
-// 🔹 LOGIN AUTOMATICO
+// ---------------- LOGIN ----------------
 window.onload = () => {
   const nome = localStorage.getItem("nome");
   const telefono = localStorage.getItem("telefono");
-  if (nome && telefono) {
-    mostraApp();
+  if(nome && telefono) mostraApp();
+
+  // applica preferenze colori salvate
+  const prefs = JSON.parse(localStorage.getItem("personalizzazione"));
+  if(prefs){
+    document.body.style.background = prefs.bg;
+    document.body.style.color = prefs.testo;
+    const buttons = document.querySelectorAll("button");
+    buttons.forEach(b => b.style.background = prefs.btn);
+    document.getElementById("coloreSfondo").value = prefs.bg;
+    document.getElementById("colorePulsante").value = prefs.btn;
+    document.getElementById("coloreTesto").value = prefs.testo;
   }
 };
 
-// 🔹 PASSA ALLA PAGINA APP
 function vaiAvanti() {
   const nome = document.getElementById("nome").value.trim();
   const telefono = document.getElementById("telefono").value.trim();
   const ricordami = document.getElementById("ricordami").checked;
-
-  if (!nome || !telefono) { alert("Inserisci nome e telefono"); return; }
-
-  if (ricordami) {
-    localStorage.setItem("nome", nome);
-    localStorage.setItem("telefono", telefono);
-  }
-
+  if(!nome || !telefono){alert("Inserisci nome e telefono"); return;}
+  if(ricordami){localStorage.setItem("nome",nome); localStorage.setItem("telefono",telefono);}
   mostraApp();
 }
 
-// 🔹 MOSTRA APP
 function mostraApp() {
   document.getElementById("paginaLogin").classList.add("hidden");
   document.getElementById("paginaApp").classList.remove("hidden");
   mostraMatch();
 }
 
-// 🔹 INVIO DATI SU SHEET
+// ---------------- PERSONALIZZAZIONE ----------------
+function applicaPersonalizzazione() {
+  const bg = document.getElementById("coloreSfondo").value;
+  const btn = document.getElementById("colorePulsante").value;
+  const testo = document.getElementById("coloreTesto").value;
+
+  document.body.style.background = bg;
+  document.body.style.color = testo;
+  const buttons = document.querySelectorAll("button");
+  buttons.forEach(b => b.style.background = btn);
+
+  localStorage.setItem("personalizzazione", JSON.stringify({bg, btn, testo}));
+}
+
+// ---------------- NOTIFICHE PUSH ----------------
+if("Notification" in window && Notification.permission !== "granted"){
+  Notification.requestPermission();
+}
+if("serviceWorker" in navigator){
+  navigator.serviceWorker.register("service-worker.js");
+}
+
+// ---------------- INVIO DATI ----------------
 async function inviaDati() {
   const nome = localStorage.getItem("nome") || document.getElementById("nome").value;
   const telefono = localStorage.getItem("telefono") || document.getElementById("telefono").value;
-  const giorno = document.getElementById("giorno").value;
+  const giorni = Array.from(document.querySelectorAll(".giorni:checked")).map(cb=>cb.value);
   const fascia = document.getElementById("fascia").value;
 
-  if (!giorno || !fascia) { alert("Seleziona giorno e orario"); return; }
+  if(giorni.length===0 || !fascia){alert("Seleziona almeno un giorno e l'orario"); return;}
 
-  const data = { nome, telefono, giorno, fascia };
-
-  await fetch(scriptURL, {
-    method: "POST",
-    mode: "no-cors",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(data)
-  });
-
-  alert("Slot salvato 🎉");
+  for(const giorno of giorni){
+    const data = {nome, telefono, giorno, fascia};
+    await fetch(scriptURL,{
+      method:"POST",
+      mode:"no-cors",
+      headers:{"Content-Type":"application/json"},
+      body:JSON.stringify(data)
+    });
+  }
+  alert("Slot salvati 🎉");
   mostraMatch();
 }
 
-// 🔹 CARICA DATI DAL FOGLIO
-async function caricaDati() {
+// ---------------- CARICA DATI ----------------
+async function caricaDati(){
   const res = await fetch(sheetCSV);
   const txt = await res.text();
   const righe = txt.split("\n").slice(1);
-  return righe.map(r => r.split(",")).filter(r => r.length >= 4);
+  return righe.map(r=>r.split(",")).filter(r=>r.length>=4);
 }
 
-// 🔹 MOSTRA MATCH E LINK WHATSAPP
-async function mostraMatch() {
+// ---------------- MOSTRA MATCH ----------------
+async function mostraMatch(){
   const dati = await caricaDati();
   const gruppi = {};
+  const mioNumero = localStorage.getItem("telefono");
 
-  dati.forEach(r => {
+  dati.forEach(r=>{
     const key = r[2]+"|"+r[3];
-    if (!gruppi[key]) gruppi[key] = [];
+    if(!gruppi[key]) gruppi[key]=[];
     gruppi[key].push(r);
   });
 
   const lista = document.getElementById("listaMatch");
-  lista.innerHTML = "";
+  lista.innerHTML="";
 
-  for (let k in gruppi) {
-    if (gruppi[k].length >= 2) {
+  for(let k in gruppi){
+    if(gruppi[k].length>=2){
       const [giorno, fascia] = k.split("|");
-      const nomi = gruppi[k].map(x=>x[0]).join(", ");
-      const telefono = gruppi[k][0][1];
-      const link = "https://wa.me/" + telefono + "?text=" +
-        encodeURIComponent("Ciao " + nomi + "! Siamo liberi " + giorno + " " + fascia + ". Ci organizziamo?");
+      const altriUtenti = gruppi[k].filter(u => u[1] !== mioNumero);
+      if(altriUtenti.length===0) continue;
+
+      const nomi = altriUtenti.map(x=>x[0]).join(", ");
+      const telefono = altriUtenti[0][1];
+
+      const link = "https://wa.me/"+telefono+"?text="+encodeURIComponent("Ciao "+nomi+"! Siamo liberi "+giorno+" "+fascia+". Ci organizziamo?");
       const li = document.createElement("li");
       li.innerHTML = `${giorno} ${fascia}: ${nomi} <a href="${link}" target="_blank">WhatsApp</a>`;
       lista.appendChild(li);
+
+      if("serviceWorker" in navigator && Notification.permission==="granted"){
+        navigator.serviceWorker.controller.postMessage({
+          type:"MATCH_FOUND",
+          text:`Match trovato: ${nomi} liberi ${giorno} ${fascia}`
+        });
+      }
     }
   }
 }
 
-// 🔹 Service Worker per PWA
-if ("serviceWorker" in navigator) {
-  navigator.serviceWorker.register("service-worker.js")
-    .then(() => console.log("Service Worker registrato"));
+// ---------------- RESET MANUALE ----------------
+function resetManuale(){
+  fetch(scriptURL + "?reset=true", {method:"GET"}).then(()=>alert("Match resettati manualmente"));
 }
 </script>
-
 </body>
 </html>
