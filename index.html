@@ -74,10 +74,28 @@ async function mostraMatch() {
     }
 }
 
-document.getElementById("formDisponibilita").addEventListener("submit", function(e){
+
+  const scriptURL = https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec;
+
+document.getElementById("formDisponibilita").addEventListener("submit", async function(e){
     e.preventDefault();
-    alert("Perfetto! Il tuo slot è stato registrato. (Aggiornamento reale via Google Sheet se connesso)"); 
+
+    const data = {
+        nome: document.getElementById("nome").value,
+        telefono: document.getElementById("telefono").value,
+        giorno: document.getElementById("giorno").value,
+        fascia: document.getElementById("fascia").value
+    };
+
+    await fetch(scriptURL, {
+        method: "POST",
+        body: JSON.stringify(data)
+    });
+
+    alert("Perfetto! Slot salvato 🎉");
 });
+    
+
 
 mostraMatch();
 </script>
