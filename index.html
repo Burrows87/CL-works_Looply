@@ -75,7 +75,7 @@ async function mostraMatch() {
 }
 
 
-  const scriptURL = https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec;
+  const scriptURL = "https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec";
 
 document.getElementById("formDisponibilita").addEventListener("submit", async function(e){
     e.preventDefault();
@@ -89,6 +89,10 @@ document.getElementById("formDisponibilita").addEventListener("submit", async fu
 
     await fetch(scriptURL, {
         method: "POST",
+        mode: "no-cors",
+        headers: {
+        "Content-Type": "application/json"
+    },
         body: JSON.stringify(data)
     });
 
