@@ -3,110 +3,228 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Chi è libero questo weekend?</title>
+<title>Looply</title>
+
+<!-- Manifest PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#10b981">
+
+<!-- Font moderno -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;700&display=swap" rel="stylesheet">
+
 <style>
-body { font-family: sans-serif; padding: 20px; max-width: 500px; margin: auto; }
-h1 { text-align: center; }
-form, .match { margin-top: 20px; padding: 15px; border-radius: 15px; background: #f0f0f0; }
-input, select, button { width: 100%; padding: 10px; margin: 5px 0; border-radius: 10px; }
-button { background: #4CAF50; color: white; border: none; cursor: pointer; }
-button:hover { background: #45a049; }
+/* Body generale */
+body {
+  font-family: 'Inter', sans-serif;
+  background: #f9fafb;
+  color: #1f2937;
+  margin: 0;
+  padding: 0;
+}
+
+/* Titoli */
+h1 {
+  text-align: center;
+  font-size: 2rem;
+  margin-top: 30px;
+}
+
+h3 {
+  margin-bottom: 10px;
+}
+
+/* Box principali */
+.box {
+  background: #ffffff;
+  padding: 20px;
+  margin: 20px auto;
+  border-radius: 20px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+  max-width: 500px;
+}
+
+/* Input e select */
+input, select {
+  width: 100%;
+  padding: 12px;
+  margin: 8px 0;
+  border-radius: 12px;
+  border: 1px solid #d1d5db;
+  font-size: 1rem;
+}
+
+/* Pulsanti */
+button {
+  width: 100%;
+  padding: 12px;
+  margin: 10px 0;
+  border-radius: 12px;
+  border: none;
+  background: #10b981;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+button:hover {
+  background: #059669;
+}
+
+/* Link WhatsApp */
+ul li a {
+  color: #3b82f6;
+  font-weight: 500;
+  text-decoration: none;
+}
+
+ul li a:hover {
+  text-decoration: underline;
+}
+
+/* Nascondi pagine */
+.hidden { display: none; }
 </style>
 </head>
 <body>
-<h1>Chi è libero questo weekend? 🤙</h1>
-<p>Scegli il tuo slot e vedrai chi è libero nello stesso momento.</p>
 
-<form id="formDisponibilita">
-<input type="text" id="nome" placeholder="Il tuo nome" required>
-<input type="text" id="telefono" placeholder="Telefono (+39 …)" required>
-<select id="giorno" required>
-  <option value="">Scegli il giorno</option>
-  <option>Venerdì</option>
-  <option>Sabato</option>
-  <option>Domenica</option>
-</select>
-<select id="fascia" required>
-  <option value="">Scegli l'orario</option>
-  <option>Pomeriggio</option>
-  <option>Sera</option>
-</select>
-<button type="submit">Unisciti al Loop</button>
-</form>
+<h1>Looply 🤙</h1>
 
-<div class="match">
-<h2>Slot liberi</h2>
-<ul id="listaMatch"></ul>
+<!-- PAGINA 1: LOGIN -->
+<div id="paginaLogin" class="box">
+  <h3>I tuoi dati</h3>
+  <input type="text" id="nome" placeholder="Nome">
+  <input type="text" id="telefono" placeholder="Telefono (+39 …)">
+  <label><input type="checkbox" id="ricordami"> Ricordami</label>
+  <button onclick="vaiAvanti()">Continua</button>
+</div>
+
+<!-- PAGINA 2: APP -->
+<div id="paginaApp" class="hidden">
+  <div class="box">
+    <h3>Disponibilità</h3>
+    <select id="giorno">
+      <option value="">Giorno</option>
+      <option>Venerdì</option>
+      <option>Sabato</option>
+      <option>Domenica</option>
+    </select>
+    <select id="fascia">
+      <option value="">Orario</option>
+      <option>Pomeriggio</option>
+      <option>Sera</option>
+    </select>
+    <button onclick="inviaDati()">Salva</button>
+  </div>
+
+  <div class="box">
+    <h3>Match trovati</h3>
+    <ul id="listaMatch"></ul>
+  </div>
 </div>
 
 <script>
-// Inserisci qui il link CSV pubblicato del tuo Google Sheet
+// Links da sostituire con i tuoi
+const scriptURL = "https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec";
 const sheetCSV = "https://docs.google.com/spreadsheets/d/e/2PACX-1vRVLUIHOP2mSaElPf1El2pziDaygDAv-C_I8c5pJs-ZReVyJcrMrXp8QNxrF4rYK1l92d25nl2xZH24/pub?output=csv";
 
-async function caricaDati() {
-    const res = await fetch(sheetCSV);
-    const txt = await res.text();
-    const righe = txt.split("\n").slice(1); 
-    const dati = righe.map(r => r.split(","));
-    return dati.filter(r => r.length >= 4);
+// 🔹 LOGIN AUTOMATICO
+window.onload = () => {
+  const nome = localStorage.getItem("nome");
+  const telefono = localStorage.getItem("telefono");
+  if (nome && telefono) {
+    mostraApp();
+  }
+};
+
+// 🔹 PASSA ALLA PAGINA APP
+function vaiAvanti() {
+  const nome = document.getElementById("nome").value.trim();
+  const telefono = document.getElementById("telefono").value.trim();
+  const ricordami = document.getElementById("ricordami").checked;
+
+  if (!nome || !telefono) { alert("Inserisci nome e telefono"); return; }
+
+  if (ricordami) {
+    localStorage.setItem("nome", nome);
+    localStorage.setItem("telefono", telefono);
+  }
+
+  mostraApp();
 }
 
-async function mostraMatch() {
-    const dati = await caricaDati();
-    const gruppi = {};
-    dati.forEach(r => {
-        const chiave = r[2]+"|"+r[3];
-        if (!gruppi[chiave]) gruppi[chiave] = [];
-        gruppi[chiave].push(r);
-    });
-    const lista = document.getElementById("listaMatch");
-    lista.innerHTML = "";
-    for (let k in gruppi) {
-        if (gruppi[k].length >= 2) {
-            const [giorno, fascia] = k.split("|");
-            const nomi = gruppi[k].map(x=>x[0]).join(", ");
-            const telefono = gruppi[k][0][1]; 
-            const li = document.createElement("li");
-            li.innerHTML = `${giorno} ${fascia}: ${nomi} 
-            <a href="https://wa.me/${telefono}?text=Ciao! Ho visto che siamo liberi ${giorno} ${fascia} (${nomi}). Organizziamo?" target="_blank">;
-            lista.appendChild(li);
-        }
-    }
-}
-
-
-  const scriptURL = "https://script.google.com/macros/s/AKfycby6pCkpppgoOFu5YSfVZKI2J23fNyb92zdsfqh6GQkUxvEI51NWg9BymXN2c5wBD6xoIQ/exec";
-
-document.getElementById("formDisponibilita").addEventListener("submit", async function(e){
-    e.preventDefault();
-
-    const data = {
-        nome: document.getElementById("nome").value,
-        telefono: document.getElementById("telefono").value,
-        giorno: document.getElementById("giorno").value,
-        fascia: document.getElementById("fascia").value
-    };
-
-if (!data.nome || !data.telefono) {
-    alert("Compila tutti i campi");
-    return;
-}
-
-    await fetch(scriptURL, {
-        method: "POST",
-        mode: "no-cors",
-        headers: {
-        "Content-Type": "application/json"
-    },
-        body: JSON.stringify(data)
-    });
-
-    alert("Perfetto! Slot salvato 🎉");
-});
-
+// 🔹 MOSTRA APP
+function mostraApp() {
+  document.getElementById("paginaLogin").classList.add("hidden");
+  document.getElementById("paginaApp").classList.remove("hidden");
   mostraMatch();
+}
 
-mostraMatch();
+// 🔹 INVIO DATI SU SHEET
+async function inviaDati() {
+  const nome = localStorage.getItem("nome") || document.getElementById("nome").value;
+  const telefono = localStorage.getItem("telefono") || document.getElementById("telefono").value;
+  const giorno = document.getElementById("giorno").value;
+  const fascia = document.getElementById("fascia").value;
+
+  if (!giorno || !fascia) { alert("Seleziona giorno e orario"); return; }
+
+  const data = { nome, telefono, giorno, fascia };
+
+  await fetch(scriptURL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(data)
+  });
+
+  alert("Slot salvato 🎉");
+  mostraMatch();
+}
+
+// 🔹 CARICA DATI DAL FOGLIO
+async function caricaDati() {
+  const res = await fetch(sheetCSV);
+  const txt = await res.text();
+  const righe = txt.split("\n").slice(1);
+  return righe.map(r => r.split(",")).filter(r => r.length >= 4);
+}
+
+// 🔹 MOSTRA MATCH E LINK WHATSAPP
+async function mostraMatch() {
+  const dati = await caricaDati();
+  const gruppi = {};
+
+  dati.forEach(r => {
+    const key = r[2]+"|"+r[3];
+    if (!gruppi[key]) gruppi[key] = [];
+    gruppi[key].push(r);
+  });
+
+  const lista = document.getElementById("listaMatch");
+  lista.innerHTML = "";
+
+  for (let k in gruppi) {
+    if (gruppi[k].length >= 2) {
+      const [giorno, fascia] = k.split("|");
+      const nomi = gruppi[k].map(x=>x[0]).join(", ");
+      const telefono = gruppi[k][0][1];
+      const link = "https://wa.me/" + telefono + "?text=" +
+        encodeURIComponent("Ciao " + nomi + "! Siamo liberi " + giorno + " " + fascia + ". Ci organizziamo?");
+      const li = document.createElement("li");
+      li.innerHTML = `${giorno} ${fascia}: ${nomi} <a href="${link}" target="_blank">WhatsApp</a>`;
+      lista.appendChild(li);
+    }
+  }
+}
+
+// 🔹 Service Worker per PWA
+if ("serviceWorker" in navigator) {
+  navigator.serviceWorker.register("service-worker.js")
+    .then(() => console.log("Service Worker registrato"));
+}
 </script>
+
 </body>
 </html>
