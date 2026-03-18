@@ -68,7 +68,7 @@ async function mostraMatch() {
             const telefono = gruppi[k][0][1]; 
             const li = document.createElement("li");
             li.innerHTML = `${giorno} ${fascia}: ${nomi} 
-            <a href="https://wa.me/${telefono}?text=Ciao ${nomi}! Siamo liberi ${giorno} ${fascia}. Ci organizziamo?" target="_blank">Invita su WhatsApp</a>`;
+            <a href="https://wa.me/${telefono}?text=Ciao! Ho visto che siamo liberi ${giorno} ${fascia} (${nomi}). Organizziamo?" target="_blank">;
             lista.appendChild(li);
         }
     }
