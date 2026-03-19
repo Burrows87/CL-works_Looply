@@ -1,156 +1,226 @@
-let currentSlide = 0;
+// ---------------- FIREBASE CONFIG ----------------
 
-const slidesData = [
-  { title: "Benvenuto in Looply 🤙", text: "Trova amici disponibili insieme a te." },
-  { title: "Segna quando sei libero 📅", text: "Scegli giorni e momenti della settimana." },
-  { title: "Ricevi match 🔥", text: "Looply ti mostra chi è disponibile con te." }
-];
+const firebaseConfig = {
+  apiKey: "XXX",
+  authDomain: "XXX",
+  projectId: "XXX"
+};
 
-/* ---------------- SLIDES ---------------- */
+firebase.initializeApp(firebaseConfig);
 
-function showSlide(i){
-  currentSlide = i;
+const db = firebase.firestore();
 
-  document.getElementById("slideTitle").innerText = slidesData[i].title;
-  document.getElementById("slideText").innerText = slidesData[i].text;
-
-  document.getElementById("ctaFinal").style.display =
-    (i === slidesData.length - 1) ? "block" : "none";
-
-  renderDots();
-}
-
-function nextSlide(){
-  if(currentSlide < slidesData.length - 1){
-    showSlide(currentSlide + 1);
-  }
-}
-
-function prevSlide(){
-  if(currentSlide > 0){
-    showSlide(currentSlide - 1);
-  }
-}
-
-function renderDots(){
-  const dots = document.getElementById("dots");
-  dots.innerHTML = "";
-
-  slidesData.forEach((_, i)=>{
-    const d = document.createElement("span");
-    d.innerText = "●";
-    if(i === currentSlide) d.classList.add("active");
-    dots.appendChild(d);
-  });
-}
-
-function finishSlides(){
-  localStorage.setItem("slidesSeen","true");
-  document.getElementById("slides").classList.add("hidden");
-  document.getElementById("formLogin").classList.remove("hidden");
-}
-
-/* ---------------- LOGIN ---------------- */
+// ---------------- LOGIN ----------------
 
 document.getElementById("terms").onchange = checkLogin;
 document.getElementById("privacy").onchange = checkLogin;
 
 function checkLogin(){
-  const t = document.getElementById("terms").checked;
-  const p = document.getElementById("privacy").checked;
-  document.getElementById("enterBtn").disabled = !(t && p);
+  const t = terms.checked;
+  const p = privacy.checked;
+  enterBtn.disabled = !(t && p);
 }
 
-function login(){
-  const name = document.getElementById("username").value;
-  if(!name) return alert("Inserisci nome");
+let currentUser = null;
 
-  localStorage.setItem("user", name);
+async function login(){
 
-  document.getElementById("formLogin").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
+  const name = username.value;
+  const phone = document.getElementById("phone").value;
+
+  if(!name || !phone) return alert("Inserisci dati");
+
+  const user = await firebase.auth().signInAnonymously();
+  currentUser = user.user.uid;
+
+  await db.collection("users").doc(currentUser).set({
+    name,
+    phone
+  });
+
+  formLogin.classList.add("hidden");
+  app.classList.remove("hidden");
+
+  listenMatches();
 }
 
-/* ---------------- DAYS ---------------- */
+// ---------------- DAYS ----------------
 
-const daysList = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+const days = ["Lun","Mar","Mer","Gio","Ven","Sab","Dom"];
+const slots = ["Mattina","Pomeriggio","Sera"];
 
-const daysContainer = document.getElementById("days");
+const availability = {};
 
-daysList.forEach(day=>{
+const container = document.getElementById("daysContainer");
+
+days.forEach(day => {
+
+  const div = document.createElement("div");
+  div.className = "day-block";
+
   const btn = document.createElement("button");
   btn.innerText = day;
 
+  const timeDiv = document.createElement("div");
+
   btn.onclick = ()=>{
     btn.classList.toggle("selected");
+
+    if(btn.classList.contains("selected")){
+      availability[day] = [];
+      timeDiv.style.display = "block";
+    } else {
+      delete availability[day];
+      timeDiv.style.display = "none";
+    }
   };
 
-  daysContainer.appendChild(btn);
+  slots.forEach(s=>{
+    const t = document.createElement("button");
+    t.innerText = s;
+
+    t.onclick = ()=>{
+      t.classList.toggle("selected");
+
+      if(!availability[day]) availability[day] = [];
+
+      if(t.classList.contains("selected")){
+        availability[day].push(s);
+      } else {
+        availability[day] = availability[day].filter(x=>x!==s);
+      }
+    };
+
+    timeDiv.appendChild(t);
+  });
+
+  timeDiv.style.display = "none";
+
+  div.appendChild(btn);
+  div.appendChild(timeDiv);
+
+  container.appendChild(div);
 });
 
-/* ---------------- SETTINGS ---------------- */
+// ---------------- SAVE + MATCH ----------------
 
-function openSettings(){
-  document.getElementById("app").classList.add("hidden");
-  document.getElementById("settings").classList.remove("hidden");
+async function saveAvailability(){
+
+  await db.collection("availability").doc(currentUser).set({
+    userId: currentUser,
+    data: availability
+  });
+
+  checkMatches();
 }
 
-function goBack(){
-  document.getElementById("settings").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
+async function checkMatches(){
+
+  const snapshot = await db.collection("availability").get();
+
+  snapshot.forEach(doc => {
+
+    const other = doc.data();
+
+    if(other.userId === currentUser) return;
+
+    const match = findMatch(availability, other.data);
+
+    if(match){
+      showMatch(match.day, match.slots, other.userId);
+    }
+
+  });
 }
 
-function saveSettings(){
-  const notify = document.getElementById("notifyToggle").checked;
-  localStorage.setItem("notifications", notify);
-}
+function findMatch(a, b){
 
-/* ---------------- PERSONALIZATION ---------------- */
+  for(let day in a){
 
-function changeTheme(){
-  const theme = document.getElementById("themeSelect").value;
+    if(b[day]){
 
-  if(theme === "dark"){
-    document.body.style.background = "#121212";
-    document.body.style.color = "#ffffff";
-  } else {
-    document.body.style.background = "#ffffff";
-    document.body.style.color = "#000000";
+      const common = a[day].filter(s => b[day].includes(s));
+
+      if(common.length > 0){
+        return { day, slots: common };
+      }
+    }
   }
 
-  localStorage.setItem("theme", theme);
+  return null;
 }
 
-function changeColor(){
-  const color = document.getElementById("colorPicker").value;
+// ---------------- MATCH UI ----------------
 
-  document.documentElement.style.setProperty('--primary', color);
-  localStorage.setItem("primaryColor", color);
+let currentMatchUser = null;
+
+async function showMatch(day, slots, userId){
+
+  currentMatchUser = userId;
+
+  const userDoc = await db.collection("users").doc(userId).get();
+  const user = userDoc.data();
+
+  matchText.innerText = `${user.name} - ${day} (${slots.join(", ")})`;
+
+  matchSuggestions.innerHTML = "";
+
+  slots.forEach(s=>{
+    let text = "";
+
+    if(s==="Mattina") text="☕ Colazione";
+    if(s==="Pomeriggio") text="🍕 Pizza";
+    if(s==="Sera") text="🍸 Aperitivo";
+
+    const p = document.createElement("p");
+    p.innerText = text;
+    matchSuggestions.appendChild(p);
+  });
+
+  matchPopup.classList.remove("hidden");
 }
 
-/* ---------------- INIT ---------------- */
+function closeMatch(){
+  matchPopup.classList.add("hidden");
+}
 
-window.onload = () => {
+// ---------------- WHATSAPP ----------------
 
-  const slidesSeen = localStorage.getItem("slidesSeen");
+async function sendWhatsApp(){
 
-  if(!slidesSeen){
-    document.getElementById("slides").classList.remove("hidden");
-    showSlide(0);
-  } else {
-    document.getElementById("formLogin").classList.remove("hidden");
-  }
+  const userDoc = await db.collection("users").doc(currentMatchUser).get();
+  const other = userDoc.data();
 
-  const theme = localStorage.getItem("theme");
-  const color = localStorage.getItem("primaryColor");
+  const me = await db.collection("users").doc(currentUser).get();
 
-  if(theme){
-    document.getElementById("themeSelect").value = theme;
-    changeTheme();
-  }
+  const myName = me.data().name;
 
-  if(color){
-    document.getElementById("colorPicker").value = color;
-    document.documentElement.style.setProperty('--primary', color);
-  }
-};
+  const msg = `Ciao ${other.name}! Sono ${myName} da Looply 😊 Ci organizziamo?`;
+
+  const url = `https://wa.me/${other.phone}?text=${encodeURIComponent(msg)}`;
+
+  window.open(url, "_blank");
+}
+
+// ---------------- REAL TIME LISTENER ----------------
+
+function listenMatches(){
+
+  db.collection("availability").onSnapshot(snapshot => {
+
+    snapshot.forEach(doc => {
+
+      const other = doc.data();
+
+      if(other.userId === currentUser) return;
+
+      const match = findMatch(availability, other.data);
+
+      if(match){
+        showMatch(match.day, match.slots, other.userId);
+      }
+
+    });
+
+  });
+}
