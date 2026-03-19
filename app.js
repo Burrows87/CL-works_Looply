@@ -1,9 +1,9 @@
 // ---------------- FIREBASE CONFIG ----------------
 
 const firebaseConfig = {
-  apiKey: "XXX",
-  authDomain: "XXX",
-  projectId: "XXX"
+  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
+  authDomain: "looply-app-21eb9.firebaseapp.com",
+  projectId: "looply-app-21eb9",
 };
 
 firebase.initializeApp(firebaseConfig);
