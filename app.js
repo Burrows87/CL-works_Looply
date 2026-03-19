@@ -1,12 +1,12 @@
 // ================= FIREBASE INIT =================
 
 const firebaseConfig = {
-  apiKey: "INSERISCI_API_KEY",
-  authDomain: "INSERISCI_AUTH_DOMAIN",
-  projectId: "INSERISCI_PROJECT_ID",
-  storageBucket: "INSERISCI_STORAGE_BUCKET",
-  messagingSenderId: "INSERISCI_SENDER_ID",
-  appId: "INSERISCI_APP_ID"
+  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
+  authDomain: "looply-app-21eb9.firebaseapp.com",
+  projectId: "looply-app-21eb9",
+  storageBucket: "looply-app-21eb9.firebasestorage.app",
+  messagingSenderId: "484354825970",
+  appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"looply-app-21eb9
 };
 
 firebase.initializeApp(firebaseConfig);
