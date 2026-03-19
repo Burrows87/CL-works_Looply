@@ -6,107 +6,49 @@
 
 <title>Looply</title>
 
-<link rel="manifest" href="manifest.json">
 <link rel="stylesheet" href="style.css">
+
+<!-- Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js"></script>
 </head>
 
 <body>
 
-<!-- SLIDES -->
-<div id="slides" class="full-screen hidden">
-
-  <div class="top-right">
-    <button onclick="finishSlides()">Skip</button>
-  </div>
-
-  <div id="slideContent">
-    <h2 id="slideTitle"></h2>
-    <p id="slideText"></p>
-  </div>
-
-  <div id="dots"></div>
-
-  <div class="nav">
-    <button onclick="prevSlide()">⬅️</button>
-    <button onclick="nextSlide()">➡️</button>
-  </div>
-
-  <div id="ctaFinal" class="hidden">
-    <button onclick="finishSlides()">Entra su Looply 🚀</button>
-  </div>
-
-</div>
-
 <!-- LOGIN -->
-<div id="formLogin">
+<div id="formLogin" class="container">
   <h2>Login</h2>
 
   <input id="username" placeholder="Nome">
+  <input id="phone" placeholder="Telefono (es. 393...)">
 
-  <div>
-    <label>
-      <input type="checkbox" id="terms">
-      Accetto Termini
-    </label>
-  </div>
-
-  <div>
-    <label>
-      <input type="checkbox" id="privacy">
-      Accetto Privacy
-    </label>
-  </div>
+  <label><input type="checkbox" id="terms"> Termini</label>
+  <label><input type="checkbox" id="privacy"> Privacy</label>
 
   <button id="enterBtn" onclick="login()" disabled>Entra</button>
-
-  <p>
-    <a href="terms.html">Termini</a> |
-    <a href="privacy.html">Privacy</a>
-  </p>
 </div>
 
 <!-- APP -->
-<div id="app" class="hidden">
+<div id="app" class="hidden container">
 
-  <h2>Disponibilità</h2>
+  <div class="card">
+    <h2>Quando sei disponibile?</h2>
+    <div id="daysContainer" class="days-grid"></div>
 
-  <div id="days"></div>
-
-  <button onclick="saveAvailability()">Salva</button>
-
-  <hr>
-
-  <button onclick="openSettings()">⚙️ Impostazioni</button>
+    <button onclick="saveAvailability()">Salva</button>
+  </div>
 
 </div>
 
-<!-- SETTINGS -->
-<div id="settings" class="hidden">
+<!-- MATCH POPUP -->
+<div id="matchPopup" class="hidden card match-popup">
+  <h3>🎉 Match trovato!</h3>
+  <p id="matchText"></p>
+  <div id="matchSuggestions"></div>
 
-  <button onclick="goBack()">⬅️ Back</button>
-
-  <h3>Impostazioni</h3>
-
-  <label>
-    <input type="checkbox" id="notifyToggle" onchange="saveSettings()">
-    Notifiche attive
-  </label>
-
-  <hr>
-
-  <h4>Personalizzazione</h4>
-
-  <label>Tema:</label>
-  <select id="themeSelect" onchange="changeTheme()">
-    <option value="light">Chiaro</option>
-    <option value="dark">Scuro</option>
-  </select>
-
-  <br><br>
-
-  <label>Colore principale:</label>
-  <input type="color" id="colorPicker" onchange="changeColor()">
-
+  <button onclick="sendWhatsApp()">💬 WhatsApp</button>
+  <button onclick="closeMatch()">Chiudi</button>
 </div>
 
 <script src="app.js"></script>
