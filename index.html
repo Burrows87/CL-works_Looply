@@ -1,7 +1,9 @@
 <!DOCTYPE html>
-<html>
+<html lang="it">
 <head>
+<meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Looply</title>
 
 <link rel="manifest" href="manifest.json">
@@ -10,7 +12,7 @@
 
 <body>
 
-<!-- ONBOARDING -->
+<!-- SLIDES -->
 <div id="slides" class="full-screen hidden">
 
   <div class="top-right">
@@ -86,9 +88,24 @@
   <h3>Impostazioni</h3>
 
   <label>
-    <input type="checkbox" id="notifyToggle">
+    <input type="checkbox" id="notifyToggle" onchange="saveSettings()">
     Notifiche attive
   </label>
+
+  <hr>
+
+  <h4>Personalizzazione</h4>
+
+  <label>Tema:</label>
+  <select id="themeSelect" onchange="changeTheme()">
+    <option value="light">Chiaro</option>
+    <option value="dark">Scuro</option>
+  </select>
+
+  <br><br>
+
+  <label>Colore principale:</label>
+  <input type="color" id="colorPicker" onchange="changeColor()">
 
 </div>
 
