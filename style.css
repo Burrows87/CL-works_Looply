@@ -1,10 +1,9 @@
 /* 1. VARIABILI E BASE */
 :root {
-    --primary-color: #2563eb; /* Colore di default */
+    --primary-color: #2563eb; 
     --bg-color: #f3f4f6;
     --card-bg: #ffffff;
     --text-main: #1f2937;
-    --text-muted: #6b7280;
     --border-color: #e5e7eb;
 }
 
@@ -13,7 +12,7 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al click su mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -31,21 +30,22 @@ body {
 }
 
 /* 2. CARD E HEADER */
-.header h1 {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -0.5px;
-}
-
 .card {
     background: var(--card-bg);
     padding: 20px;
     border-radius: 20px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border-color);
+    margin-bottom: 20px;
 }
 
-/* 3. LAYOUT GIORNI (AFFIANCATI) */
+.header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    margin-bottom: 5px;
+}
+
+/* 3. GIORNI E SLOT */
 .days-row {
     display: flex;
     justify-content: space-between;
@@ -53,9 +53,7 @@ body {
     margin-bottom: 20px;
 }
 
-.day-item {
-    flex: 1;
-}
+.day-item { flex: 1; }
 
 .day-btn {
     width: 100%;
@@ -64,28 +62,23 @@ body {
     border: 2px solid var(--border-color);
     background: white;
     font-weight: 700;
-    font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s ease;
-    color: var(--text-main);
+    transition: all 0.2s;
 }
 
-/* STATO ATTIVO: USA LA VARIABILE */
 .day-btn.active {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     color: white !important;
-    transform: scale(0.95);
 }
 
-/* 4. SLOT ORARI */
 .slots {
     background: #f9fafb;
     padding: 15px;
     border-radius: 15px;
     margin-bottom: 12px;
     border: 1px dashed var(--border-color);
-    display: none; /* Nascosti finché non clicchi sul giorno */
+    display: none;
 }
 
 .slots:not(.disabled) {
@@ -95,53 +88,69 @@ body {
 
 .slots-grid {
     display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    grid-template-columns: 1fr 1fr;
     gap: 10px;
 }
 
-.slots label {
-    font-size: 14px;
-    font-weight: 500;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    cursor: pointer;
-}
-
-/* 5. PULSANTI AZIONE */
+/* 4. PULSANTI */
 .btn-primary {
     background-color: var(--primary-color) !important;
-    color: white;
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: opacity 0.2s;
+    color: white; width: 100%; padding: 15px; border: none;
+    border-radius: 14px; font-weight: 700; cursor: pointer;
 }
 
 .btn-whatsapp {
     background-color: #25d366 !important;
-    color: white;
-    width: 100%;
-    padding: 15px;
-    border: none;
-    border-radius: 14px;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
+    color: white; width: 100%; padding: 15px; border: none;
+    border-radius: 14px; font-weight: 700; cursor: pointer;
 }
 
 .btn-google {
-    width: 100%;
-    padding:
+    width: 100%; padding: 14px; border: 1px solid var(--border-color);
+    background: white; border-radius: 12px; font-weight: 600; cursor: pointer;
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+}
+
+/* 5. FIX COLORI IMPOSTAZIONI (IMPORTANTE PER IPHONE) */
+.colors-container {
+    display: flex;
+    justify-content: center;
+    gap: 12px;
+    padding: 20px 0;
+    flex-wrap: wrap;
+}
+
+.color-dot {
+    display: block !important; /* Forza la visibilità */
+    width: 42px !important;
+    height: 42px !important;
+    border-radius: 50% !important;
+    cursor: pointer;
+    border: 3px solid white !important;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
+    transition: transform 0.2s;
+}
+
+.color-dot:active { transform: scale(0.9); }
+
+.btn-logout {
+    background: #fee2e2; color: #ef4444; width: 100%; border: none;
+    padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 20px;
+}
+
+/* 6. ANIMAZIONI E POPUP MATCH */
+@keyframes fadeIn {
+    from { opacity: 0; transform: translateY(-5px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    0% { transform: scale(0.8); opacity: 0; }
+    100% { transform: scale(1); opacity: 1; }
+}
+
+/* Stile per il Modal del Match */
+#matchModal .card {
+    border: none;
+    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
+}
