@@ -34,7 +34,6 @@ window.addEventListener("DOMContentLoaded", () => {
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // Toggle giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -42,7 +41,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Logica "Sempre"
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -268,8 +266,12 @@ async function showMatches() {
 
   const match = matches[0];
 
+  const daysText = match.days.join(", ");
+
   document.getElementById("matchText").innerText =
-    `${match.name} è disponibile: ${match.days.join(", ")}`;
+    `Tu e ${match.name} siete liberi: ${daysText}. Scrivigli su WhatsApp!`;
+
+  window.currentMatch = match;
 
   document.getElementById("matchPopup").classList.remove("hidden");
 }
@@ -298,12 +300,25 @@ window.saveAvailability = async function () {
   }
 };
 
+// ================= WHATSAPP =================
+
+window.sendWhatsApp = function () {
+
+  if (!window.currentMatch) return;
+
+  const phone = window.currentMatch.phone;
+
+  const message = encodeURIComponent(
+    `Ciao! Ho visto su Looply che siamo liberi ${window.currentMatch.days.join(", ")}. Ti va di uscire?`
+  );
+
+  const url = `https://wa.me/${phone}?text=${message}`;
+
+  window.open(url, "_blank");
+};
+
 // ================= MATCH POPUP =================
 
 window.closeMatch = function () {
   document.getElementById("matchPopup").classList.add("hidden");
-};
-
-window.sendWhatsApp = function () {
-  alert("Collegamento WhatsApp da implementare");
 };
