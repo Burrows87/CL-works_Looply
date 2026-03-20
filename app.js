@@ -16,14 +16,14 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// ================= SESSION HANDLER =================
+// ================= SESSION =================
 
 firebase.auth().onAuthStateChanged(user => {
 
   if (user) {
     currentUser = user.uid;
 
-    console.log("User logged in:", user.email);
+    console.log("Logged in:", user.email);
 
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
@@ -39,34 +39,53 @@ firebase.auth().onAuthStateChanged(user => {
 
 // ================= GOOGLE LOGIN =================
 
-window.loginWithGoogle = async function () {
+function loginWithGoogle() {
 
   console.log("CLICK GOOGLE LOGIN");
 
   const provider = new firebase.auth.GoogleAuthProvider();
 
-  try {
-    const result = await auth.signInWithPopup(provider);
+  auth.signInWithPopup(provider)
+    .then(async (result) => {
 
-    const user = result.user;
-    currentUser = user.uid;
+      const user = result.user;
+      currentUser = user.uid;
 
-    console.log("Google login success:", user.email);
+      console.log("Login success:", user.email);
 
-    await db.collection("users").doc(currentUser).set({
-      name: user.displayName,
-      email: user.email,
-      photoURL: user.photoURL,
-      createdAt: new Date()
-    }, { merge: true });
+      await db.collection("users").doc(currentUser).set({
+        name: user.displayName,
+        email: user.email,
+        photoURL: user.photoURL,
+        createdAt: new Date()
+      }, { merge: true });
 
-  } catch (err) {
-    console.error("Google login error:", err);
-    alert(err.message);
+    })
+    .catch(err => {
+      console.error("Google login error:", err);
+      alert(err.message);
+    });
+
+}
+
+// Esponi globalmente (importante)
+window.loginWithGoogle = loginWithGoogle;
+
+// ================= EVENT LISTENER BOTTONI =================
+
+document.addEventListener("DOMContentLoaded", () => {
+
+  const googleBtn = document.getElementById("googleBtn");
+
+  if (googleBtn) {
+    googleBtn.addEventListener("click", loginWithGoogle);
+  } else {
+    console.error("googleBtn NON trovato nel DOM");
   }
-};
 
-// ================= STATE =================
+});
+
+// ================= DAYS =================
 
 let selectedDays = {
   venerdi: false,
@@ -74,14 +93,11 @@ let selectedDays = {
   domenica: false
 };
 
-// ================= DOM READY =================
-
-window.addEventListener("DOMContentLoaded", () => {
+document.addEventListener("DOMContentLoaded", () => {
 
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
-      const day = btn.getAttribute("data-day");
-      toggleDay(day);
+      toggleDay(btn.dataset.day);
     });
   });
 
@@ -119,7 +135,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 // ================= TOGGLE DAY =================
 
-window.toggleDay = function(day) {
+function toggleDay(day) {
 
   const btn = document.querySelector(`[data-day="${day}"]`);
   const slots = document.getElementById(`${day}-slots`);
@@ -147,13 +163,15 @@ window.toggleDay = function(day) {
       cb.disabled = true;
     });
   }
-};
+}
+
+window.toggleDay = toggleDay;
 
 // ================= AVAILABILITY =================
 
 function getAvailability() {
 
-  function getDaySlots(day) {
+  function getDay(day) {
 
     if (!selectedDays[day]) return null;
 
@@ -162,19 +180,19 @@ function getAvailability() {
     const checked = Array.from(container.querySelectorAll("input:checked"))
       .map(cb => cb.value);
 
-    return checked.length > 0 ? checked : ["any"];
+    return checked.length ? checked : ["any"];
   }
 
   return {
-    venerdi: getDaySlots("venerdi"),
-    sabato: getDaySlots("sabato"),
-    domenica: getDaySlots("domenica")
+    venerdi: getDay("venerdi"),
+    sabato: getDay("sabato"),
+    domenica: getDay("domenica")
   };
 }
 
 // ================= SAVE =================
 
-window.saveAvailability = async function () {
+async function saveAvailability() {
 
   if (!currentUser) {
     alert("Utente non loggato");
@@ -190,8 +208,10 @@ window.saveAvailability = async function () {
 
     alert("Disponibilità salvata");
 
-  } catch (error) {
-    console.error("Save error:", error);
-    alert("Errore nel salvataggio");
+  } catch (err) {
+    console.error(err);
+    alert("Errore salvataggio");
   }
-};
+}
+
+window.saveAvailability = saveAvailability;
