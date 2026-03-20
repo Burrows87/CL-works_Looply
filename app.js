@@ -73,9 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   });
 
-  // Validazione form login
   setupFormValidation();
-
 });
 
 // ================= FORM VALIDATION =================
@@ -111,7 +109,6 @@ window.login = async function () {
   const terms = document.getElementById("terms").checked;
   const privacy = document.getElementById("privacy").checked;
 
-  // 🔴 BLOCCO REALE
   if (!name || !phone) {
     alert("Inserisci nome e telefono");
     return;
@@ -206,6 +203,77 @@ function getAvailability() {
   };
 }
 
+// ================= MATCHING =================
+
+async function findMatches() {
+
+  if (!currentUser) return [];
+
+  const currentUserDoc = await db.collection("users").doc(currentUser).get();
+  const myData = currentUserDoc.data();
+
+  const usersSnapshot = await db.collection("users").get();
+
+  const myAvailability = myData.availability || {};
+
+  let matches = [];
+
+  usersSnapshot.forEach(doc => {
+
+    if (doc.id === currentUser) return;
+
+    const user = doc.data();
+    const otherAvailability = user.availability || {};
+
+    const commonDays = [];
+
+    for (let day in myAvailability) {
+
+      if (!myAvailability[day] || !otherAvailability[day]) continue;
+
+      const mySlots = myAvailability[day];
+      const otherSlots = otherAvailability[day];
+
+      const hasMatch =
+        mySlots.includes("any") ||
+        otherSlots.includes("any") ||
+        mySlots.some(slot => otherSlots.includes(slot));
+
+      if (hasMatch) {
+        commonDays.push(day);
+      }
+    }
+
+    if (commonDays.length > 0) {
+      matches.push({
+        name: user.name,
+        phone: user.phone,
+        days: commonDays
+      });
+    }
+
+  });
+
+  return matches;
+}
+
+async function showMatches() {
+
+  const matches = await findMatches();
+
+  if (matches.length === 0) {
+    alert("Nessun match trovato");
+    return;
+  }
+
+  const match = matches[0];
+
+  document.getElementById("matchText").innerText =
+    `${match.name} è disponibile: ${match.days.join(", ")}`;
+
+  document.getElementById("matchPopup").classList.remove("hidden");
+}
+
 // ================= SAVE =================
 
 window.saveAvailability = async function () {
@@ -222,10 +290,20 @@ window.saveAvailability = async function () {
       availability
     }, { merge: true });
 
-    alert("Disponibilità salvata");
+    await showMatches();
 
   } catch (error) {
     console.error(error);
     alert("Errore nel salvataggio");
   }
+};
+
+// ================= MATCH POPUP =================
+
+window.closeMatch = function () {
+  document.getElementById("matchPopup").classList.add("hidden");
+};
+
+window.sendWhatsApp = function () {
+  alert("Collegamento WhatsApp da implementare");
 };
