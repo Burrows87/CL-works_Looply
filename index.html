@@ -8,7 +8,11 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Firebase compat -->
+<!-- ✅ PWA -->
+<link rel="manifest" href="manifest.json">
+<meta name="theme-color" content="#2563eb">
+
+<!-- Firebase -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
@@ -29,9 +33,9 @@
     <input id="username" placeholder="Nome">
     <input id="phone" placeholder="Telefono (es. 393...)">
 
-<label>
-  <input type="checkbox" id="rememberMe"> Ricordami
-</label>
+    <label>
+      <input type="checkbox" id="rememberMe"> Ricordami
+    </label>
     
     <label>
       <input type="checkbox" id="terms"> Accetto i termini
@@ -56,43 +60,43 @@
 
   <div class="card">
 
-<div class="days-row">
+    <div class="days-row">
 
-  <!-- VENERDÌ -->
-  <div class="day-item">
-    <button class="day-btn" data-day="venerdi">Venerdì</button>
+      <!-- VENERDÌ -->
+      <div class="day-item">
+        <button class="day-btn" data-day="venerdi">Venerdì</button>
 
-    <div id="venerdi-slots" class="slots disabled">
-      <label><input type="checkbox" value="mattina"> Mattina</label>
-      <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-      <label><input type="checkbox" value="sera"> Sera</label>
-    </div>
-  </div>
+        <div id="venerdi-slots" class="slots disabled">
+          <label><input type="checkbox" value="any" class="always"> Sempre</label>
+          <label><input type="checkbox" value="mattina"> Mattina</label>
+          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
+          <label><input type="checkbox" value="sera"> Sera</label>
+        </div>
+      </div>
 
-  <!-- SABATO -->
-  <div class="day-item">
-    <button class="day-btn" data-day="sabato">Sabato</button>
+      <!-- SABATO -->
+      <div class="day-item">
+        <button class="day-btn" data-day="sabato">Sabato</button>
 
-    <div id="sabato-slots" class="slots disabled">
-      <label><input type="checkbox" value="mattina"> Mattina</label>
-      <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-      <label><input type="checkbox" value="sera"> Sera</label>
-    </div>
-  </div>
+        <div id="sabato-slots" class="slots disabled">
+          <label><input type="checkbox" value="any" class="always"> Sempre</label>
+          <label><input type="checkbox" value="mattina"> Mattina</label>
+          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
+          <label><input type="checkbox" value="sera"> Sera</label>
+        </div>
+      </div>
 
-  <!-- DOMENICA -->
-  <div class="day-item">
-    <button class="day-btn" data-day="domenica">Domenica</button>
+      <!-- DOMENICA -->
+      <div class="day-item">
+        <button class="day-btn" data-day="domenica">Domenica</button>
 
-    <div id="domenica-slots" class="slots disabled">
-      <label><input type="checkbox" value="mattina"> Mattina</label>
-      <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-      <label><input type="checkbox" value="sera"> Sera</label>
-    </div>
-  </div>
-
-</div>
-    
+        <div id="domenica-slots" class="slots disabled">
+          <label><input type="checkbox" value="any" class="always"> Sempre</label>
+          <label><input type="checkbox" value="mattina"> Mattina</label>
+          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
+          <label><input type="checkbox" value="sera"> Sera</label>
+        </div>
+      </div>
 
     </div>
 
