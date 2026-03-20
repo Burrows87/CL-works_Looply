@@ -1,3 +1,5 @@
+// ================= FIREBASE INIT =================
+
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -14,35 +16,8 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// ================= SESSION =================
-
-auth.onAuthStateChanged(user => {
-
-  if (user) {
-
-    currentUser = user.uid;
-
-    console.log("SESSION ACTIVE:", user.email);
-
-    document.getElementById("formLogin").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-
-  } else {
-
-    currentUser = null;
-
-    console.log("NO SESSION");
-
-    document.getElementById("formLogin").classList.remove("hidden");
-    document.getElementById("app").classList.add("hidden");
-
-  }
-
-});
-
 // ================= GOOGLE LOGIN =================
 
-// CLICK BUTTON
 document.getElementById("googleBtn").addEventListener("click", () => {
 
   console.log("Google login click");
@@ -53,16 +28,20 @@ document.getElementById("googleBtn").addEventListener("click", () => {
 
 });
 
-// HANDLE REDIRECT RESULT
+// ================= HANDLE REDIRECT =================
+
 auth.getRedirectResult()
   .then(async (result) => {
 
-    if (result.user) {
+    console.log("Redirect result:", result);
+
+    if (result && result.user) {
 
       const user = result.user;
-      currentUser = user.uid;
 
       console.log("Redirect login OK:", user.email);
+
+      currentUser = user.uid;
 
       await db.collection("users").doc(currentUser).set({
         name: user.displayName,
@@ -79,13 +58,39 @@ auth.getRedirectResult()
     alert(err.message);
   });
 
-// ================= EMAIL LOGIN (PLACEHOLDER) =================
+// ================= SESSION MANAGEMENT =================
+
+auth.onAuthStateChanged(user => {
+
+  if (user) {
+
+    console.log("SESSION ACTIVE:", user.email);
+
+    currentUser = user.uid;
+
+    document.getElementById("formLogin").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+  } else {
+
+    console.log("NO SESSION");
+
+    currentUser = null;
+
+    document.getElementById("formLogin").classList.remove("hidden");
+    document.getElementById("app").classList.add("hidden");
+
+  }
+
+});
+
+// ================= EMAIL LOGIN PLACEHOLDER =================
 
 window.login = function () {
   alert("Login email non configurato");
 };
 
-// ================= DAYS =================
+// ================= DAYS SELECTION =================
 
 let selectedDays = {
   venerdi: false,
