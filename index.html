@@ -8,10 +8,11 @@
 
 <link rel="stylesheet" href="style.css">
 
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<!-- Firebase compat -->
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+
 </head>
 
 <body>
@@ -32,25 +33,24 @@
 <!-- APP -->
 <div id="app" class="hidden container">
 
-  <div class="card">
-    <h2>Quando sei disponibile?</h2>
-    <div id="daysContainer" class="days-grid"></div>
+  <h2>Disponibilità</h2>
 
-    <button onclick="saveAvailability()">Salva</button>
-  </div>
+  <div id="daysContainer"></div>
+
+  <button onclick="saveAvailability()">Salva</button>
 
 </div>
 
 <!-- MATCH POPUP -->
-<div id="matchPopup" class="hidden card match-popup">
+<div id="matchPopup" class="hidden">
   <h3>🎉 Match trovato!</h3>
   <p id="matchText"></p>
-  <div id="matchSuggestions"></div>
 
-  <button onclick="sendWhatsApp()">💬 WhatsApp</button>
+  <button onclick="sendWhatsApp()">WhatsApp</button>
   <button onclick="closeMatch()">Chiudi</button>
 </div>
 
 <script src="app.js"></script>
+
 </body>
 </html>
