@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Looply - La tua App</title>
+  <title>Looply - App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="style.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -28,10 +28,10 @@
       </div>
     </div>
 
-    <div id="app" class="hidden">
+    <div id="app" style="display: none;">
       <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
         <h1 id="welcomeTitle">Ciao!</h1>
-        <i class="fa-solid fa-gear" onclick="openSettings()" style="font-size: 22px; cursor: pointer; color: #6b7280;"></i>
+        <i class="fa-solid fa-gear" onclick="openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 5px;"></i>
       </div>
 
       <div class="card">
@@ -68,9 +68,9 @@
       </div>
     </div>
 
-    <div id="settingsPage" class="hidden">
+    <div id="settingsPage" style="display: none;">
       <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
-        <i class="fa-solid fa-arrow-left" onclick="closeSettings()" style="font-size: 20px; cursor: pointer; color: #111827;"></i>
+        <i class="fa-solid fa-arrow-left" onclick="closeSettings()" style="font-size: 20px; cursor: pointer; color: #111827; padding: 5px;"></i>
         <h1>Impostazioni</h1>
       </div>
       
@@ -80,9 +80,7 @@
           <h3 id="userName" style="margin: 5px 0;">Utente</h3>
           <p id="userEmail" style="color: #6b7280; font-size: 13px;"></p>
         </div>
-        
         <hr style="border: 0; border-top: 1px solid #f3f4f6; margin: 20px 0;">
-        
         <button onclick="logout()" style="background: #fee2e2; color: #ef4444; border: none;">Esci dall'account</button>
       </div>
     </div>
