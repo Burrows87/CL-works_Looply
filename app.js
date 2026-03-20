@@ -22,20 +22,23 @@ const langPack = {
     en: { welcome: "Hi", save: "Save availability", saving: "Saving...", saved: "✅ Saved!", matchTitle: "Match Found!", matchText: (nome, giorno, fascia) => `🎉 <b>Great!</b> You and <b>${nome}</b> are both free on <b>${giorno} ${fascia}</b>!`, waBtn: "Message on WhatsApp", waMsg: (nome, giorno, fascia) => `Hi ${nome}! I saw on Looply that we're both free on ${giorno} ${fascia}, shall we hang out? 🤙🏻`, later: "Later", settings: "Settings", logout: "Logout", days: { ven: "Fri", sab: "Sat", dom: "Sun", labels: ["Friday", "Saturday", "Sunday"] }, slots: { always: "Always", morning: "Morning", afternoon: "After.", evening: "Evening" } }
 };
 
-// --- LOGICA DI LOGIN ---
-function inizializzaLogin() {
+// --- LOGICA DI LOGIN (SISTEMATA) ---
+function attivaPulsanteLogin() {
     const btn = document.getElementById("googleBtn");
     if (btn) {
-        btn.onclick = (e) => {
+        btn.onclick = async (e) => {
             e.preventDefault();
             const provider = new firebase.auth.GoogleAuthProvider();
-            provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
+            try {
+                // Usiamo Popup che è più reattivo del Redirect
+                await auth.signInWithPopup(provider);
+            } catch (error) {
+                console.error("Errore Login:", error);
+                alert("Errore nel login: " + error.message);
+            }
         };
     }
 }
-
-auth.getRedirectResult().catch(err => console.error("Errore redirect:", err));
 
 // --- GESTIONE PROFILO ---
 async function inizializzaUtente(user) {
@@ -51,7 +54,7 @@ async function inizializzaUtente(user) {
         } else {
             document.getElementById("onboardingModal").style.display = "flex";
         }
-    } catch (e) { console.error(e); }
+    } catch (e) { console.error("Errore Database:", e); }
 }
 
 function applicaLingua(nome, lingua) {
@@ -97,21 +100,21 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = null;
         if(formLogin) formLogin.style.display = "block";
         if(appDiv) appDiv.style.display = "none";
-        inizializzaLogin();
+        attivaPulsanteLogin();
     }
 });
 
-// --- AZIONI ---
+// --- AZIONI GLOBALI ---
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     const lingua = document.getElementById("selectLingua").value;
-    if (nome.length < 2) return alert("Nome troppo corto!");
+    if (nome.length < 2) return alert("Inserisci un nome!");
     try {
         await db.collection("users").doc(currentUser).set({ displayName: nome, lang: lingua, themeColor: "#2563eb" }, { merge: true });
         userLang = lingua;
         document.getElementById("onboardingModal").style.display = "none";
         applicaLingua(nome, lingua);
-    } catch (e) { alert("Errore"); }
+    } catch (e) { alert("Errore nel salvataggio"); }
 };
 
 window.saveAvailability = async () => {
@@ -180,6 +183,7 @@ async function caricaDati() {
     }
 }
 
+// Eventi pulsanti giorni
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const d = btn.dataset.day;
@@ -189,11 +193,11 @@ document.querySelectorAll(".day-btn").forEach(btn => {
     };
 });
 
+// Impostazioni e Tema
 window.changeTheme = (color) => {
     document.documentElement.style.setProperty('--primary-color', color);
     db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
 };
-
 window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
 window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
 window.logout = () => auth.signOut().then(() => location.reload());
