@@ -15,13 +15,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
-let currentMatchUser = null;
-
-// ================= DOM READY =================
-
-window.addEventListener("DOMContentLoaded", () => {
-  // niente createDaysUI (rimosso per evitare errori)
-});
 
 // ================= LOGIN =================
 
@@ -29,15 +22,15 @@ window.login = async function () {
 
   const name = document.getElementById("username").value;
   const phone = document.getElementById("phone").value;
-  const terms = document.getElementById("terms").checked;
-  const privacy = document.getElementById("privacy").checked;
+  const terms = document.getElementById("terms")?.checked;
+  const privacy = document.getElementById("privacy")?.checked;
 
   if (!name || !phone) {
     alert("Inserisci nome e telefono");
     return;
   }
 
-  if (!terms || !privacy) {
+  if (terms === false || privacy === false) {
     alert("Devi accettare termini e privacy");
     return;
   }
@@ -55,8 +48,6 @@ window.login = async function () {
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
 
-    listenMatches();
-
   } catch (err) {
     console.error(err);
     alert(err.message);
@@ -71,11 +62,15 @@ let selectedDays = {
   domenica: false
 };
 
-function toggleDay(day) {
+// FIX: funzione globale
+window.toggleDay = function(day) {
+
   selectedDays[day] = !selectedDays[day];
 
-  const btn = document.getElementById(`${day}-btn`);
+  const btn = document.querySelector(`[onclick="toggleDay('${day}')"]`);
   const select = document.getElementById(`${day}-slot`);
+
+  if (!btn || !select) return;
 
   if (selectedDays[day]) {
     btn.classList.add("active");
@@ -85,7 +80,9 @@ function toggleDay(day) {
     select.disabled = true;
     select.value = "";
   }
-}
+
+  console.log(day, "disabled:", select.disabled);
+};
 
 // ================= RACCOLTA DATI =================
 
@@ -107,90 +104,32 @@ function getAvailability() {
 
 // ================= SALVATAGGIO =================
 
-async function saveAvailability() {
+window.saveAvailability = async function () {
+
+  if (!currentUser) {
+    alert("Utente non autenticato");
+    return;
+  }
 
   const availability = getAvailability();
 
   try {
     await db.collection("users").doc(currentUser).set({
-      availability: availability,
+      availability,
       updatedAt: new Date()
     }, { merge: true });
 
     alert("Disponibilità salvata");
 
-    checkMatches(currentUser);
-
   } catch (error) {
     console.error(error);
     alert("Errore nel salvataggio");
   }
-}
+};
 
-// ================= MATCH =================
+// ================= UTILITY DEBUG =================
 
-async function checkMatches(myId) {
-
-  const myDoc = await db.collection("users").doc(myId).get();
-  const myData = myDoc.data();
-
-  if (!myData || !myData.availability) return;
-
-  const snapshot = await db.collection("users").get();
-
-  snapshot.forEach(doc => {
-
-    if (doc.id === myId) return;
-
-    const user = doc.data();
-
-    if (user.availability && compareAvailability(myData.availability, user.availability)) {
-      showMatch(user);
-    }
-
-  });
-}
-
-function compareAvailability(a, b) {
-  if (!a || !b) return false;
-
-  return (
-    (a.venerdi && b.venerdi && a.venerdi === b.venerdi) ||
-    (a.sabato && b.sabato && a.sabato === b.sabato) ||
-    (a.domenica && b.domenica && a.domenica === b.domenica)
-  );
-}
-
-// ================= MATCH UI =================
-
-function showMatch(user) {
-  const popup = document.getElementById("matchPopup");
-  const text = document.getElementById("matchText");
-
-  text.innerText = `Hai un match con ${user.name}`;
-
-  popup.classList.remove("hidden");
-
-  currentMatchUser = user;
-}
-
-function closeMatch() {
-  document.getElementById("matchPopup").classList.add("hidden");
-}
-
-function sendWhatsApp() {
-  if (!currentMatchUser) return;
-
-  const phone = currentMatchUser.phone;
-  const message = encodeURIComponent("Ciao! Match da Looply 👋");
-
-  window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
-}
-
-// ================= LISTENER MATCH =================
-
-function listenMatches() {
-  db.collection("users").onSnapshot(() => {
-    checkMatches(currentUser);
-  });
-}
+// utile per debug manuale da console
+window.debugState = function () {
+  console.log("selectedDays:", selectedDays);
+};
