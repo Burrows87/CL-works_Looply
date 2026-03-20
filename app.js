@@ -8,7 +8,6 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -16,96 +15,55 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// 2. GESTIONE LOGIN (OTTIMIZZATA PER MOBILE)
-document.addEventListener("DOMContentLoaded", () => {
-    const googleBtn = document.getElementById("googleBtn");
-    if (googleBtn) {
-        googleBtn.onclick = () => {
-            const provider = new firebase.auth.GoogleAuthProvider();
-            // Metodo Redirect: più stabile per Safari e browser in-app (WhatsApp/Instagram)
-            auth.signInWithRedirect(provider);
-        };
-    }
-});
-
-// Gestisce il ritorno dal redirect di Google
-auth.getRedirectResult().then((result) => {
-    if (result.user) console.log("Login completato con successo!");
-}).catch((error) => {
-    if (error.code !== 'auth/no-auth-event') {
-        console.error("Errore nel login:", error.message);
-    }
-});
-
-// 3. MONITORAGGIO STATO UTENTE
-auth.onAuthStateChanged(async (user) => {
-    const formLogin = document.getElementById("formLogin");
-    const appDiv = document.getElementById("app");
-    
-    if (user) {
-        currentUser = user.uid;
-        formLogin.style.display = "none";
-        appDiv.style.display = "block";
-        
-        // Aggiorna UI con dati utente
-        document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "!");
-        document.getElementById("userName").innerText = user.displayName || "Utente";
-        document.getElementById("userEmail").innerText = user.email;
-        
-        if (user.photoURL) {
-            const img = document.getElementById("userPhoto");
-            img.src = user.photoURL;
-            img.style.display = "block";
-        }
-        // Carica dati salvati (disponibilità e tema)
-        await caricaDati();
-    } else {
-        currentUser = null;
-        formLogin.style.display = "block";
-        appDiv.style.display = "none";
-        document.getElementById("settingsPage").style.display = "none";
-    }
-});
-
-// 4. CAMBIO TEMA (COLORI)
+// 2. FUNZIONE CAMBIO COLORE (IL CUORE DEL PROBLEMA)
 window.changeTheme = async (color) => {
-    console.log("Applicazione tema:", color);
-    // Cambia la variabile CSS in tempo reale
+    console.log("Cambio colore richiesto:", color);
+    
+    // Cambia il colore a tutto il documento istantaneamente
     document.documentElement.style.setProperty('--primary-color', color);
     
-    // Salva la scelta nel database
+    // Salva nel database così al prossimo accesso è già pronto
     if (currentUser) {
         try {
             await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
-        } catch (e) {
-            console.error("Errore salvataggio tema:", e);
-        }
+        } catch (e) { console.error("Errore salvataggio tema:", e); }
     }
 };
 
-// 5. NAVIGAZIONE INTERNA
-window.openSettings = () => {
-    document.getElementById("app").style.display = "none";
-    document.getElementById("settingsPage").style.display = "block";
-};
+// 3. LOGIN (REDIRECT PER MOBILE)
+document.addEventListener("DOMContentLoaded", () => {
+    const googleBtn = document.getElementById("googleBtn");
+    if (googleBtn) {
+        googleBtn.onclick = () => auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
+    }
+});
 
-window.closeSettings = () => {
-    document.getElementById("settingsPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
-};
+auth.onAuthStateChanged(async (user) => {
+    if (user) {
+        currentUser = user.uid;
+        document.getElementById("formLogin").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "!");
+        document.getElementById("userName").innerText = user.displayName || "Utente";
+        document.getElementById("userEmail").innerText = user.email;
+        if (user.photoURL) document.getElementById("userPhoto").src = user.photoURL;
+        await caricaDati();
+    } else {
+        currentUser = null;
+        document.getElementById("formLogin").style.display = "block";
+        document.getElementById("app").style.display = "none";
+    }
+});
 
-// 6. LOGICA SELEZIONE GIORNI
+// 4. LOGICA GIORNI
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
         const slots = document.getElementById(day + "-slots");
-        
         selectedDays[day] = !selectedDays[day];
-        
         if (selectedDays[day]) {
             btn.classList.add("active");
             slots.classList.remove("disabled");
-            // Seleziona 'Sempre' di default all'attivazione
             slots.querySelector('input[value="any"]').checked = true;
         } else {
             btn.classList.remove("active");
@@ -115,73 +73,59 @@ document.querySelectorAll(".day-btn").forEach(btn => {
     };
 });
 
-// 7. SALVATAGGIO DISPONIBILITÀ
+// 5. SALVATAGGIO DISPONIBILITÀ
 window.saveAvailability = async () => {
     const btn = document.getElementById("btnSave");
     btn.innerText = "Salvataggio...";
-    
     const av = {
-        venerdi: getCheckedValues("venerdi"),
-        sabato: getCheckedValues("sabato"),
-        domenica: getCheckedValues("domenica")
+        venerdi: getCheckedVals("venerdi"),
+        sabato: getCheckedVals("sabato"),
+        domenica: getCheckedVals("domenica")
     };
-
     try {
         await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
-        btn.innerText = "Salva disponibilità";
-        alert("✅ Disponibilità salvata correttamente!");
-    } catch (e) {
-        alert("Errore durante il salvataggio.");
-        btn.innerText = "Salva disponibilità";
-    }
+        alert("✅ Salvato!");
+    } catch (e) { alert("Errore"); }
+    btn.innerText = "Salva disponibilità";
 };
 
-function getCheckedValues(day) {
+function getCheckedVals(day) {
     if (!selectedDays[day]) return null;
-    const container = document.getElementById(day + "-slots");
-    const values = Array.from(container.querySelectorAll("input:checked")).map(c => c.value);
-    return values.length > 0 ? values : null;
+    return Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
 }
 
-// 8. CARICAMENTO DATI DA FIREBASE
+// 6. CARICAMENTO DATI (TEMA E GIORNI)
 async function caricaDati() {
-    try {
-        const doc = await db.collection("users").doc(currentUser).get();
-        if (doc.exists) {
-            const data = doc.data();
-            
-            // 1. Applica il tema salvato
-            if (data.themeColor) {
-                document.documentElement.style.setProperty('--primary-color', data.themeColor);
-            }
-
-            // 2. Ripristina la disponibilità
-            if (data.availability) {
-                const av = data.availability;
-                for (const d in av) {
-                    if (av[d]) {
-                        const btn = document.querySelector(`[data-day="${d}"]`);
-                        const slots = document.getElementById(d + "-slots");
-                        selectedDays[d] = true;
-                        if (btn) btn.classList.add("active");
-                        if (slots) {
-                            slots.classList.remove("disabled");
-                            slots.querySelectorAll("input").forEach(cb => {
-                                if (av[d].includes(cb.value)) cb.checked = true;
-                            });
-                        }
+    const doc = await db.collection("users").doc(currentUser).get();
+    if (doc.exists) {
+        const data = doc.data();
+        if (data.themeColor) document.documentElement.style.setProperty('--primary-color', data.themeColor);
+        if (data.availability) {
+            for (const d in data.availability) {
+                if (data.availability[d]) {
+                    selectedDays[d] = true;
+                    const btn = document.querySelector(`[data-day="${d}"]`);
+                    const slots = document.getElementById(d + "-slots");
+                    if(btn) btn.classList.add("active");
+                    if(slots) {
+                        slots.classList.remove("disabled");
+                        slots.querySelectorAll("input").forEach(cb => {
+                            if (data.availability[d].includes(cb.value)) cb.checked = true;
+                        });
                     }
                 }
             }
         }
-    } catch (e) {
-        console.error("Errore caricamento dati:", e);
     }
 }
 
-// 9. LOGOUT
-window.logout = () => {
-    auth.signOut().then(() => {
-        location.reload();
-    });
+// NAVIGAZIONE
+window.openSettings = () => {
+    document.getElementById("app").style.display = "none";
+    document.getElementById("settingsPage").style.display = "block";
 };
+window.closeSettings = () => {
+    document.getElementById("settingsPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+};
+window.logout = () => auth.signOut().then(() => location.reload());
