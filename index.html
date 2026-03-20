@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <title>Looply</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
@@ -74,12 +75,9 @@
                     </div>
                 </div>
 
-                <div style="margin-top: 20px; display: flex; flex-direction: column; gap: 10px;">
+                <div style="margin-top: 20px;">
                     <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i> Salva disponibilità
-                    </button>
-                    <button onclick="window.shareWhatsApp()" class="btn-whatsapp">
-                        <i class="fa-brands fa-whatsapp"></i> Invia su WhatsApp
                     </button>
                 </div>
             </div>
@@ -93,7 +91,7 @@
             <div class="card">
                 <div style="text-align: center; margin-bottom: 25px;">
                     <img id="userPhoto" src="" style="width: 80px; height: 80px; border-radius: 50%; display: none; margin: 0 auto 10px; border: 3px solid var(--primary-color); object-fit: cover;">
-                    <h3 id="userName" style="margin-bottom: 2px;">Utente</h3>
+                    <h3 id="userName">Utente</h3>
                     <p id="userEmail" style="font-size: 12px; color: gray;"></p>
                 </div>
 
@@ -119,10 +117,12 @@
                 <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
                 <h2 style="margin-bottom: 15px;">Match Trovato!</h2>
                 <p id="matchText" style="margin-bottom: 20px; line-height: 1.5;"></p>
-                <button id="matchWA" class="btn-whatsapp" style="margin-bottom:10px;">
-                    <i class="fa-brands fa-whatsapp"></i> Scrivi subito!
+                
+                <button id="matchWA" class="btn-whatsapp">
+                    <i class="fa-brands fa-whatsapp"></i> Scrivi su WhatsApp
                 </button>
-                <button onclick="window.closeMatch()" style="background:none; border:none; color:gray; cursor:pointer; font-size:14px; margin-top: 10px;">Chiudi</button>
+                
+                <button onclick="window.closeMatch()" style="background:none; border:none; color:gray; cursor:pointer; font-size:14px; margin-top: 20px;">Più tardi</button>
             </div>
         </div>
 
