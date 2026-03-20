@@ -24,39 +24,18 @@ let selectedDays = {
   domenica: false
 };
 
-// ================= TOGGLE DAY =================
-
-window.toggleDay = function(day) {
-
-  const btn = document.querySelector(`[data-day="${day}"]`);
-  const slots = document.getElementById(`${day}-slots`);
-
-  selectedDays[day] = !selectedDays[day];
-
-  if (selectedDays[day]) {
-    btn.classList.add("active");
-    slots.classList.remove("disabled");
-  } else {
-    btn.classList.remove("active");
-    slots.classList.add("disabled");
-
-    // reset checkbox
-    slots.querySelectorAll("input").forEach(cb => cb.checked = false);
-  }
-};
-
 // ================= DOM READY =================
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // Prefill "Ricordami"
+  // Ricordami
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
 
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // Event listener bottoni giorni
+  // Click bottoni giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -104,6 +83,36 @@ window.login = async function () {
   } catch (err) {
     console.error(err);
     alert(err.message);
+  }
+};
+
+// ================= TOGGLE DAY =================
+
+window.toggleDay = function(day) {
+
+  const btn = document.querySelector(`[data-day="${day}"]`);
+  const slots = document.getElementById(`${day}-slots`);
+
+  selectedDays[day] = !selectedDays[day];
+
+  if (selectedDays[day]) {
+    btn.classList.add("active");
+    slots.classList.remove("disabled");
+
+    // abilita checkbox
+    slots.querySelectorAll("input").forEach(cb => {
+      cb.disabled = false;
+    });
+
+  } else {
+    btn.classList.remove("active");
+    slots.classList.add("disabled");
+
+    // reset + disabilita checkbox
+    slots.querySelectorAll("input").forEach(cb => {
+      cb.checked = false;
+      cb.disabled = true;
+    });
   }
 };
 
