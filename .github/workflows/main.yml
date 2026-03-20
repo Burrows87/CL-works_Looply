@@ -10,12 +10,14 @@ jobs:
     runs-on: ubuntu-latest
 
     env:
-  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
 
     steps:
-      - uses: actions/checkout@v3
+      - name: Checkout repo
+        uses: actions/checkout@v3
 
-      - uses: w9jds/firebase-action@master
+      - name: Deploy to Firebase
+        uses: w9jds/firebase-action@master
         with:
           args: deploy --only hosting
         env:
