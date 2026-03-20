@@ -1,4 +1,4 @@
-// ================= FIREBASE =================
+// ================= FIREBASE INIT =================
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
@@ -24,23 +24,30 @@ window.login = async function () {
   const phone = document.getElementById("phone").value;
 
   if (!name || !phone) {
-    alert("Inserisci dati");
+    alert("Inserisci nome e telefono");
     return;
   }
 
-  const result = await auth.signInAnonymously();
-  currentUser = result.user.uid;
+  try {
+    const result = await auth.signInAnonymously();
+    currentUser = result.user.uid;
 
-  await db.collection("users").doc(currentUser).set({
-    name,
-    phone
-  });
+    await db.collection("users").doc(currentUser).set({
+      name,
+      phone,
+      createdAt: new Date()
+    });
 
-  document.getElementById("formLogin").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
+    document.getElementById("formLogin").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
 };
 
-// ================= GIORNI =================
+// ================= STATE =================
 
 let selectedDays = {
   venerdi: false,
@@ -48,26 +55,33 @@ let selectedDays = {
   domenica: false
 };
 
-// EVENT LISTENER (NO onclick inline)
-document.querySelectorAll(".day-btn").forEach(btn => {
-  btn.addEventListener("click", function () {
+// ================= DOM READY =================
 
-    const day = this.getAttribute("data-day");
-    const select = document.getElementById(`${day}-slot`);
+window.addEventListener("DOMContentLoaded", () => {
 
-    selectedDays[day] = !selectedDays[day];
+  const buttons = document.querySelectorAll(".day-btn");
 
-    if (selectedDays[day]) {
-      this.classList.add("active");
-      select.disabled = false;
-    } else {
-      this.classList.remove("active");
-      select.disabled = true;
-      select.value = "";
-    }
+  buttons.forEach(btn => {
+    btn.addEventListener("click", () => {
 
-    console.log("Toggle:", day, selectedDays[day]);
+      const day = btn.getAttribute("data-day");
+      const select = document.getElementById(`${day}-slot`);
+
+      selectedDays[day] = !selectedDays[day];
+
+      if (selectedDays[day]) {
+        btn.classList.add("active");
+        select.disabled = false;
+      } else {
+        btn.classList.remove("active");
+        select.disabled = true;
+        select.value = "";
+      }
+
+      console.log("Toggle:", day, selectedDays[day], "disabled:", select.disabled);
+    });
   });
+
 });
 
 // ================= AVAILABILITY =================
@@ -99,9 +113,15 @@ window.saveAvailability = async function () {
 
   const availability = getAvailability();
 
-  await db.collection("users").doc(currentUser).set({
-    availability
-  }, { merge: true });
+  try {
+    await db.collection("users").doc(currentUser).set({
+      availability
+    }, { merge: true });
 
-  alert("Salvato");
+    alert("Disponibilità salvata");
+
+  } catch (error) {
+    console.error(error);
+    alert("Errore nel salvataggio");
+  }
 };
