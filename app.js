@@ -9,7 +9,7 @@ const firebaseConfig = {
   storageBucket: "looply-app-21eb9.firebasestorage.app",
   messagingSenderId: "484354825970",
   appId: "1:484354825970:web:79bc652c6b39fb57d27a6b",
-  looply-app-21eb9
+  
 };
 
 firebase.initializeApp(firebaseConfig);
