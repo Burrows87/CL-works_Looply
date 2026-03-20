@@ -1,4 +1,5 @@
-// 1. CONFIGURAZIONE FIREBASE
+console.log("App.js caricato correttamente!");
+
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -8,7 +9,6 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -16,51 +16,42 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// 2. NAVIGAZIONE (GLOBALIZZATA)
-window.openSettings = function() {
-    console.log("Apertura impostazioni...");
+// NAVIGAZIONE
+window.openSettings = () => {
     document.getElementById("app").style.display = "none";
     document.getElementById("settingsPage").style.display = "block";
 };
-
-window.closeSettings = function() {
-    console.log("Ritorno all'app...");
+window.closeSettings = () => {
     document.getElementById("settingsPage").style.display = "none";
     document.getElementById("app").style.display = "block";
 };
 
-// 3. GESTIONE ACCESSO (AUTH)
+// LOGIN GOOGLE (METODO DIRETTO)
 document.addEventListener("DOMContentLoaded", () => {
-    // Collega il pulsante Google in modo sicuro
-    const googleBtn = document.getElementById("googleBtn");
-    if (googleBtn) {
-        googleBtn.onclick = () => {
-            console.log("Avvio Login Google...");
+    const btn = document.getElementById("googleBtn");
+    if (btn) {
+        btn.onclick = () => {
+            console.log("Click su Login Google rilevato!");
             const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithPopup(provider).catch(e => {
-                console.error("Errore login:", e);
-                alert("Errore durante l'accesso: " + e.message);
-            });
+            auth.signInWithPopup(provider)
+                .then((result) => console.log("Successo:", result.user))
+                .catch((error) => {
+                    console.error("Errore Firebase:", error.code);
+                    alert("Errore Login: " + error.message);
+                });
         };
     }
 });
 
+// STATO AUTH
 auth.onAuthStateChanged(async (user) => {
-    const formLogin = document.getElementById("formLogin");
-    const appDiv = document.getElementById("app");
-    const settingsDiv = document.getElementById("settingsPage");
-
     if (user) {
         currentUser = user.uid;
-        formLogin.style.display = "none";
-        appDiv.style.display = "block";
-        
-        // Carica dati utente nella UI
-        const name = user.displayName ? user.displayName.split(' ')[0] : "Utente";
-        document.getElementById("welcomeTitle").innerText = "Ciao " + name + "!";
+        document.getElementById("formLogin").style.display = "none";
+        document.getElementById("app").style.display = "block";
+        document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "Utente");
         document.getElementById("userName").innerText = user.displayName || "Utente";
         document.getElementById("userEmail").innerText = user.email;
-        
         if (user.photoURL) {
             const img = document.getElementById("userPhoto");
             img.src = user.photoURL;
@@ -69,97 +60,67 @@ auth.onAuthStateChanged(async (user) => {
         await caricaDati();
     } else {
         currentUser = null;
-        formLogin.style.display = "block";
-        appDiv.style.display = "none";
-        settingsDiv.style.display = "none";
+        document.getElementById("formLogin").style.display = "block";
+        document.getElementById("app").style.display = "none";
+        document.getElementById("settingsPage").style.display = "none";
     }
 });
 
-// 4. LOGICA GIORNI
+// LOGICA GIORNI
 document.querySelectorAll(".day-btn").forEach(btn => {
-    btn.addEventListener("click", () => toggleDay(btn.dataset.day, true));
-});
-
-function toggleDay(day, isManual = false) {
-    const btn = document.querySelector(`[data-day="${day}"]`);
-    const slots = document.getElementById(day + "-slots");
-    if(!btn || !slots) return;
-
-    if (isManual) selectedDays[day] = !selectedDays[day];
-    else selectedDays[day] = true;
-
-    if (selectedDays[day]) {
-        btn.classList.add("active");
-        slots.classList.remove("disabled");
-        if (isManual) {
-            const alwaysCb = slots.querySelector('input[value="any"]');
-            if(alwaysCb) alwaysCb.checked = true;
-            slots.querySelectorAll('input:not([value="any"])').forEach(i => i.checked = false);
-        }
-    } else {
-        btn.classList.remove("active");
-        slots.classList.add("disabled");
-        slots.querySelectorAll("input").forEach(i => i.checked = false);
-    }
-}
-
-// Gestione checkbox intelligenti
-document.querySelectorAll('.slots').forEach(container => {
-    container.addEventListener('change', (e) => {
-        const clicked = e.target;
-        const alwaysCb = container.querySelector('input[value="any"]');
-        const fasceCbs = container.querySelectorAll('input:not([value="any"])');
-        if (clicked.value === "any") {
-            if (clicked.checked) fasceCbs.forEach(i => i.checked = false);
+    btn.onclick = () => {
+        const day = btn.dataset.day;
+        const slots = document.getElementById(day + "-slots");
+        selectedDays[day] = !selectedDays[day];
+        if (selectedDays[day]) {
+            btn.classList.add("active");
+            slots.classList.remove("disabled");
+            slots.querySelector('input[value="any"]').checked = true;
         } else {
-            if (clicked.checked) alwaysCb.checked = false;
+            btn.classList.remove("active");
+            slots.classList.add("disabled");
+            slots.querySelectorAll("input").forEach(i => i.checked = false);
         }
-    });
+    };
 });
 
-// 5. SALVATAGGIO E CARICAMENTO
+// SALVATAGGIO
 window.saveAvailability = async () => {
-    const btn = document.getElementById("btnSave");
     const av = {
-        venerdi: getCheckedValues("venerdi"),
-        sabato: getCheckedValues("sabato"),
-        domenica: getCheckedValues("domenica")
+        venerdi: getValues("venerdi"),
+        sabato: getValues("sabato"),
+        domenica: getValues("domenica")
     };
     try {
-        btn.innerText = "Salvataggio...";
         await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
-        btn.innerText = "Salva disponibilità";
-        alert("✅ Disponibilità salvata correttamente!");
-    } catch (e) { 
-        alert("Errore nel salvataggio dei dati."); 
-        btn.innerText = "Salva disponibilità"; 
-    }
+        alert("✅ Salvato!");
+    } catch (e) { alert("Errore"); }
 };
 
-function getCheckedValues(day) {
+function getValues(day) {
     if (!selectedDays[day]) return null;
-    const container = document.getElementById(day + "-slots");
-    const values = Array.from(container.querySelectorAll("input:checked")).map(c => c.value);
-    return values.length > 0 ? values : null;
+    const vals = Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
+    return vals.length > 0 ? vals : null;
 }
 
 async function caricaDati() {
-    try {
-        const doc = await db.collection("users").doc(currentUser).get();
-        if (doc.exists && doc.data().availability) {
-            const av = doc.data().availability;
-            for (const d in av) {
-                if (av[d]) {
-                    toggleDay(d, false);
-                    const container = document.getElementById(d + "-slots");
-                    container.querySelectorAll("input").forEach(cb => {
-                        if (av[d].includes(cb.value)) cb.checked = true;
-                    });
-                }
+    const doc = await db.collection("users").doc(currentUser).get();
+    if (doc.exists && doc.data().availability) {
+        const av = doc.data().availability;
+        for (const d in av) {
+            if (av[d]) {
+                const btn = document.querySelector(`[data-day="${d}"]`);
+                const slots = document.getElementById(d + "-slots");
+                selectedDays[d] = true;
+                btn.classList.add("active");
+                slots.classList.remove("disabled");
+                slots.querySelectorAll("input").forEach(cb => {
+                    if (av[d].includes(cb.value)) cb.checked = true;
+                });
             }
         }
-    } catch (e) { console.error("Errore caricamento dati:", e); }
+    }
 }
 
 window.logout = () => auth.signOut().then(() => location.reload());
-window.loginEmail = () => alert("Al momento è attivo solo l'accesso con Google!");
+window.loginEmail = () => alert("Usa Google!");
