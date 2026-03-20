@@ -1,4 +1,5 @@
 window.onload = function () {
+}
 
 // ================= FIREBASE INIT =================
 
