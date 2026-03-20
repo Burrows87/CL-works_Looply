@@ -5,9 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
 <title>Looply</title>
-  
-<link rel="stylesheet" href="style.css">
 
+<link rel="stylesheet" href="style.css">
 
 <!-- Firebase compat -->
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
@@ -19,8 +18,8 @@
 <body>
 
 <!-- LOGIN -->
-  <div id="formLogin" class="container">
-  
+<div id="formLogin" class="container">
+
   <div class="header">
     <h1>Looply</h1>
     <p>Trova amici quando siete liberi</p>
@@ -30,18 +29,21 @@
     <input id="username" placeholder="Nome">
     <input id="phone" placeholder="Telefono (es. 393...)">
 
-    <label><input type="checkbox" id="terms"> Accetto i termini</label>
-    <label><input type="checkbox" id="privacy"> Accetto la privacy</label>
+    <label>
+      <input type="checkbox" id="terms"> Accetto i termini
+    </label>
 
-    <button id="enterBtn" onclick="login()">Entra</button>
-    
+    <label>
+      <input type="checkbox" id="privacy"> Accetto la privacy
+    </label>
+
+    <button onclick="login()">Entra</button>
   </div>
 
-  </div>
-
+</div>
 
 <!-- APP -->
-  <div id="app" class="hidden container">
+<div id="app" class="hidden container">
 
   <div class="header">
     <h1>Disponibilità</h1>
@@ -49,53 +51,52 @@
   </div>
 
   <div class="card">
-    <div id="daysContainer"></div>
 
     <div class="days-row">
 
-  <!-- Venerdì -->
-  <div class="day-item">
-    <button class="day-btn" onclick="toggleDay('venerdi')">Venerdì</button>
+      <!-- VENERDÌ -->
+      <div class="day-item">
+        <button class="day-btn" data-day="venerdi">Venerdì</button>
 
-    <select id="venerdi-slot" class="slot-select" disabled>
-      <option value="">Seleziona fascia (opzionale)</option>
-      <option value="mattina">Mattina</option>
-      <option value="pomeriggio">Pomeriggio</option>
-      <option value="sera">Sera</option>
-    </select>
-  </div>
+        <select id="venerdi-slot" class="slot-select" disabled>
+          <option value="">Fascia (opzionale)</option>
+          <option value="mattina">Mattina</option>
+          <option value="pomeriggio">Pomeriggio</option>
+          <option value="sera">Sera</option>
+        </select>
+      </div>
 
-  <!-- Sabato -->
-  <div class="day-item">
-    <button class="day-btn" onclick="toggleDay('sabato')">Sabato</button>
+      <!-- SABATO -->
+      <div class="day-item">
+        <button class="day-btn" data-day="sabato">Sabato</button>
 
-    <select id="sabato-slot" class="slot-select" disabled>
-      <option value="">Seleziona fascia (opzionale)</option>
-      <option value="mattina">Mattina</option>
-      <option value="pomeriggio">Pomeriggio</option>
-      <option value="sera">Sera</option>
-    </select>
-  </div>
+        <select id="sabato-slot" class="slot-select" disabled>
+          <option value="">Fascia (opzionale)</option>
+          <option value="mattina">Mattina</option>
+          <option value="pomeriggio">Pomeriggio</option>
+          <option value="sera">Sera</option>
+        </select>
+      </div>
 
-  <!-- Domenica -->
-  <div class="day-item">
-    <button class="day-btn" onclick="toggleDay('domenica')">Domenica</button>
+      <!-- DOMENICA -->
+      <div class="day-item">
+        <button class="day-btn" data-day="domenica">Domenica</button>
 
-    <select id="domenica-slot" class="slot-select" disabled>
-      <option value="">Seleziona fascia (opzionale)</option>
-      <option value="mattina">Mattina</option>
-      <option value="pomeriggio">Pomeriggio</option>
-      <option value="sera">Sera</option>
-    </select>
-  </div>
+        <select id="domenica-slot" class="slot-select" disabled>
+          <option value="">Fascia (opzionale)</option>
+          <option value="mattina">Mattina</option>
+          <option value="pomeriggio">Pomeriggio</option>
+          <option value="sera">Sera</option>
+        </select>
+      </div>
 
     </div>
 
     <button onclick="saveAvailability()">Salva disponibilità</button>
-  </div>
 
   </div>
 
+</div>
 
 <!-- MATCH POPUP -->
 <div id="matchPopup" class="hidden">
