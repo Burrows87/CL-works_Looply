@@ -1,4 +1,3 @@
-// 1. CONFIGURAZIONE
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU", 
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -12,101 +11,68 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 2. LOGIN (Usa Popup invece di Redirect per interrompere il loop sui domini)
+// USA IL POPUP: Interrompe il loop di ricaricamento della pagina
 window.startLogin = function() {
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithPopup(provider)
         .then((result) => {
-            console.log("Login successo:", result.user.displayName);
+            console.log("Login riuscito:", result.user.displayName);
         })
         .catch((error) => {
-            console.error("Errore login:", error.code);
-            alert("Errore Login: " + error.message);
+            console.error("Errore Login:", error);
+            alert("Errore: " + error.message);
         });
 };
 
-// 3. GESTIONE STATO (Logica Anti-Loop)
 auth.onAuthStateChanged(async (user) => {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
 
     if (user) {
-        console.log("Utente riconosciuto:", user.uid);
-        
-        // MOSTRA L'APP IMMEDIATAMENTE
-        if (loginDiv) loginDiv.style.display = "none";
-        if (appDiv) appDiv.style.display = "block";
+        // MOSTRA SUBITO L'APP: Questo blocca visivamente il loop
+        loginDiv.style.display = "none";
+        appDiv.style.display = "block";
 
         try {
             const doc = await db.collection("users").doc(user.uid).get();
-            
             if (doc.exists && doc.data().displayName) {
                 document.getElementById("welcomeTitle").innerText = `Ciao ${doc.data().displayName} 🤙🏻`;
-                if (doc.data().availability) caricaDisponibilita(doc.data().availability);
+                // Carica qui le disponibilità se presenti
             } else {
                 document.getElementById("onboardingModal").style.display = "flex";
             }
         } catch (e) {
-            console.error("Errore Database:", e);
-            // Se arrivi qui, Firestore è bloccato dalle regole
-            alert("Firestore Error: Controlla le regole del database!");
+            console.error("Firestore error:", e);
         }
     } else {
-        // Nessun utente: mostra solo login
-        if (loginDiv) loginDiv.style.display = "flex";
-        if (appDiv) appDiv.style.display = "none";
+        loginDiv.style.display = "flex";
+        appDiv.style.display = "none";
     }
 });
 
-// 4. SALVATAGGIO
-window.saveAvailability = async () => {
-    const btn = document.getElementById("labelSaveBtn");
-    btn.innerText = "Salvataggio...";
-    
-    const av = {
-        venerdi: Array.from(document.querySelectorAll("#venerdi-slots input:checked")).map(c => c.value),
-        sabato: Array.from(document.querySelectorAll("#sabato-slots input:checked")).map(c => c.value),
-        domenica: Array.from(document.querySelectorAll("#domenica-slots input:checked")).map(c => c.value)
-    };
-
-    try {
-        await db.collection("users").doc(auth.currentUser.uid).set({ availability: av }, { merge: true });
-        btn.innerText = "✅ Salvato!";
-        setTimeout(() => btn.innerText = "Salva disponibilità", 2000);
-    } catch (e) {
-        alert("Errore permessi database!");
-        btn.innerText = "Salva disponibilità";
-    }
-};
-
-// 5. UTILITY
-function caricaDisponibilita(av) {
-    Object.keys(av).forEach(giorno => {
-        const slots = document.getElementById(giorno + "-slots");
-        if (av[giorno].length > 0) {
-            document.querySelector(`[data-day="${giorno}"]`).classList.add("active");
-            slots.classList.remove("disabled");
-            av[giorno].forEach(val => {
-                const cb = slots.querySelector(`input[value="${val}"]`);
-                if (cb) cb.checked = true;
-            });
-        }
-    });
-}
-
-// Navigazione e Onboarding
+// Funzione Onboarding
 window.saveOnboarding = async () => {
-    const n = document.getElementById("inputNome").value;
-    await db.collection("users").doc(auth.currentUser.uid).set({ displayName: n, lang: 'it' }, { merge: true });
+    const nome = document.getElementById("inputNome").value.trim();
+    if (nome.length < 2) return alert("Inserisci un nome!");
+    await db.collection("users").doc(auth.currentUser.uid).set({
+        displayName: nome, lang: 'it'
+    }, { merge: true });
     document.getElementById("onboardingModal").style.display = "none";
-    document.getElementById("welcomeTitle").innerText = `Ciao ${n} 🤙🏻`;
+    document.getElementById("welcomeTitle").innerText = `Ciao ${nome} 🤙🏻`;
 };
 
-document.querySelectorAll(".day-btn").forEach(b => {
-    b.onclick = () => {
-        b.classList.toggle("active");
-        document.getElementById(b.dataset.day + "-slots").classList.toggle("disabled");
-    };
+// Navigazione
+window.logout = () => auth.signOut().then(() => {
+    // Invece di reload, puliamo l'interfaccia manualmente
+    document.getElementById("app").style.display = "none";
+    document.getElementById("formLogin").style.display = "flex";
 });
 
-window.logout = () => auth.signOut().then(() => { location.href = location.pathname; });
+// Gestione click pulsanti giorni
+document.querySelectorAll(".day-btn").forEach(btn => {
+    btn.onclick = () => {
+        const d = btn.dataset.day;
+        btn.classList.toggle("active");
+        document.getElementById(d + "-slots").classList.toggle("disabled");
+    };
+});
