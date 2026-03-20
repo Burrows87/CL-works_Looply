@@ -73,7 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   });
 
-  // 🔥 Controllo form per abilitare bottone login
+  // Validazione form login
   setupFormValidation();
 
 });
@@ -82,7 +82,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
 function setupFormValidation() {
 
-  const btn = document.querySelector("#formLogin button");
+  const btn = document.getElementById("enterBtn");
 
   function checkForm() {
     const name = document.getElementById("username").value.trim();
@@ -111,6 +111,7 @@ window.login = async function () {
   const terms = document.getElementById("terms").checked;
   const privacy = document.getElementById("privacy").checked;
 
+  // 🔴 BLOCCO REALE
   if (!name || !phone) {
     alert("Inserisci nome e telefono");
     return;
@@ -128,7 +129,9 @@ window.login = async function () {
     await db.collection("users").doc(currentUser).set({
       name,
       phone,
-      createdAt: new Date()
+      createdAt: new Date(),
+      termsAccepted: terms,
+      privacyAccepted: privacy
     });
 
     if (remember) {
