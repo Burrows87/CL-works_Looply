@@ -132,6 +132,7 @@ days.forEach(day => {
 });
 
 // ================= SAVE =================
+
 window.saveAvailability = async function () {
 
   if (!currentUser) {
@@ -146,7 +147,6 @@ window.saveAvailability = async function () {
     });
 
     alert("Disponibilità salvata!");
-
     checkMatches();
 
   } catch (error) {
@@ -154,6 +154,7 @@ window.saveAvailability = async function () {
     alert("Errore salvataggio");
   }
 }
+  
 
 // ================= MATCH =================
 
@@ -210,7 +211,8 @@ async function showMatch(day, slots, userId) {
   document.getElementById("matchPopup").classList.remove("hidden");
 }
 
-// ================= WHATSAPP =================
+  // ================= WHATSAPP =================
+
 window.sendWhatsApp = async function () {
 
   const userDoc = await db.collection("users").doc(currentMatchUser).get();
