@@ -16,17 +16,47 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
-// ================= PREFILL "RICORDAMI" =================
+// ================= STATE =================
+
+let selectedDays = {
+  venerdi: false,
+  sabato: false,
+  domenica: false
+};
+
+// ================= TOGGLE DAY =================
+
+window.toggleDay = function(day) {
+
+  const btn = document.querySelector(`[data-day="${day}"]`);
+  const slots = document.getElementById(`${day}-slots`);
+
+  selectedDays[day] = !selectedDays[day];
+
+  if (selectedDays[day]) {
+    btn.classList.add("active");
+    slots.classList.remove("disabled");
+  } else {
+    btn.classList.remove("active");
+    slots.classList.add("disabled");
+
+    // reset checkbox
+    slots.querySelectorAll("input").forEach(cb => cb.checked = false);
+  }
+};
+
+// ================= DOM READY =================
 
 window.addEventListener("DOMContentLoaded", () => {
 
+  // Prefill "Ricordami"
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
 
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // 🔴 COLLEGA I BOTTONI AI CLICK
+  // Event listener bottoni giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -77,37 +107,6 @@ window.login = async function () {
   }
 };
 
-// ================= STATE =================
-
-let selectedDays = {
-  venerdi: false,
-  sabato: false,
-  domenica: false
-};
-
-// ================= TOGGLE DAY =================
-
-window.toggleDay = function(day) {
-
-  const btn = document.querySelector(`[data-day="${day}"]`);
-  const slots = document.getElementById(`${day}-slots`);
-
-  selectedDays[day] = !selectedDays[day];
-
-  if (selectedDays[day]) {
-    btn.classList.add("active");
-    slots.classList.remove("disabled");
-  } else {
-    btn.classList.remove("active");
-    slots.classList.add("disabled");
-
-    // reset checkbox
-    slots.querySelectorAll("input").forEach(cb => cb.checked = false);
-  }
-
-  console.log("Toggle:", day, selectedDays[day]);
-};
-
 // ================= GET AVAILABILITY =================
 
 function getAvailability() {
@@ -117,6 +116,7 @@ function getAvailability() {
     if (!selectedDays[day]) return null;
 
     const container = document.getElementById(`${day}-slots`);
+
     const checked = Array.from(container.querySelectorAll("input:checked"))
       .map(cb => cb.value);
 
