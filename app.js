@@ -16,12 +16,25 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
+// ================= PREFILL "RICORDAMI" =================
+
+window.addEventListener("DOMContentLoaded", () => {
+
+  const savedName = localStorage.getItem("looply_name");
+  const savedPhone = localStorage.getItem("looply_phone");
+
+  if (savedName) document.getElementById("username").value = savedName;
+  if (savedPhone) document.getElementById("phone").value = savedPhone;
+
+});
+
 // ================= LOGIN =================
 
 window.login = async function () {
 
-  const name = document.getElementById("username").value;
-  const phone = document.getElementById("phone").value;
+  const name = document.getElementById("username").value.trim();
+  const phone = document.getElementById("phone").value.trim();
+  const remember = document.getElementById("rememberMe").checked;
 
   if (!name || !phone) {
     alert("Inserisci nome e telefono");
@@ -29,15 +42,27 @@ window.login = async function () {
   }
 
   try {
+    // Firebase anonymous auth
     const result = await auth.signInAnonymously();
     currentUser = result.user.uid;
 
+    // Save user data
     await db.collection("users").doc(currentUser).set({
       name,
       phone,
       createdAt: new Date()
     });
 
+    // Ricordami
+    if (remember) {
+      localStorage.setItem("looply_name", name);
+      localStorage.setItem("looply_phone", phone);
+    } else {
+      localStorage.removeItem("looply_name");
+      localStorage.removeItem("looply_phone");
+    }
+
+    // UI switch
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
 
@@ -55,49 +80,41 @@ let selectedDays = {
   domenica: false
 };
 
-// ================= DOM READY =================
+// ================= TOGGLE DAYS =================
 
-window.addEventListener("DOMContentLoaded", () => {
+window.toggleDay = function(day) {
 
-  const buttons = document.querySelectorAll(".day-btn");
+  const btn = document.querySelector(`[onclick="toggleDay('${day}')"]`);
+  const select = document.getElementById(`${day}-slot`);
 
-  buttons.forEach(btn => {
-    btn.addEventListener("click", () => {
+  selectedDays[day] = !selectedDays[day];
 
-      const day = btn.getAttribute("data-day");
-      const select = document.getElementById(`${day}-slot`);
+  if (selectedDays[day]) {
+    btn.classList.add("active");
+    select.disabled = false;
+  } else {
+    btn.classList.remove("active");
+    select.disabled = true;
+    select.value = "";
+  }
 
-      selectedDays[day] = !selectedDays[day];
+  console.log("Day:", day, selectedDays[day]);
+};
 
-      if (selectedDays[day]) {
-        btn.classList.add("active");
-        select.disabled = false;
-      } else {
-        btn.classList.remove("active");
-        select.disabled = true;
-        select.value = "";
-      }
-
-      console.log("Toggle:", day, selectedDays[day], "disabled:", select.disabled);
-    });
-  });
-
-});
-
-// ================= AVAILABILITY =================
+// ================= GET AVAILABILITY =================
 
 function getAvailability() {
   return {
     venerdi: selectedDays.venerdi
-      ? document.getElementById("venerdi-slot").value || "any"
+      ? (document.getElementById("venerdi-slot").value || "any")
       : null,
 
     sabato: selectedDays.sabato
-      ? document.getElementById("sabato-slot").value || "any"
+      ? (document.getElementById("sabato-slot").value || "any")
       : null,
 
     domenica: selectedDays.domenica
-      ? document.getElementById("domenica-slot").value || "any"
+      ? (document.getElementById("domenica-slot").value || "any")
       : null
   };
 }
