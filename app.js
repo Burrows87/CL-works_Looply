@@ -1,5 +1,5 @@
 window.addEventListener("DOMContentLoaded", function () {
-
+});
 
 // ================= FIREBASE INIT =================
 
