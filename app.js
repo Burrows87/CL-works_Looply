@@ -1,4 +1,4 @@
-// ================= FIREBASE INIT =================
+// ================= FIREBASE =================
 
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
@@ -22,36 +22,22 @@ window.login = async function () {
 
   const name = document.getElementById("username").value;
   const phone = document.getElementById("phone").value;
-  const terms = document.getElementById("terms")?.checked;
-  const privacy = document.getElementById("privacy")?.checked;
 
   if (!name || !phone) {
-    alert("Inserisci nome e telefono");
+    alert("Inserisci dati");
     return;
   }
 
-  if (terms === false || privacy === false) {
-    alert("Devi accettare termini e privacy");
-    return;
-  }
+  const result = await auth.signInAnonymously();
+  currentUser = result.user.uid;
 
-  try {
-    const result = await auth.signInAnonymously();
-    currentUser = result.user.uid;
+  await db.collection("users").doc(currentUser).set({
+    name,
+    phone
+  });
 
-    await db.collection("users").doc(currentUser).set({
-      name,
-      phone,
-      createdAt: new Date()
-    }, { merge: true });
-
-    document.getElementById("formLogin").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
+  document.getElementById("formLogin").classList.add("hidden");
+  document.getElementById("app").classList.remove("hidden");
 };
 
 // ================= GIORNI =================
@@ -62,29 +48,29 @@ let selectedDays = {
   domenica: false
 };
 
-// FIX: funzione globale
-window.toggleDay = function(day) {
+// EVENT LISTENER (NO onclick inline)
+document.querySelectorAll(".day-btn").forEach(btn => {
+  btn.addEventListener("click", function () {
 
-  selectedDays[day] = !selectedDays[day];
+    const day = this.getAttribute("data-day");
+    const select = document.getElementById(`${day}-slot`);
 
-  const btn = document.querySelector(`[onclick="toggleDay('${day}')"]`);
-  const select = document.getElementById(`${day}-slot`);
+    selectedDays[day] = !selectedDays[day];
 
-  if (!btn || !select) return;
+    if (selectedDays[day]) {
+      this.classList.add("active");
+      select.disabled = false;
+    } else {
+      this.classList.remove("active");
+      select.disabled = true;
+      select.value = "";
+    }
 
-  if (selectedDays[day]) {
-    btn.classList.add("active");
-    select.disabled = false;
-  } else {
-    btn.classList.remove("active");
-    select.disabled = true;
-    select.value = "";
-  }
+    console.log("Toggle:", day, selectedDays[day]);
+  });
+});
 
-  console.log(day, "disabled:", select.disabled);
-};
-
-// ================= RACCOLTA DATI =================
+// ================= AVAILABILITY =================
 
 function getAvailability() {
   return {
@@ -102,34 +88,20 @@ function getAvailability() {
   };
 }
 
-// ================= SALVATAGGIO =================
+// ================= SAVE =================
 
 window.saveAvailability = async function () {
 
   if (!currentUser) {
-    alert("Utente non autenticato");
+    alert("Utente non loggato");
     return;
   }
 
   const availability = getAvailability();
 
-  try {
-    await db.collection("users").doc(currentUser).set({
-      availability,
-      updatedAt: new Date()
-    }, { merge: true });
+  await db.collection("users").doc(currentUser).set({
+    availability
+  }, { merge: true });
 
-    alert("Disponibilità salvata");
-
-  } catch (error) {
-    console.error(error);
-    alert("Errore nel salvataggio");
-  }
-};
-
-// ================= UTILITY DEBUG =================
-
-// utile per debug manuale da console
-window.debugState = function () {
-  console.log("selectedDays:", selectedDays);
+  alert("Salvato");
 };
