@@ -116,6 +116,11 @@ label {
   gap: 8px;
 }
 
+.slot-select {
+  position: relative;
+  z-index: 2;
+}
+
 /* pulsante giorno */
 
 .day-btn {
