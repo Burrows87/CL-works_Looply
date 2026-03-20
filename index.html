@@ -4,252 +4,81 @@
   <meta charset="UTF-8">
   <title>Looply</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
   <style>
-    body { font-family: Arial; padding: 20px; }
-    .hidden { display: none; }
-    .active { background-color: #4CAF50; color: white; }
-    .disabled { opacity: 0.5; pointer-events: none; }
-    .day-btn { margin: 5px; padding: 10px; }
-    .slots { margin: 10px 0; }
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f4f9; }
+    .hidden { display: none !important; }
+    .active { background-color: #4CAF50 !important; color: white; border-color: #388E3C; }
+    .disabled { opacity: 0.4; pointer-events: none; }
+    .day-btn { margin: 5px; padding: 12px 20px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; transition: 0.3s; }
+    .slots { margin: 15px 0; padding: 15px; border: 1px solid #ddd; background: white; border-radius: 8px; }
+    input[type="email"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
+    button#googleBtn { width: 100%; padding: 12px; cursor: pointer; background: #4285F4; color: white; border: none; border-radius: 4px; font-weight: bold; }
+    .save-btn { width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
   </style>
 </head>
-
 <body>
 
-  <!-- ================= LOGIN ================= -->
   <div id="formLogin">
+    <div style="max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
+      <h2 style="text-align: center;">Looply Login</h2>
+      <input type="email" id="email" placeholder="Email">
+      <input type="password" id="password" placeholder="Password">
+      
+      <div style="font-size: 14px; margin-bottom: 15px;">
+        <label><input type="checkbox" id="terms"> Accetto i termini</label><br>
+        <label><input type="checkbox" id="privacy"> Accetto la privacy</label>
+      </div>
 
-    <h2>Looply Login</h2>
-
-    <input type="email" id="email" placeholder="Email"><br><br>
-    <input type="password" id="password" placeholder="Password"><br><br>
-
-    <input type="text" id="username" placeholder="Nome"><br><br>
-    <input type="text" id="phone" placeholder="Telefono"><br><br>
-
-    <label>
-      <input type="checkbox" id="terms"> Accetto i termini
-    </label><br>
-
-    <label>
-      <input type="checkbox" id="privacy"> Accetto la privacy
-    </label><br><br>
-
-    <button onclick="login()">Login / Registrati</button>
-
-    <hr>
-
-    <!-- LOGIN GOOGLE -->
-    <button id="googleBtn">Accedi con Google</button>
-
+      <button onclick="loginEmail()" style="width: 100%; padding: 10px; margin-bottom: 10px; cursor: pointer;">Accedi / Registrati</button>
+      <div style="text-align: center; margin: 10px 0; color: #666;">oppure</div>
+      <button id="googleBtn">Accedi con Google</button>
+    </div>
   </div>
 
-  <!-- ================= APP ================= -->
-  <div id="app" class="hidden">
-
-    <h2>Looply</h2>
-
-    <h3>Seleziona disponibilità</h3>
-
-    <button class="day-btn" data-day="venerdi">Venerdì</button>
-    <button class="day-btn" data-day="sabato">Sabato</button>
-    <button class="day-btn" data-day="domenica">Domenica</button>
+  <div id="app" class="hidden" style="max-width: 600px; margin: auto;">
+    <div style="display: flex; justify-content: space-between; align-items: center;">
+      <h2>Looply</h2>
+      <button onclick="logout()" style="padding: 5px 10px; cursor: pointer;">Esci</button>
+    </div>
+    
+    <h3>Seleziona la tua disponibilità</h3>
+    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
+      <button class="day-btn" data-day="venerdi">Venerdì</button>
+      <button class="day-btn" data-day="sabato">Sabato</button>
+      <button class="day-btn" data-day="domenica">Domenica</button>
+    </div>
 
     <div id="venerdi-slots" class="slots disabled">
-      <h4>Venerdì</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <h4>Disponibilità Venerdì</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
       <label><input type="checkbox" value="morning"> Mattina</label><br>
       <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label>
     </div>
 
     <div id="sabato-slots" class="slots disabled">
-      <h4>Sabato</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <h4>Disponibilità Sabato</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
       <label><input type="checkbox" value="morning"> Mattina</label><br>
       <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label>
     </div>
 
     <div id="domenica-slots" class="slots disabled">
-      <h4>Domenica</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <h4>Disponibilità Domenica</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
       <label><input type="checkbox" value="morning"> Mattina</label><br>
       <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label>
     </div>
 
-    <br>
-    <button onclick="saveAvailability()">Salva disponibilità</button>
-
+    <button class="save-btn" onclick="saveAvailability()">Salva disponibilità</button>
   </div>
 
-  <!-- ================= FIREBASE ================= -->
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <script>
-    // ================= FIREBASE INIT =================
-
-    const firebaseConfig = {
-      apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
-      authDomain: "looply-app-21eb9.firebaseapp.com",
-      projectId: "looply-app-21eb9",
-      storageBucket: "looply-app-21eb9.firebasestorage.app",
-      messagingSenderId: "484354825970",
-      appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
-    };
-
-    firebase.initializeApp(firebaseConfig);
-
-    const auth = firebase.auth();
-    const db = firebase.firestore();
-
-    let currentUser = null;
-
-    // ================= SESSION =================
-
-    firebase.auth().onAuthStateChanged(user => {
-
-      if (user) {
-        currentUser = user.uid;
-        document.getElementById("formLogin").classList.add("hidden");
-        document.getElementById("app").classList.remove("hidden");
-        console.log("Logged in:", user.email);
-      } else {
-        currentUser = null;
-        document.getElementById("formLogin").classList.remove("hidden");
-        document.getElementById("app").classList.add("hidden");
-      }
-
-    });
-
-    // ================= GOOGLE LOGIN =================
-
-    document.getElementById("googleBtn").addEventListener("click", async () => {
-
-      console.log("Google login click");
-
-      const provider = new firebase.auth.GoogleAuthProvider();
-
-      try {
-        const result = await auth.signInWithPopup(provider);
-        const user = result.user;
-
-        currentUser = user.uid;
-
-        await db.collection("users").doc(currentUser).set({
-          name: user.displayName,
-          email: user.email,
-          photoURL: user.photoURL,
-          createdAt: new Date()
-        }, { merge: true });
-
-      } catch (err) {
-        console.error("Google login error:", err);
-        alert(err.message);
-      }
-
-    });
-
-    // ================= LOGIN EMAIL (PLACEHOLDER) =================
-
-    window.login = function () {
-      alert("Email login non ancora configurato");
-    };
-
-    // ================= DAYS =================
-
-    let selectedDays = {
-      venerdi: false,
-      sabato: false,
-      domenica: false
-    };
-
-    document.querySelectorAll(".day-btn").forEach(btn => {
-      btn.addEventListener("click", () => {
-        const day = btn.dataset.day;
-        toggleDay(day);
-      });
-    });
-
-    function toggleDay(day) {
-
-      const btn = document.querySelector(`[data-day="${day}"]`);
-      const slots = document.getElementById(`${day}-slots`);
-
-      selectedDays[day] = !selectedDays[day];
-
-      if (selectedDays[day]) {
-        btn.classList.add("active");
-        slots.classList.remove("disabled");
-
-        slots.querySelectorAll("input").forEach(cb => {
-          cb.disabled = false;
-          cb.checked = false;
-        });
-
-        const always = slots.querySelector(".always");
-        if (always) always.checked = true;
-
-      } else {
-        btn.classList.remove("active");
-        slots.classList.add("disabled");
-
-        slots.querySelectorAll("input").forEach(cb => {
-          cb.checked = false;
-          cb.disabled = true;
-        });
-      }
-    }
-
-    // ================= SAVE =================
-
-    function getAvailability() {
-
-      function getDay(day) {
-        if (!selectedDays[day]) return null;
-
-        const container = document.getElementById(`${day}-slots`);
-
-        const checked = Array.from(container.querySelectorAll("input:checked"))
-          .map(cb => cb.value);
-
-        return checked.length ? checked : ["any"];
-      }
-
-      return {
-        venerdi: getDay("venerdi"),
-        sabato: getDay("sabato"),
-        domenica: getDay("domenica")
-      };
-    }
-
-    window.saveAvailability = async function () {
-
-      if (!currentUser) {
-        alert("Non loggato");
-        return;
-      }
-
-      const availability = getAvailability();
-
-      try {
-        await db.collection("users").doc(currentUser).set({
-          availability
-        }, { merge: true });
-
-        alert("Salvato!");
-
-      } catch (err) {
-        console.error(err);
-        alert("Errore salvataggio");
-      }
-    };
-
-  </script>
-
+  <script src="app.js"></script>
 </body>
 </html>
