@@ -15,7 +15,7 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- 2. INIZIALIZZAZIONE LOGIN (Fix per tasto "morto") ---
+// --- 2. INIZIALIZZAZIONE LOGIN (Fix per iPhone/Safari) ---
 function inizializzaLogin() {
     const googleBtn = document.getElementById("googleBtn");
     if (googleBtn) {
@@ -39,8 +39,10 @@ auth.onAuthStateChanged(async (user) => {
         formLogin.style.display = "none";
         appDiv.style.display = "block";
         
-        // Update UI
-        document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "!");
+        // Benvenuto Personalizzato con Emoji 🤙🏻
+        const nomeUtente = user.displayName ? user.displayName.split(' ')[0] : "!";
+        document.getElementById("welcomeTitle").innerHTML = `Ciao ${nomeUtente} 🤙🏻`;
+        
         document.getElementById("userName").innerText = user.displayName || "Utente";
         document.getElementById("userEmail").innerText = user.email;
         if (user.photoURL) {
@@ -58,7 +60,7 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// --- 4. GESTIONE GIORNI ---
+// --- 4. GESTIONE GIORNI E INTERFACCIA ---
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
@@ -97,10 +99,10 @@ window.saveAvailability = async () => {
         btn.innerHTML = '✅ Salvato!';
         setTimeout(() => { btn.innerHTML = oldText; }, 2000);
 
-        // Avvia la ricerca di match
+        // Avvia il controllo match dopo il salvataggio
         await controllaMatch(av); 
     } catch (e) { 
-        alert("Errore connessione");
+        alert("Errore durante il salvataggio");
         btn.innerHTML = oldText;
     }
 };
@@ -142,15 +144,13 @@ function mostraPopupMatch(nome, giorno, fascia) {
     const text = document.getElementById("matchText");
     const btnWA = document.getElementById("matchWA");
 
-    text.innerHTML = `🔥 <b>Grande!</b> Tu e <b>${nome}</b> siete entrambi liberi <b>${giorno} ${fascia}</b>!`;
+    text.innerHTML = `🎉 <b>Match!</b> Tu e <b>${nome}</b> siete entrambi liberi <b>${giorno} ${fascia}</b>!`;
     
-    // Messaggio WhatsApp precompilato
-    const messaggio = `Ciao ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, che facciamo? 😊`;
+    // Messaggio WhatsApp con emoji
+    const messaggio = `Ehi ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo? 🤙🏻😊`;
     btnWA.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(messaggio)}`, '_blank');
 
-    // Vibrazione (se supportata)
     if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-
     modal.style.display = "flex";
 }
 
@@ -158,7 +158,7 @@ window.closeMatch = () => {
     document.getElementById("matchModal").style.display = "none";
 };
 
-// --- 7. IMPOSTAZIONI E TEMA ---
+// --- 7. TEMA E CARICAMENTO ---
 window.changeTheme = async (color) => {
     document.documentElement.style.setProperty('--primary-color', color);
     if (currentUser) {
@@ -187,7 +187,6 @@ async function caricaEControlla() {
                     }
                 }
             }
-            // Controllo match all'avvio
             await controllaMatch(data.availability);
         }
     }
@@ -204,9 +203,9 @@ window.closeSettings = () => {
 };
 window.logout = () => auth.signOut().then(() => location.reload());
 
-// --- 9. SERVICE WORKER ---
+// --- 9. PWA ---
 if ('serviceWorker' in navigator) {
     window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.log("SW Error", err));
+        navigator.serviceWorker.register('/sw.js').catch(e => console.log("SW Error", e));
     });
 }
