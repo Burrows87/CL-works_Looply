@@ -1,7 +1,7 @@
 // ================= FIREBASE INIT =================
 
 const firebaseConfig = {
-  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
+  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
   projectId: "looply-app-21eb9",
   storageBucket: "looply-app-21eb9.firebasestorage.app",
@@ -28,7 +28,7 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // remember me
+  // preload dati
   const savedEmail = localStorage.getItem("looply_email");
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
@@ -37,7 +37,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // Toggle giorni
+  // toggle giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -45,7 +45,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // Logica fasce + "sempre"
+  // logica checkbox fasce + sempre
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -96,8 +96,11 @@ function setupFormValidation() {
   }
 
   ["email", "username", "phone", "terms", "privacy"].forEach(id => {
-    document.getElementById(id).addEventListener("input", checkForm);
-    document.getElementById(id).addEventListener("change", checkForm);
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener("input", checkForm);
+      el.addEventListener("change", checkForm);
+    }
   });
 
   checkForm();
@@ -128,21 +131,23 @@ window.login = async function () {
 
   try {
 
-    // tenta login
-    let result;
+    let userCredential;
+
     try {
-      result = await auth.signInWithEmailAndPassword(email, password);
+      // prova login
+      userCredential = await auth.signInWithEmailAndPassword(email, password);
     } catch (err) {
 
       // se utente non esiste → registrazione
       if (err.code === "auth/user-not-found") {
-        result = await auth.createUserWithEmailAndPassword(email, password);
+        userCredential = await auth.createUserWithEmailAndPassword(email, password);
       } else {
         throw err;
       }
     }
 
-    currentUser = result.user.uid;
+    const user = userCredential.user;
+    currentUser = user.uid;
 
     await db.collection("users").doc(currentUser).set({
       name,
