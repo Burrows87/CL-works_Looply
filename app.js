@@ -1,4 +1,4 @@
-// 1. CONFIGURAZIONE FIREBASE
+// 1. CONFIGURAZIONE
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -8,179 +8,70 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione sicura
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-let currentUser = null;
-let userLang = 'it';
-let selectedDays = { venerdi: false, sabato: false, domenica: false };
-
-// 2. TRADUZIONI
-const langPack = {
-    it: { welcome: "Ciao", save: "Salva disponibilità", saving: "Salvo...", saved: "✅ Salvato!", matchTitle: "Match Trovato!", matchText: (nome, giorno, fascia) => `🎉 <b>Grande!</b> Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`, waBtn: "Scrivi su WhatsApp", waMsg: (nome, giorno, fascia) => `Ehi ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo? 🤙🏻`, later: "Più tardi", settings: "Impostazioni", logout: "Esci", days: { ven: "Ven", sab: "Sab", dom: "Dom", labels: ["Venerdì", "Sabato", "Domenica"] }, slots: { always: "Sempre", morning: "Mattina", afternoon: "Pom.", evening: "Sera" } },
-    en: { welcome: "Hi", save: "Save availability", saving: "Saving...", saved: "✅ Saved!", matchTitle: "Match Found!", matchText: (nome, giorno, fascia) => `🎉 <b>Great!</b> You and <b>${nome}</b> are both free on <b>${giorno} ${fascia}</b>!`, waBtn: "Message on WhatsApp", waMsg: (nome, giorno, fascia) => `Hi ${nome}! I saw on Looply that we're both free on ${giorno} ${fascia}, shall we hang out? 🤙🏻`, later: "Later", settings: "Settings", logout: "Logout", days: { ven: "Fri", sab: "Sat", dom: "Sun", labels: ["Friday", "Saturday", "Sunday"] }, slots: { always: "Always", morning: "Morning", afternoon: "After.", evening: "Evening" } }
-};
-
-// --- 3. LOGIN (METODO REDIRECT - IL PIÙ SICURO) ---
+// 2. LOGIN CON REDIRECT (Evita i blocchi popup)
 window.startLogin = function() {
-    console.log("Reindirizzamento a Google...");
     const provider = new firebase.auth.GoogleAuthProvider();
-    provider.setCustomParameters({ prompt: 'select_account' });
     auth.signInWithRedirect(provider);
 };
 
-// Gestione del ritorno dal Redirect
-auth.getRedirectResult().catch((error) => {
-    console.error("Errore nel ritorno dal login:", error.message);
-    if (error.code === 'auth/unauthorized-domain') {
-        alert("Errore: Questo dominio non è autorizzato nella console Firebase!");
-    }
-});
-
-// --- 4. GESTIONE STATO UTENTE ---
+// 3. IL CONTROLLO ANTI-LOOP
 auth.onAuthStateChanged(async (user) => {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
 
     if (user) {
-        currentUser = user.uid;
-        if(loginDiv) loginDiv.style.display = "none";
-        if(appDiv) appDiv.style.display = "block";
+        console.log("Utente loggato:", user.uid);
         
-        // Carica dati utente
-        const doc = await db.collection("users").doc(user.uid).get();
-        if (doc.exists && doc.data().displayName) {
-            const data = doc.data();
-            userLang = data.lang || 'it';
-            applicaLingua(data.displayName, userLang);
-            document.getElementById("userPhoto").src = user.photoURL || "";
-            document.getElementById("userEmail").innerText = user.email;
-            caricaDati();
-        } else {
-            document.getElementById("onboardingModal").style.display = "flex";
+        try {
+            // Proviamo a leggere il database
+            const doc = await db.collection("users").doc(user.uid).get();
+            
+            // Se arriviamo qui, il database risponde!
+            if (loginDiv) loginDiv.style.display = "none";
+            if (appDiv) appDiv.style.display = "block";
+
+            if (doc.exists && doc.data().displayName) {
+                // Utente già registrato
+                applicaLingua(doc.data().displayName, doc.data().lang || 'it');
+                caricaDati();
+            } else {
+                // Nuovo utente: mostra onboarding
+                document.getElementById("onboardingModal").style.display = "flex";
+            }
+        } catch (error) {
+            console.error("Errore Database:", error);
+            alert("Errore accesso Database. Hai attivato Firestore in 'Test Mode'?");
+            // NON rimandiamo al login qui, altrimenti va in loop!
         }
     } else {
-        if(loginDiv) loginDiv.style.display = "flex";
-        if(appDiv) appDiv.style.display = "none";
+        // Nessun utente: mostra login
+        if (loginDiv) loginDiv.style.display = "flex";
+        if (appDiv) appDiv.style.display = "none";
     }
 });
 
-// --- 5. FUNZIONI DI SALVATAGGIO E MATCH ---
+// --- FUNZIONI AGGIUNTIVE (Copiale tutte) ---
+
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     const lingua = document.getElementById("selectLingua").value;
-    if (nome.length < 2) return alert("Inserisci un nome!");
-
-    await db.collection("users").doc(currentUser).set({
-        displayName: nome, lang: lingua, themeColor: "#2563eb"
+    if (nome.length < 2) return;
+    
+    await db.collection("users").doc(auth.currentUser.uid).set({
+        displayName: nome, lang: lingua, availability: {}
     }, { merge: true });
-
-    userLang = lingua;
+    
     document.getElementById("onboardingModal").style.display = "none";
     applicaLingua(nome, lingua);
 };
 
-window.saveAvailability = async () => {
-    const btn = document.getElementById("labelSaveBtn");
-    const t = langPack[userLang];
-    btn.innerText = t.saving;
-
-    const av = {
-        venerdi: getCheckedVals("venerdi"),
-        sabato: getCheckedVals("sabato"),
-        domenica: getCheckedVals("domenica")
-    };
-
-    try {
-        await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
-        btn.innerText = t.saved;
-        setTimeout(() => { btn.innerText = t.save; }, 2000);
-        await controllaMatch(av);
-    } catch (e) { btn.innerText = t.save; }
-};
-
-async function controllaMatch(miaAv) {
-    const snapshot = await db.collection("users").get();
-    let matchTrovato = false;
-    snapshot.forEach(doc => {
-        if (doc.id !== currentUser && !matchTrovato) {
-            const altro = doc.data();
-            if (altro.availability) {
-                ["venerdi", "sabato", "domenica"].forEach(g => {
-                    if (miaAv[g] && altro.availability[g]) {
-                        const comuni = miaAv[g].filter(f => altro.availability[g].includes(f));
-                        if (comuni.length > 0 && !matchTrovato) {
-                            const giornoTrad = document.getElementById(`label${g.charAt(0).toUpperCase() + g.slice(1)}`).innerText;
-                            mostraPopupMatch(altro.displayName, giornoTrad, comuni[0]);
-                            matchTrovato = true;
-                        }
-                    }
-                });
-            }
-        }
-    });
-}
-
-function mostraPopupMatch(nome, giorno, fascia) {
-    const t = langPack[userLang];
-    document.getElementById("matchText").innerHTML = t.matchText(nome, giorno, fascia);
-    document.getElementById("matchWA").onclick = () => {
-        window.open(`https://wa.me/?text=${encodeURIComponent(t.waMsg(nome, giorno, fascia))}`, '_blank');
-    };
-    document.getElementById("matchModal").style.display = "flex";
-}
-
-// --- 6. UTILITY ---
 function applicaLingua(nome, lingua) {
-    const t = langPack[lingua];
-    document.getElementById("welcomeTitle").innerHTML = `${t.welcome} ${nome} 🤙🏻`;
-    document.getElementById("labelSaveBtn").innerText = t.save;
-    document.getElementById("btnVen").innerText = t.days.ven;
-    document.getElementById("btnSab").innerText = t.days.sab;
-    document.getElementById("btnDom").innerText = t.days.dom;
-    document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
-    document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
-    document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
-    document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
+    const welcome = lingua === 'it' ? "Ciao" : "Hi";
+    document.getElementById("welcomeTitle").innerText = `${welcome} ${nome} 🤙🏻`;
 }
-
-function getCheckedVals(day) {
-    if (!selectedDays[day]) return null;
-    return Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
-}
-
-async function caricaDati() {
-    const doc = await db.collection("users").doc(currentUser).get();
-    if (doc.exists && doc.data().availability) {
-        const av = doc.data().availability;
-        for (const d in av) {
-            if (av[d] && av[d].length > 0) {
-                selectedDays[d] = true;
-                const btn = document.querySelector(`[data-day="${d}"]`);
-                if(btn) btn.classList.add("active");
-                const s = document.getElementById(d + "-slots");
-                if(s) {
-                    s.classList.remove("disabled");
-                    s.querySelectorAll("input").forEach(cb => { if (av[d].includes(cb.value)) cb.checked = true; });
-                }
-            }
-        }
-    }
-}
-
-// Gestione click pulsanti giorni
-document.querySelectorAll(".day-btn").forEach(btn => {
-    btn.onclick = () => {
-        const d = btn.dataset.day;
-        selectedDays[d] = !selectedDays[d];
-        btn.classList.toggle("active");
-        document.getElementById(d + "-slots").classList.toggle("disabled");
-    };
-});
 
 window.logout = () => auth.signOut().then(() => location.reload());
-window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
-window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
-window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
