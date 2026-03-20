@@ -6,7 +6,8 @@ const firebaseConfig = {
   projectId: "looply-app-21eb9",
   storageBucket: "looply-app-21eb9.firebasestorage.app",
   messagingSenderId: "484354825970",
-  appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"looply-app-21eb9
+  appId: "1:484354825970:web:79bc652c6b39fb57d27a6b",
+  looply-app-21eb9
 };
 
 firebase.initializeApp(firebaseConfig);
@@ -203,7 +204,7 @@ async function showMatch(day, slots, userId) {
   const user = userDoc.data();
 
   document.getElementById("matchText").innerText =
-    ${user.name} - ${day} (${slots.join(", ")});
+    ${user.name} - ${day} (${slots.join(", ")})';
 
   document.getElementById("matchPopup").classList.remove("hidden");
 }
@@ -218,9 +219,9 @@ async function sendWhatsApp() {
   const meDoc = await db.collection("users").doc(currentUser).get();
   const me = meDoc.data();
 
-  const message = Ciao ${other.name}! Sono ${me.name} da Looply 😊;
+  const message = `Ciao ${other.name}! Sono ${me.name} da Looply 😊`;
 
-  const url = https://wa.me/${other.phone}?text=${encodeURIComponent(message)};
+  const const url = `https://wa.me/${other.phone}?text=${encodeURIComponent(message)}`;
 
   window.open(url, "_blank");
 }
