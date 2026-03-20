@@ -36,11 +36,12 @@
       <input type="checkbox" id="privacy"> Accetto la privacy
     </label><br><br>
 
-    <button id="enterBtn" onclick="login()">Login / Registrati</button>
+    <button onclick="login()">Login / Registrati</button>
 
     <hr>
 
-    <button onclick="loginWithGoogle()">Accedi con Google</button>
+    <!-- LOGIN GOOGLE -->
+    <button id="googleBtn">Accedi con Google</button>
 
   </div>
 
@@ -89,8 +90,166 @@
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
-  <!-- TUO JS -->
-  <script src="script.js"></script>
+  <script>
+    // ================= FIREBASE INIT =================
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
+      authDomain: "looply-app-21eb9.firebaseapp.com",
+      projectId: "looply-app-21eb9",
+      storageBucket: "looply-app-21eb9.firebasestorage.app",
+      messagingSenderId: "484354825970",
+      appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+
+    const auth = firebase.auth();
+    const db = firebase.firestore();
+
+    let currentUser = null;
+
+    // ================= SESSION =================
+
+    firebase.auth().onAuthStateChanged(user => {
+
+      if (user) {
+        currentUser = user.uid;
+        document.getElementById("formLogin").classList.add("hidden");
+        document.getElementById("app").classList.remove("hidden");
+        console.log("Logged in:", user.email);
+      } else {
+        currentUser = null;
+        document.getElementById("formLogin").classList.remove("hidden");
+        document.getElementById("app").classList.add("hidden");
+      }
+
+    });
+
+    // ================= GOOGLE LOGIN =================
+
+    document.getElementById("googleBtn").addEventListener("click", async () => {
+
+      console.log("Google login click");
+
+      const provider = new firebase.auth.GoogleAuthProvider();
+
+      try {
+        const result = await auth.signInWithPopup(provider);
+        const user = result.user;
+
+        currentUser = user.uid;
+
+        await db.collection("users").doc(currentUser).set({
+          name: user.displayName,
+          email: user.email,
+          photoURL: user.photoURL,
+          createdAt: new Date()
+        }, { merge: true });
+
+      } catch (err) {
+        console.error("Google login error:", err);
+        alert(err.message);
+      }
+
+    });
+
+    // ================= LOGIN EMAIL (PLACEHOLDER) =================
+
+    window.login = function () {
+      alert("Email login non ancora configurato");
+    };
+
+    // ================= DAYS =================
+
+    let selectedDays = {
+      venerdi: false,
+      sabato: false,
+      domenica: false
+    };
+
+    document.querySelectorAll(".day-btn").forEach(btn => {
+      btn.addEventListener("click", () => {
+        const day = btn.dataset.day;
+        toggleDay(day);
+      });
+    });
+
+    function toggleDay(day) {
+
+      const btn = document.querySelector(`[data-day="${day}"]`);
+      const slots = document.getElementById(`${day}-slots`);
+
+      selectedDays[day] = !selectedDays[day];
+
+      if (selectedDays[day]) {
+        btn.classList.add("active");
+        slots.classList.remove("disabled");
+
+        slots.querySelectorAll("input").forEach(cb => {
+          cb.disabled = false;
+          cb.checked = false;
+        });
+
+        const always = slots.querySelector(".always");
+        if (always) always.checked = true;
+
+      } else {
+        btn.classList.remove("active");
+        slots.classList.add("disabled");
+
+        slots.querySelectorAll("input").forEach(cb => {
+          cb.checked = false;
+          cb.disabled = true;
+        });
+      }
+    }
+
+    // ================= SAVE =================
+
+    function getAvailability() {
+
+      function getDay(day) {
+        if (!selectedDays[day]) return null;
+
+        const container = document.getElementById(`${day}-slots`);
+
+        const checked = Array.from(container.querySelectorAll("input:checked"))
+          .map(cb => cb.value);
+
+        return checked.length ? checked : ["any"];
+      }
+
+      return {
+        venerdi: getDay("venerdi"),
+        sabato: getDay("sabato"),
+        domenica: getDay("domenica")
+      };
+    }
+
+    window.saveAvailability = async function () {
+
+      if (!currentUser) {
+        alert("Non loggato");
+        return;
+      }
+
+      const availability = getAvailability();
+
+      try {
+        await db.collection("users").doc(currentUser).set({
+          availability
+        }, { merge: true });
+
+        alert("Salvato!");
+
+      } catch (err) {
+        console.error(err);
+        alert("Errore salvataggio");
+      }
+    };
+
+  </script>
 
 </body>
 </html>
