@@ -213,7 +213,7 @@ async function showMatch(day, slots, userId) {
 
 // ================= WHATSAPP =================
 
-async function sendWhatsApp() {
+window.sendWhatsApp = async function ()
 
   const userDoc = await db.collection("users").doc(currentMatchUser).get();
   const other = userDoc.data();
