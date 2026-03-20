@@ -12,7 +12,7 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu su iPhone */
+    -webkit-tap-highlight-color: transparent;
 }
 
 body {
@@ -29,27 +29,30 @@ body {
     max-width: 420px;
 }
 
-/* 2. HEADER E TITOLO 🤙🏻 */
+/* 2. HEADER E TITOLI */
 .header h1 {
-    font-size: 28px;
+    font-size: 26px;
     font-weight: 800;
-    margin-bottom: 5px;
     letter-spacing: -1px;
     display: flex;
     align-items: center;
-    gap: 8px; /* Spazio per l'emoji */
+    gap: 8px;
 }
 
-.header p {
-    color: #6b7280;
-    margin-bottom: 20px;
+.day-label {
+    margin-bottom: 10px;
+    font-weight: 800;
+    font-size: 14px;
+    color: var(--primary-color);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
 }
 
-/* 3. CARD PRINCIPALE */
+/* 3. CARD */
 .card {
     background: var(--card-bg);
-    padding: 20px;
-    border-radius: 22px;
+    padding: 22px;
+    border-radius: 24px;
     box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
     border: 1px solid var(--border-color);
     margin-bottom: 20px;
@@ -68,29 +71,27 @@ body {
 .day-btn {
     width: 100%;
     padding: 16px 5px;
-    border-radius: 14px;
+    border-radius: 16px;
     border: 2px solid var(--border-color);
     background: white;
     font-weight: 700;
     font-size: 15px;
-    cursor: pointer;
-    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+    transition: all 0.2s ease;
 }
 
 .day-btn.active {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     color: white !important;
-    transform: translateY(-2px);
     box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .slots {
     background: #f9fafb;
-    padding: 15px;
-    border-radius: 15px;
+    padding: 18px;
+    border-radius: 18px;
     margin-bottom: 12px;
-    border: 1px dashed var(--border-color);
+    border: 1px solid var(--border-color);
     display: none;
 }
 
@@ -108,20 +109,32 @@ body {
 .slots label {
     display: flex;
     align-items: center;
-    gap: 8px;
+    gap: 10px;
     font-size: 14px;
-    font-weight: 500;
+    font-weight: 600;
     cursor: pointer;
 }
 
-/* 5. PULSANTI */
+/* 5. INPUT E SELECT (BENVENUTO) */
+input[type="text"], select {
+    -webkit-appearance: none;
+    appearance: none;
+    outline: none;
+    transition: border-color 0.2s;
+}
+
+input[type="text"]:focus, select:focus {
+    border-color: var(--primary-color) !important;
+}
+
+/* 6. PULSANTI */
 .btn-primary {
     background-color: var(--primary-color) !important;
     color: white;
     width: 100%;
-    padding: 16px;
+    padding: 18px;
     border: none;
-    border-radius: 14px;
+    border-radius: 16px;
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
@@ -129,64 +142,77 @@ body {
     align-items: center;
     justify-content: center;
     gap: 10px;
+    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
 }
 
 .btn-google {
     width: 100%;
-    padding: 14px;
+    padding: 16px;
     border: 1px solid var(--border-color);
     background: white;
-    border-radius: 14px;
+    border-radius: 16px;
     font-weight: 600;
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-}
-
-/* 6. COLORI IMPOSTAZIONI (FIX IPHONE) */
-.colors-container {
-    display: flex;
-    justify-content: center;
     gap: 12px;
-    padding: 20px 0;
-    flex-wrap: wrap;
 }
 
-.color-dot {
-    display: block !important;
-    width: 42px !important;
-    height: 42px !important;
-    border-radius: 50% !important;
-    cursor: pointer;
-    border: 3px solid white !important;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.15) !important;
-    transition: transform 0.2s;
-}
-
-.color-dot:active { transform: scale(0.85); }
-
-/* 7. POPUP MATCH & WHATSAPP */
 .btn-whatsapp {
     background-color: #25d366 !important;
     color: white;
     width: 100%;
     padding: 18px;
     border: none;
-    border-radius: 16px;
+    border-radius: 18px;
     font-weight: 800;
     font-size: 17px;
-    cursor: pointer;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);
+    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
 }
 
-#matchModal .card {
+.btn-logout {
+    background: #fee2e2;
+    color: #ef4444;
+    width: 100%;
     border: none;
-    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
-    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+    padding: 14px;
+    border-radius: 12px;
+    font-weight: 700;
+    margin-top: 20px;
 }
+
+/* 7. COLORI IMPOSTAZIONI */
+.colors-container {
+    display: flex;
+    justify-content: center;
+    gap: 15px;
+    padding: 20px 0;
+}
+
+.color-dot {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    border: 3px solid white;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    cursor: pointer;
+}
+
+/* 8. ANIMAZIONI E MODAL */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-8px); }
+    to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes popIn {
+    from { transform: scale(0.9); opacity: 0; }
+    to { transform: scale(1); opacity: 1; }
+}
+
+#onboardingModal, #matchModal {
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+}
+
+.fa-spin { animation: spin 1s linear infinite; }
+@keyframes spin { 100% { transform: rotate(360deg); } }
