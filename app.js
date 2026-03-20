@@ -133,7 +133,7 @@ days.forEach(day => {
 
 // ================= SAVE =================
 
-async function saveAvailability() {
+window.saveAvailability = async function ()
 
   if (!currentUser) {
     alert("Utente non loggato");
