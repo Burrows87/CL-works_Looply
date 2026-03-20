@@ -1,104 +1,57 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
   <title>Looply</title>
-
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
-    body { font-family: Arial; padding: 20px; }
     .hidden { display: none; }
-    .day-btn { margin: 5px; padding: 10px; cursor: pointer; }
-    .active { background: green; color: white; }
+    .active { background-color: #4CAF50; color: white; }
     .disabled { opacity: 0.5; pointer-events: none; }
+    .day-btn { margin: 5px; padding: 10px; }
+    .slots { margin: 10px 0; }
   </style>
 </head>
 
 <body>
 
-<!-- ================= LOGIN ================= -->
+  <!-- ================= LOGIN ================= -->
+  <div id="formLogin">
 
-<div id="formLogin">
+    <h2>Login Looply</h2>
 
-  <h2>Registrazione / Login</h2>
+    <input type="email" id="email" placeholder="Email"><br><br>
+    <input type="password" id="password" placeholder="Password"><br><br>
 
-  <input id="email" type="email" placeholder="Email"><br><br>
-  <input id="password" type="password" placeholder="Password"><br><br>
+    <input type="text" id="username" placeholder="Nome"><br><br>
+    <input type="text" id="phone" placeholder="Telefono"><br><br>
 
-  <input id="username" type="text" placeholder="Nome"><br><br>
-  <input id="phone" type="text" placeholder="Telefono"><br><br>
+    <label>
+      <input type="checkbox" id="terms"> Accetto termini
+    </label><br>
 
-  <label>
-    <input type="checkbox" id="terms">
-    Accetto i termini
-  </label><br>
+    <label>
+      <input type="checkbox" id="privacy"> Accetto privacy
+    </label><br><br>
 
-  <label>
-    <input type="checkbox" id="privacy">
-    Accetto la privacy
-  </label><br><br>
+    <button id="enterBtn" onclick="login()">Login / Registrati</button>
 
-  <label>
-    <input type="checkbox" id="rememberMe">
-    Ricordami
-  </label><br><br>
+    <hr>
 
-  <button id="enterBtn" onclick="login()" disabled>Entra</button>
+    <button onclick="loginWithGoogle()">Accedi con Google</button>
 
-</div>
-
-<!-- ================= APP ================= -->
-
-<div id="app" class="hidden">
-
-  <h2>Looply</h2>
-
-  <h3>Seleziona giorni</h3>
-
-  <button class="day-btn" data-day="venerdi">Venerdì</button>
-  <button class="day-btn" data-day="sabato">Sabato</button>
-  <button class="day-btn" data-day="domenica">Domenica</button>
-
-  <hr>
-
-  <!-- VENERDI -->
-  <div id="venerdi-slots" class="slots disabled">
-    <h4>Venerdì</h4>
-    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
-    <label><input type="checkbox" value="mattina"> Mattina</label><br>
-    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
-    <label><input type="checkbox" value="sera"> Sera</label><br>
   </div>
 
-  <!-- SABATO -->
-  <div id="sabato-slots" class="slots disabled">
-    <h4>Sabato</h4>
-    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
-    <label><input type="checkbox" value="mattina"> Mattina</label><br>
-    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
-    <label><input type="checkbox" value="sera"> Sera</label><br>
-  </div>
+  <!-- ================= APP ================= -->
+  <div id="app" class="hidden">
 
-  <!-- DOMENICA -->
-  <div id="domenica-slots" class="slots disabled">
-    <h4>Domenica</h4>
-    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
-    <label><input type="checkbox" value="mattina"> Mattina</label><br>
-    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
-    <label><input type="checkbox" value="sera"> Sera</label><br>
-  </div>
+    <h2>Looply App</h2>
 
-  <br>
+    <h3>Seleziona giorni disponibili</h3>
 
-  <button onclick="saveAvailability()">Salva disponibilità</button>
+    <button class="day-btn" data-day="venerdi">Venerdì</button>
+    <button class="day-btn" data-day="sabato">Sabato</button>
+    <button class="day-btn" data-day="domenica">Domenica</button>
 
-</div>
-
-<script src="app.js"></script>
-
-</body>
-</html>
+    <div id="venerdi
