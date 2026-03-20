@@ -33,51 +33,52 @@
         </div>
 
         <div id="app" style="display: none;">
-            <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
-                <h1 id="welcomeTitle">Ciao!</h1>
-                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 5px;"></i>
+            <div class="header" style="display: flex !important; justify-content: space-between; align-items: center; padding: 15px 0; min-height: 60px;">
+                <h1 id="welcomeTitle" style="display: flex !important; align-items: center; gap: 8px; margin: 0;">
+                    </h1>
+                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 10px;"></i>
             </div>
 
             <div class="card">
                 <div class="days-row">
-                    <div class="day-item"><button class="day-btn" data-day="venerdi">Ven</button></div>
-                    <div class="day-item"><button class="day-btn" data-day="sabato">Sab</button></div>
-                    <div class="day-item"><button class="day-btn" data-day="domenica">Dom</button></div>
+                    <div class="day-item"><button class="day-btn" data-day="venerdi" id="btnVen">Ven</button></div>
+                    <div class="day-item"><button class="day-btn" data-day="sabato" id="btnSab">Sab</button></div>
+                    <div class="day-item"><button class="day-btn" data-day="domenica" id="btnDom">Dom</button></div>
                 </div>
 
                 <div id="venerdi-slots" class="slots disabled">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 14px; color: var(--primary-color);">Venerdì</p>
+                    <p class="day-label" id="labelVen">Venerdì</p>
                     <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
+                        <label><input type="checkbox" value="Sempre"> <span class="txtAlways">Sempre</span></label>
+                        <label><input type="checkbox" value="Mattina"> <span class="txtMorning">Mattina</span></label>
+                        <label><input type="checkbox" value="Pomeriggio"> <span class="txtAfternoon">Pom.</span></label>
+                        <label><input type="checkbox" value="Sera"> <span class="txtEvening">Sera</span></label>
                     </div>
                 </div>
 
                 <div id="sabato-slots" class="slots disabled">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 14px; color: var(--primary-color);">Sabato</p>
+                    <p class="day-label" id="labelSab">Sabato</p>
                     <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
+                        <label><input type="checkbox" value="Sempre"> <span class="txtAlways">Sempre</span></label>
+                        <label><input type="checkbox" value="Mattina"> <span class="txtMorning">Mattina</span></label>
+                        <label><input type="checkbox" value="Pomeriggio"> <span class="txtAfternoon">Pom.</span></label>
+                        <label><input type="checkbox" value="Sera"> <span class="txtEvening">Sera</span></label>
                     </div>
                 </div>
 
                 <div id="domenica-slots" class="slots disabled">
-                    <p style="margin-bottom: 8px; font-weight: bold; font-size: 14px; color: var(--primary-color);">Domenica</p>
+                    <p class="day-label" id="labelDom">Domenica</p>
                     <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
+                        <label><input type="checkbox" value="Sempre"> <span class="txtAlways">Sempre</span></label>
+                        <label><input type="checkbox" value="Mattina"> <span class="txtMorning">Mattina</span></label>
+                        <label><input type="checkbox" value="Pomeriggio"> <span class="txtAfternoon">Pom.</span></label>
+                        <label><input type="checkbox" value="Sera"> <span class="txtEvening">Sera</span></label>
                     </div>
                 </div>
 
                 <div style="margin-top: 20px;">
                     <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary">
-                        <i class="fa-solid fa-floppy-disk"></i> Salva disponibilità
+                        <i class="fa-solid fa-floppy-disk"></i> <span id="labelSaveBtn">Salva disponibilità</span>
                     </button>
                 </div>
             </div>
@@ -86,7 +87,7 @@
         <div id="settingsPage" style="display: none;">
             <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
                 <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="cursor: pointer; font-size: 20px;"></i>
-                <h1>Impostazioni</h1>
+                <h1 id="titleSettings">Impostazioni</h1>
             </div>
             <div class="card">
                 <div style="text-align: center; margin-bottom: 25px;">
@@ -96,7 +97,7 @@
                 </div>
 
                 <div style="border-top: 1px solid #eee; padding-top: 20px;">
-                    <p style="font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">Colore Interfaccia</p>
+                    <p id="labelTheme" style="font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">Colore Interfaccia</p>
                     <div class="colors-container">
                         <div class="color-dot" onclick="window.changeTheme('#2563eb')" style="background-color: #2563eb !important;"></div>
                         <div class="color-dot" onclick="window.changeTheme('#059669')" style="background-color: #059669 !important;"></div>
@@ -107,22 +108,43 @@
                 </div>
 
                 <button onclick="window.logout()" class="btn-logout">
-                    <i class="fa-solid fa-right-from-bracket"></i> Esci dall'account
+                    <i class="fa-solid fa-right-from-bracket"></i> <span id="labelLogout">Esci</span>
                 </button>
             </div>
         </div>
 
         <div id="matchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:9999; justify-content:center; align-items:center; padding:20px;">
-            <div class="card" style="text-align:center; max-width: 320px; animation: popIn 0.4s ease;">
+            <div class="card" style="text-align:center; max-width: 320px;">
                 <div style="font-size: 50px; margin-bottom: 10px;">🎉</div>
-                <h2 style="margin-bottom: 15px;">Match Trovato!</h2>
+                <h2 id="matchFoundTitle" style="margin-bottom: 15px;">Match Trovato!</h2>
                 <p id="matchText" style="margin-bottom: 20px; line-height: 1.5;"></p>
-                
                 <button id="matchWA" class="btn-whatsapp">
-                    <i class="fa-brands fa-whatsapp"></i> Scrivi su WhatsApp
+                    <i class="fa-brands fa-whatsapp"></i> <span id="labelWhatsApp">Invia su WhatsApp</span>
                 </button>
+                <button onclick="window.closeMatch()" id="labelLater" style="background:none; border:none; color:gray; cursor:pointer; font-size:14px; margin-top: 20px;">Più tardi</button>
+            </div>
+        </div>
+
+        <div id="onboardingModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:white; z-index:10000; justify-content:center; align-items:center; padding:20px;">
+            <div style="text-align:center; width:100%; max-width: 320px;">
+                <h1 style="font-size: 50px; margin-bottom: 10px;">👋🏻</h1>
+                <h2 id="onbTitle">Benvenuto!</h2>
+                <p id="onbSubtitle" style="color: gray; margin-bottom: 30px;">Configuriamo il tuo profilo</p>
                 
-                <button onclick="window.closeMatch()" style="background:none; border:none; color:gray; cursor:pointer; font-size:14px; margin-top: 20px;">Più tardi</button>
+                <div style="text-align: left; margin-bottom: 20px;">
+                    <label style="font-weight: bold; color: var(--primary-color); font-size: 12px;">NOME / NAME</label>
+                    <input type="text" id="inputNome" placeholder="..." style="width:100%; padding:15px; border-radius:12px; border:2px solid #eee; margin-top:5px; font-size:16px;">
+                </div>
+
+                <div style="text-align: left; margin-bottom: 30px;">
+                    <label style="font-weight: bold; color: var(--primary-color); font-size: 12px;">LINGUA / LANGUAGE</label>
+                    <select id="selectLingua" style="width:100%; padding:15px; border-radius:12px; border:2px solid #eee; margin-top:5px; font-size:16px; background: white;">
+                        <option value="it">Italiano 🇮🇹</option>
+                        <option value="en">English 🇬🇧</option>
+                    </select>
+                </div>
+
+                <button onclick="window.saveOnboarding()" class="btn-primary">Salva 🤙🏻</button>
             </div>
         </div>
 
