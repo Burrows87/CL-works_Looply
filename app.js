@@ -8,43 +8,36 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione
+// Inizializzazione sicura
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// Variabili di Stato
 let currentUser = null;
 let userLang = 'it';
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// 2. DIZIONARIO TRADUZIONI
+// 2. TRADUZIONI
 const langPack = {
-    it: {
-        welcome: "Ciao", save: "Salva disponibilità", saving: "Salvo...", saved: "✅ Salvato!",
-        matchTitle: "Match Trovato!", matchText: (nome, giorno, fascia) => `🎉 <b>Grande!</b> Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`,
-        waBtn: "Scrivi su WhatsApp", waMsg: (nome, giorno, fascia) => `Ehi ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo? 🤙🏻`,
-        later: "Più tardi", settings: "Impostazioni", logout: "Esci",
-        days: { ven: "Ven", sab: "Sab", dom: "Dom", labels: ["Venerdì", "Sabato", "Domenica"] },
-        slots: { always: "Sempre", morning: "Mattina", afternoon: "Pom.", evening: "Sera" }
-    },
-    en: {
-        welcome: "Hi", save: "Save availability", saving: "Saving...", saved: "✅ Saved!",
-        matchTitle: "Match Found!", matchText: (nome, giorno, fascia) => `🎉 <b>Great!</b> You and <b>${nome}</b> are both free on <b>${giorno} ${fascia}</b>!`,
-        waBtn: "Message on WhatsApp", waMsg: (nome, giorno, fascia) => `Hi ${nome}! I saw on Looply that we're both free on ${giorno} ${fascia}, shall we hang out? 🤙🏻`,
-        later: "Later", settings: "Settings", logout: "Logout",
-        days: { ven: "Fri", sab: "Sat", dom: "Sun", labels: ["Friday", "Saturday", "Sunday"] },
-        slots: { always: "Always", morning: "Morning", afternoon: "After.", evening: "Evening" }
-    }
+    it: { welcome: "Ciao", save: "Salva disponibilità", saving: "Salvo...", saved: "✅ Salvato!", matchTitle: "Match Trovato!", matchText: (nome, giorno, fascia) => `🎉 <b>Grande!</b> Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`, waBtn: "Scrivi su WhatsApp", waMsg: (nome, giorno, fascia) => `Ehi ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo? 🤙🏻`, later: "Più tardi", settings: "Impostazioni", logout: "Esci", days: { ven: "Ven", sab: "Sab", dom: "Dom", labels: ["Venerdì", "Sabato", "Domenica"] }, slots: { always: "Sempre", morning: "Mattina", afternoon: "Pom.", evening: "Sera" } },
+    en: { welcome: "Hi", save: "Save availability", saving: "Saving...", saved: "✅ Saved!", matchTitle: "Match Found!", matchText: (nome, giorno, fascia) => `🎉 <b>Great!</b> You and <b>${nome}</b> are both free on <b>${giorno} ${fascia}</b>!`, waBtn: "Message on WhatsApp", waMsg: (nome, giorno, fascia) => `Hi ${nome}! I saw on Looply that we're both free on ${giorno} ${fascia}, shall we hang out? 🤙🏻`, later: "Later", settings: "Settings", logout: "Logout", days: { ven: "Fri", sab: "Sat", dom: "Sun", labels: ["Friday", "Saturday", "Sunday"] }, slots: { always: "Always", morning: "Morning", afternoon: "After.", evening: "Evening" } }
 };
 
-// --- 3. FUNZIONE LOGIN (Chiamata dall'HTML) ---
+// --- 3. LOGIN (METODO REDIRECT - IL PIÙ SICURO) ---
 window.startLogin = function() {
+    console.log("Reindirizzamento a Google...");
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider)
-        .then((result) => { console.log("Login OK:", result.user.displayName); })
-        .catch((error) => { alert("Errore Login: " + error.message); });
+    provider.setCustomParameters({ prompt: 'select_account' });
+    auth.signInWithRedirect(provider);
 };
+
+// Gestione del ritorno dal Redirect
+auth.getRedirectResult().catch((error) => {
+    console.error("Errore nel ritorno dal login:", error.message);
+    if (error.code === 'auth/unauthorized-domain') {
+        alert("Errore: Questo dominio non è autorizzato nella console Firebase!");
+    }
+});
 
 // --- 4. GESTIONE STATO UTENTE ---
 auth.onAuthStateChanged(async (user) => {
@@ -56,7 +49,7 @@ auth.onAuthStateChanged(async (user) => {
         if(loginDiv) loginDiv.style.display = "none";
         if(appDiv) appDiv.style.display = "block";
         
-        // Carica Profilo
+        // Carica dati utente
         const doc = await db.collection("users").doc(user.uid).get();
         if (doc.exists && doc.data().displayName) {
             const data = doc.data();
@@ -74,11 +67,11 @@ auth.onAuthStateChanged(async (user) => {
     }
 });
 
-// --- 5. FUNZIONI UI & SALVATAGGIO ---
+// --- 5. FUNZIONI DI SALVATAGGIO E MATCH ---
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     const lingua = document.getElementById("selectLingua").value;
-    if (nome.length < 2) return alert("Inserisci un nome valido");
+    if (nome.length < 2) return alert("Inserisci un nome!");
 
     await db.collection("users").doc(currentUser).set({
         displayName: nome, lang: lingua, themeColor: "#2563eb"
@@ -90,9 +83,9 @@ window.saveOnboarding = async () => {
 };
 
 window.saveAvailability = async () => {
-    const btnLabel = document.getElementById("labelSaveBtn");
+    const btn = document.getElementById("labelSaveBtn");
     const t = langPack[userLang];
-    btnLabel.innerText = t.saving;
+    btn.innerText = t.saving;
 
     const av = {
         venerdi: getCheckedVals("venerdi"),
@@ -102,10 +95,10 @@ window.saveAvailability = async () => {
 
     try {
         await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
-        btnLabel.innerText = t.saved;
-        setTimeout(() => { btnLabel.innerText = t.save; }, 2000);
+        btn.innerText = t.saved;
+        setTimeout(() => { btn.innerText = t.save; }, 2000);
         await controllaMatch(av);
-    } catch (e) { btnLabel.innerText = t.save; }
+    } catch (e) { btn.innerText = t.save; }
 };
 
 async function controllaMatch(miaAv) {
@@ -139,25 +132,18 @@ function mostraPopupMatch(nome, giorno, fascia) {
     document.getElementById("matchModal").style.display = "flex";
 }
 
-// --- 6. UTILS ---
+// --- 6. UTILITY ---
 function applicaLingua(nome, lingua) {
     const t = langPack[lingua];
     document.getElementById("welcomeTitle").innerHTML = `${t.welcome} ${nome} 🤙🏻`;
     document.getElementById("labelSaveBtn").innerText = t.save;
-    document.getElementById("titleSettings").innerText = t.settings;
-    document.getElementById("labelLogout").innerText = t.logout;
     document.getElementById("btnVen").innerText = t.days.ven;
     document.getElementById("btnSab").innerText = t.days.sab;
     document.getElementById("btnDom").innerText = t.days.dom;
-    document.getElementById("labelVen").innerText = t.days.labels[0];
-    document.getElementById("labelSab").innerText = t.days.labels[1];
-    document.getElementById("labelDom").innerText = t.days.labels[2];
     document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
     document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
     document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
     document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
-    document.getElementById("matchFoundTitle").innerText = t.matchTitle;
-    document.getElementById("labelLater").innerText = t.later;
 }
 
 function getCheckedVals(day) {
@@ -184,7 +170,7 @@ async function caricaDati() {
     }
 }
 
-// Eventi click giorni
+// Gestione click pulsanti giorni
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const d = btn.dataset.day;
