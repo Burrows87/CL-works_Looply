@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Looply - App</title>
+  <title>Looply - La tua Disponibilità</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="style.css">
 </head>
@@ -17,7 +17,7 @@
       </div>
       
       <div class="card">
-        <button id="googleBtn" style="background: #ffffff; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px;">
+        <button id="googleBtn" style="background: #ffffff; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
           <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
           Accedi con Google
         </button>
@@ -43,36 +43,36 @@
           <div class="day-item">
             <button class="day-btn" data-day="venerdi">Ven</button>
             <div id="venerdi-slots" class="slots disabled">
-              <label><input type="checkbox" value="any" class="slot-cb"> <b>Tutto</b></label>
-              <label><input type="checkbox" value="morning" class="slot-cb"> Matt.</label>
-              <label><input type="checkbox" value="afternoon" class="slot-cb"> Pom.</label>
-              <label><input type="checkbox" value="evening" class="slot-cb"> Sera</label>
+              <label><input type="checkbox" value="any"> <b>Sempre</b></label>
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
 
           <div class="day-item">
             <button class="day-btn" data-day="sabato">Sab</button>
             <div id="sabato-slots" class="slots disabled">
-              <label><input type="checkbox" value="any" class="slot-cb"> <b>Tutto</b></label>
-              <label><input type="checkbox" value="morning" class="slot-cb"> Matt.</label>
-              <label><input type="checkbox" value="afternoon" class="slot-cb"> Pom.</label>
-              <label><input type="checkbox" value="evening" class="slot-cb"> Sera</label>
+              <label><input type="checkbox" value="any"> <b>Sempre</b></label>
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
 
           <div class="day-item">
             <button class="day-btn" data-day="domenica">Dom</button>
             <div id="domenica-slots" class="slots disabled">
-              <label><input type="checkbox" value="any" class="slot-cb"> <b>Tutto</b></label>
-              <label><input type="checkbox" value="morning" class="slot-cb"> Matt.</label>
-              <label><input type="checkbox" value="afternoon" class="slot-cb"> Pom.</label>
-              <label><input type="checkbox" value="evening" class="slot-cb"> Sera</label>
+              <label><input type="checkbox" value="any"> <b>Sempre</b></label>
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
 
         </div>
 
-        <button class="mt-10" onclick="saveAvailability()">Salva disponibilità</button>
+        <button class="mt-10" id="btnSave" onclick="saveAvailability()">Salva disponibilità</button>
       </div>
     </div>
 
