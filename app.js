@@ -28,19 +28,53 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // Ricordami
+  // 🔹 Ricordami
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
 
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // Click bottoni giorni
+  // 🔹 Click bottoni giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
       toggleDay(day);
     });
+  });
+
+  // 🔹 LOGICA "SEMPRE"
+  document.querySelectorAll(".slots").forEach(container => {
+
+    const checkboxes = container.querySelectorAll("input");
+
+    checkboxes.forEach(cb => {
+
+      cb.addEventListener("change", () => {
+
+        const always = container.querySelector(".always");
+
+        if (cb.classList.contains("always") && cb.checked) {
+          // Se clicchi "Sempre" → spegne tutto il resto
+          checkboxes.forEach(c => {
+            if (c !== always) c.checked = false;
+          });
+        } else if (!cb.classList.contains("always") && cb.checked) {
+          // Se clicchi una fascia → spegne "Sempre"
+          if (always) always.checked = false;
+        }
+
+        // Se niente selezionato → riattiva "Sempre"
+        const anyChecked = Array.from(checkboxes).some(c => c.checked);
+
+        if (!anyChecked && always) {
+          always.checked = true;
+        }
+
+      });
+
+    });
+
   });
 
 });
@@ -102,13 +136,18 @@ window.toggleDay = function(day) {
     // abilita checkbox
     slots.querySelectorAll("input").forEach(cb => {
       cb.disabled = false;
+      cb.checked = false;
     });
+
+    // ✅ attiva "Sempre" di default
+    const always = slots.querySelector(".always");
+    if (always) always.checked = true;
 
   } else {
     btn.classList.remove("active");
     slots.classList.add("disabled");
 
-    // reset + disabilita checkbox
+    // reset
     slots.querySelectorAll("input").forEach(cb => {
       cb.checked = false;
       cb.disabled = true;
