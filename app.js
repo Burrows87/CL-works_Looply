@@ -23,6 +23,8 @@ firebase.auth().onAuthStateChanged(user => {
   if (user) {
     currentUser = user.uid;
 
+    console.log("User logged in:", user.email);
+
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
 
@@ -39,6 +41,8 @@ firebase.auth().onAuthStateChanged(user => {
 
 window.loginWithGoogle = async function () {
 
+  console.log("CLICK GOOGLE LOGIN");
+
   const provider = new firebase.auth.GoogleAuthProvider();
 
   try {
@@ -46,6 +50,8 @@ window.loginWithGoogle = async function () {
 
     const user = result.user;
     currentUser = user.uid;
+
+    console.log("Google login success:", user.email);
 
     await db.collection("users").doc(currentUser).set({
       name: user.displayName,
@@ -55,7 +61,7 @@ window.loginWithGoogle = async function () {
     }, { merge: true });
 
   } catch (err) {
-    console.error(err);
+    console.error("Google login error:", err);
     alert(err.message);
   }
 };
@@ -185,7 +191,7 @@ window.saveAvailability = async function () {
     alert("Disponibilità salvata");
 
   } catch (error) {
-    console.error(error);
+    console.error("Save error:", error);
     alert("Errore nel salvataggio");
   }
 };
