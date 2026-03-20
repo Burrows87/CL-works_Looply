@@ -1,4 +1,4 @@
-// CONFIGURAZIONE FIREBASE
+// 1. CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -15,18 +15,20 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- FUNZIONI DI NAVIGAZIONE (DEFINITE SUBITO) ---
+// 2. NAVIGAZIONE (GLOBALIZZATA PER L'HTML)
 window.openSettings = function() {
+  console.log("Apertura Impostazioni...");
   document.getElementById("app").style.display = "none";
   document.getElementById("settingsPage").style.display = "block";
 };
 
 window.closeSettings = function() {
+  console.log("Chiusura Impostazioni...");
   document.getElementById("settingsPage").style.display = "none";
   document.getElementById("app").style.display = "block";
 };
 
-// --- GESTIONE ACCESSO ---
+// 3. GESTIONE AUTH
 auth.onAuthStateChanged(async (user) => {
   const formLogin = document.getElementById("formLogin");
   const appDiv = document.getElementById("app");
@@ -37,9 +39,9 @@ auth.onAuthStateChanged(async (user) => {
     formLogin.style.display = "none";
     appDiv.style.display = "block";
     
-    // Caricamento Info Profilo
+    // Aggiornamento Profilo
     const name = user.displayName ? user.displayName.split(' ')[0] : "Utente";
-    document.getElementById("welcomeTitle").innerText = `Ciao ${name}!`;
+    document.getElementById("welcomeTitle").innerText = "Ciao " + name + "!";
     document.getElementById("userName").innerText = user.displayName || "Utente";
     document.getElementById("userEmail").innerText = user.email;
     
@@ -57,22 +59,20 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// LOGIN GOOGLE
-document.getElementById("googleBtn").addEventListener("click", async () => {
+// Login Google
+document.getElementById("googleBtn").addEventListener("click", () => {
   const provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    await auth.signInWithPopup(provider);
-  } catch (e) { console.error(e); }
+  auth.signInWithPopup(provider).catch(e => console.error("Errore login:", e));
 });
 
-// --- LOGICA GIORNI E SMART FLAGS ---
+// 4. LOGICA GIORNI E SMART FLAGS
 document.querySelectorAll(".day-btn").forEach(btn => {
   btn.addEventListener("click", () => toggleDay(btn.dataset.day, true));
 });
 
 function toggleDay(day, isManual = false) {
   const btn = document.querySelector(`[data-day="${day}"]`);
-  const slots = document.getElementById(`${day}-slots`);
+  const slots = document.getElementById(day + "-slots");
   
   if (isManual) selectedDays[day] = !selectedDays[day];
   else selectedDays[day] = true;
@@ -80,7 +80,6 @@ function toggleDay(day, isManual = false) {
   if (selectedDays[day]) {
     btn.classList.add("active");
     slots.classList.remove("disabled");
-    // Se clicco il giorno, metto "Sempre" di default
     if (isManual) {
       const alwaysCb = slots.querySelector('input[value="any"]');
       alwaysCb.checked = true;
@@ -93,13 +92,12 @@ function toggleDay(day, isManual = false) {
   }
 }
 
-// GESTIONE INCROCIO CHECKBOX
+// Gestione incrocio Sempre vs Fasce Orarie
 document.querySelectorAll('.slots').forEach(container => {
   container.addEventListener('change', (e) => {
     const clicked = e.target;
     const alwaysCb = container.querySelector('input[value="any"]');
     const fasceCbs = container.querySelectorAll('input:not([value="any"])');
-
     if (clicked.value === "any") {
       if (clicked.checked) fasceCbs.forEach(i => i.checked = false);
     } else {
@@ -108,7 +106,7 @@ document.querySelectorAll('.slots').forEach(container => {
   });
 });
 
-// --- SALVATAGGIO / CARICAMENTO ---
+// 5. SALVATAGGIO / CARICAMENTO FIRESTORE
 window.saveAvailability = async () => {
   const btn = document.getElementById("btnSave");
   const av = {
@@ -120,13 +118,16 @@ window.saveAvailability = async () => {
     btn.innerText = "Salvataggio...";
     await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
     btn.innerText = "Salva disponibilità";
-    alert("✅ Salvato con successo!");
-  } catch (e) { alert("Errore nel salvataggio"); btn.innerText = "Salva disponibilità"; }
+    alert("✅ Disponibilità salvata!");
+  } catch (e) { 
+    alert("Errore nel salvataggio"); 
+    btn.innerText = "Salva disponibilità"; 
+  }
 };
 
 function getCheckedValues(day) {
   if (!selectedDays[day]) return null;
-  const container = document.getElementById(`${day}-slots`);
+  const container = document.getElementById(day + "-slots");
   const values = Array.from(container.querySelectorAll("input:checked")).map(c => c.value);
   return values.length > 0 ? values : null;
 }
@@ -138,7 +139,7 @@ async function caricaDati() {
     for (const d in av) {
       if (av[d]) {
         toggleDay(d, false);
-        const container = document.getElementById(`${d}-slots`);
+        const container = document.getElementById(d + "-slots");
         container.querySelectorAll("input").forEach(cb => {
           if (av[d].includes(cb.value)) cb.checked = true;
         });
@@ -148,4 +149,4 @@ async function caricaDati() {
 }
 
 window.logout = () => auth.signOut().then(() => location.reload());
-window.loginEmail = () => alert("Usa l'accesso con Google!");
+window.loginEmail = () => alert("Accedi con Google!");
