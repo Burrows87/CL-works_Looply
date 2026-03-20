@@ -1,13 +1,51 @@
+/* 1. VARIABILI E BASE */
 :root {
-    --primary-color: #2563eb;
+    --primary-color: #2563eb; /* Colore di default */
+    --bg-color: #f3f4f6;
+    --card-bg: #ffffff;
+    --text-main: #1f2937;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
 }
 
-* { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-body { background: #f9fafb; display: flex; justify-content: center; padding: 20px; }
-.container { width: 100%; max-width: 400px; }
-.card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al click su mobile */
+}
 
-/* ALLINEAMENTO ORIZZONTALE */
+body {
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    padding: 15px;
+    min-height: 100vh;
+}
+
+.container {
+    width: 100%;
+    max-width: 420px;
+}
+
+/* 2. CARD E HEADER */
+.header h1 {
+    font-size: 26px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+}
+
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+}
+
+/* 3. LAYOUT GIORNI (AFFIANCATI) */
 .days-row {
     display: flex;
     justify-content: space-between;
@@ -15,53 +53,95 @@ body { background: #f9fafb; display: flex; justify-content: center; padding: 20p
     margin-bottom: 20px;
 }
 
-.day-item { flex: 1; }
+.day-item {
+    flex: 1;
+}
 
 .day-btn {
     width: 100%;
-    padding: 15px 5px;
-    border-radius: 12px;
-    border: 2px solid #e5e7eb;
+    padding: 16px 5px;
+    border-radius: 14px;
+    border: 2px solid var(--border-color);
     background: white;
-    font-weight: bold;
+    font-weight: 700;
+    font-size: 15px;
     cursor: pointer;
-    transition: 0.2s;
+    transition: all 0.2s ease;
+    color: var(--text-main);
 }
 
-/* REATTIVITÀ AL COLORE SCELTO */
+/* STATO ATTIVO: USA LA VARIABILE */
 .day-btn.active {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     color: white !important;
+    transform: scale(0.95);
 }
 
+/* 4. SLOT ORARI */
 .slots {
-    background: #f3f4f6;
+    background: #f9fafb;
     padding: 15px;
-    border-radius: 12px;
-    margin-bottom: 10px;
-    display: none; /* Nascondi di default, mostra solo se attivo */
+    border-radius: 15px;
+    margin-bottom: 12px;
+    border: 1px dashed var(--border-color);
+    display: none; /* Nascosti finché non clicchi sul giorno */
 }
 
 .slots:not(.disabled) {
     display: block;
+    animation: fadeIn 0.3s ease;
 }
 
-.slots label { display: block; margin: 8px 0; cursor: pointer; }
+.slots-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
 
+.slots label {
+    font-size: 14px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+}
+
+/* 5. PULSANTI AZIONE */
 .btn-primary {
     background-color: var(--primary-color) !important;
     color: white;
     width: 100%;
     padding: 15px;
     border: none;
-    border-radius: 12px;
-    font-weight: bold;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
     cursor: pointer;
-    margin-top: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: opacity 0.2s;
+}
+
+.btn-whatsapp {
+    background-color: #25d366 !important;
+    color: white;
+    width: 100%;
+    padding: 15px;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .btn-google {
-    width: 100%; padding: 12px; border: 1px solid #e5e7eb; background: white; border-radius: 10px;
-    display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: bold; cursor: pointer;
-}
+    width: 100%;
+    padding:
