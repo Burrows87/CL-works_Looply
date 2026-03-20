@@ -20,24 +20,7 @@ let currentMatchUser = null;
 // ================= DOM READY =================
 
 window.addEventListener("DOMContentLoaded", () => {
-
-  const terms = document.getElementById("terms");
-  const privacy = document.getElementById("privacy");
-  const name = document.getElementById("username");
-  const phone = document.getElementById("phone");
-  const btn = document.getElementById("enterBtn");
-
-  function checkLogin() {
-    btn.disabled = !(terms.checked && privacy.checked && name.value && phone.value);
-  }
-
-  terms.onchange = checkLogin;
-  privacy.onchange = checkLogin;
-  name.oninput = checkLogin;
-  phone.oninput = checkLogin;
-
-  createDaysUI();
-
+  createDaysUI(); // se la usi per generare i 3 giorni
 });
 
 // ================= LOGIN =================
@@ -46,6 +29,18 @@ window.login = async function () {
 
   const name = document.getElementById("username").value;
   const phone = document.getElementById("phone").value;
+  const terms = document.getElementById("terms").checked;
+  const privacy = document.getElementById("privacy").checked;
+
+  if (!name || !phone) {
+    alert("Inserisci nome e telefono");
+    return;
+  }
+
+  if (!terms || !privacy) {
+    alert("Devi accettare termini e privacy");
+    return;
+  }
 
   try {
     const result = await auth.signInAnonymously();
@@ -53,8 +48,9 @@ window.login = async function () {
 
     await db.collection("users").doc(currentUser).set({
       name,
-      phone
-    });
+      phone,
+      createdAt: new Date()
+    }, { merge: true });
 
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
@@ -67,37 +63,6 @@ window.login = async function () {
   }
 };
 
-// ================= FIREBASE INIT =================
-// (assicurati di avere la tua config Firebase sopra se la usi)
-
-const db = firebase.firestore();
-
-// ================= LOGIN =================
-
-function login() {
-  const username = document.getElementById("username").value;
-  const phone = document.getElementById("phone").value;
-  const terms = document.getElementById("terms").checked;
-  const privacy = document.getElementById("privacy").checked;
-
-  if (!username || !phone) {
-    alert("Inserisci nome e telefono");
-    return;
-  }
-
-  if (!terms || !privacy) {
-    alert("Devi accettare termini e privacy");
-    return;
-  }
-
-  // salva utente base (opzionale)
-  localStorage.setItem("user", JSON.stringify({ username, phone }));
-
-  // switch UI
-  document.getElementById("formLogin").classList.add("hidden");
-  document.getElementById("app").classList.remove("hidden");
-}
-
 // ================= GIORNI =================
 
 let selectedDays = {
@@ -109,7 +74,7 @@ let selectedDays = {
 function toggleDay(day) {
   selectedDays[day] = !selectedDays[day];
 
-  const btn = document.querySelector(`button[onclick="toggleDay('${day}')"]`);
+  const btn = document.getElementById(`${day}-btn`);
   const select = document.getElementById(`${day}-slot`);
 
   if (selectedDays[day]) {
@@ -143,25 +108,18 @@ function getAvailability() {
 // ================= SALVATAGGIO =================
 
 async function saveAvailability() {
-  const user = JSON.parse(localStorage.getItem("user"));
+
   const availability = getAvailability();
 
-  if (!user) {
-    alert("Utente non trovato");
-    return;
-  }
-
   try {
-    await db.collection("users").doc(user.phone).set({
-      username: user.username,
-      phone: user.phone,
+    await db.collection("users").doc(currentUser).set({
       availability: availability,
       updatedAt: new Date()
-    });
+    }, { merge: true });
 
     alert("Disponibilità salvata");
 
-    checkMatches(user.phone);
+    checkMatches(currentUser);
 
   } catch (error) {
     console.error(error);
@@ -169,24 +127,25 @@ async function saveAvailability() {
   }
 }
 
-// ================= MATCH (BASE) =================
+// ================= MATCH =================
 
-async function checkMatches(myPhone) {
-  const myDoc = await db.collection("users").doc(myPhone).get();
+async function checkMatches(myId) {
+
+  const myDoc = await db.collection("users").doc(myId).get();
   const myData = myDoc.data();
 
   const snapshot = await db.collection("users").get();
 
   snapshot.forEach(doc => {
+
+    if (doc.id === myId) return;
+
     const user = doc.data();
 
-    if (user.phone === myPhone) return;
-
-    const match = compareAvailability(myData.availability, user.availability);
-
-    if (match) {
+    if (user.availability && compareAvailability(myData.availability, user.availability)) {
       showMatch(user);
     }
+
   });
 }
 
@@ -206,11 +165,11 @@ function showMatch(user) {
   const popup = document.getElementById("matchPopup");
   const text = document.getElementById("matchText");
 
-  text.innerText = `Hai un match con ${user.username}`;
+  text.innerText = `Hai un match con ${user.name}`;
 
   popup.classList.remove("hidden");
 
-  window.currentMatch = user;
+  currentMatchUser = user;
 }
 
 function closeMatch() {
@@ -218,13 +177,18 @@ function closeMatch() {
 }
 
 function sendWhatsApp() {
-  const user = window.currentMatch;
+  if (!currentMatchUser) return;
 
-  if (!user) return;
-
-  const phone = user.phone;
+  const phone = currentMatchUser.phone;
   const message = encodeURIComponent("Ciao! Match da Looply 👋");
 
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
 
+// ================= LISTENER MATCH (OPZIONALE) =================
+
+function listenMatches() {
+  db.collection("users").onSnapshot(() => {
+    checkMatches(currentUser);
+  });
+}
