@@ -105,3 +105,96 @@ window.saveAvailability = async () => {
         btnLabel.innerText = t.saved;
         setTimeout(() => { btnLabel.innerText = t.save; }, 2000);
         await controllaMatch(av);
+    } catch (e) { btnLabel.innerText = t.save; }
+};
+
+async function controllaMatch(miaAv) {
+    const snapshot = await db.collection("users").get();
+    let matchTrovato = false;
+    snapshot.forEach(doc => {
+        if (doc.id !== currentUser && !matchTrovato) {
+            const altro = doc.data();
+            if (altro.availability) {
+                ["venerdi", "sabato", "domenica"].forEach(g => {
+                    if (miaAv[g] && altro.availability[g]) {
+                        const comuni = miaAv[g].filter(f => altro.availability[g].includes(f));
+                        if (comuni.length > 0 && !matchTrovato) {
+                            const giornoTrad = document.getElementById(`label${g.charAt(0).toUpperCase() + g.slice(1)}`).innerText;
+                            mostraPopupMatch(altro.displayName, giornoTrad, comuni[0]);
+                            matchTrovato = true;
+                        }
+                    }
+                });
+            }
+        }
+    });
+}
+
+function mostraPopupMatch(nome, giorno, fascia) {
+    const t = langPack[userLang];
+    document.getElementById("matchText").innerHTML = t.matchText(nome, giorno, fascia);
+    document.getElementById("matchWA").onclick = () => {
+        window.open(`https://wa.me/?text=${encodeURIComponent(t.waMsg(nome, giorno, fascia))}`, '_blank');
+    };
+    document.getElementById("matchModal").style.display = "flex";
+}
+
+// --- 6. UTILS ---
+function applicaLingua(nome, lingua) {
+    const t = langPack[lingua];
+    document.getElementById("welcomeTitle").innerHTML = `${t.welcome} ${nome} 🤙🏻`;
+    document.getElementById("labelSaveBtn").innerText = t.save;
+    document.getElementById("titleSettings").innerText = t.settings;
+    document.getElementById("labelLogout").innerText = t.logout;
+    document.getElementById("btnVen").innerText = t.days.ven;
+    document.getElementById("btnSab").innerText = t.days.sab;
+    document.getElementById("btnDom").innerText = t.days.dom;
+    document.getElementById("labelVen").innerText = t.days.labels[0];
+    document.getElementById("labelSab").innerText = t.days.labels[1];
+    document.getElementById("labelDom").innerText = t.days.labels[2];
+    document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
+    document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
+    document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
+    document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
+    document.getElementById("matchFoundTitle").innerText = t.matchTitle;
+    document.getElementById("labelLater").innerText = t.later;
+}
+
+function getCheckedVals(day) {
+    if (!selectedDays[day]) return null;
+    return Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
+}
+
+async function caricaDati() {
+    const doc = await db.collection("users").doc(currentUser).get();
+    if (doc.exists && doc.data().availability) {
+        const av = doc.data().availability;
+        for (const d in av) {
+            if (av[d] && av[d].length > 0) {
+                selectedDays[d] = true;
+                const btn = document.querySelector(`[data-day="${d}"]`);
+                if(btn) btn.classList.add("active");
+                const s = document.getElementById(d + "-slots");
+                if(s) {
+                    s.classList.remove("disabled");
+                    s.querySelectorAll("input").forEach(cb => { if (av[d].includes(cb.value)) cb.checked = true; });
+                }
+            }
+        }
+    }
+}
+
+// Eventi click giorni
+document.querySelectorAll(".day-btn").forEach(btn => {
+    btn.onclick = () => {
+        const d = btn.dataset.day;
+        selectedDays[d] = !selectedDays[d];
+        btn.classList.toggle("active");
+        document.getElementById(d + "-slots").classList.toggle("disabled");
+    };
+});
+
+window.logout = () => auth.signOut().then(() => location.reload());
+window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
+window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
+window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
