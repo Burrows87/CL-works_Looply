@@ -8,7 +8,10 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+// Inizializzazione sicura
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
@@ -36,26 +39,27 @@ const langPack = {
     }
 };
 
-// --- 3. FIX LOGIN PER MOBILE (REDIRECT) ---
-auth.getRedirectResult().then((result) => {
-    if (result.user) console.log("Login completato dopo redirect");
-}).catch((error) => {
-    console.error("Errore Redirect:", error.message);
-});
-
+// --- 3. LOGICA DI LOGIN ---
 function inizializzaLogin() {
     const btn = document.getElementById("googleBtn");
     if (btn) {
+        // Rimuoviamo eventuali listener precedenti per sicurezza
+        btn.onclick = null; 
         btn.onclick = (e) => {
             e.preventDefault();
             const provider = new firebase.auth.GoogleAuthProvider();
             provider.setCustomParameters({ prompt: 'select_account' });
-            auth.signInWithRedirect(provider);
+            auth.signInWithRedirect(provider).catch(err => alert("Errore login: " + err.message));
         };
     }
 }
 
-// --- 4. GESTIONE PROFILO & LINGUA ---
+// Gestione ritorno dal redirect
+auth.getRedirectResult().catch((error) => {
+    console.error("Errore redirect:", error.message);
+});
+
+// --- 4. GESTIONE PROFILO ---
 async function inizializzaUtente(user) {
     try {
         const userDoc = await db.collection("users").doc(user.uid).get();
@@ -64,20 +68,104 @@ async function inizializzaUtente(user) {
             userLang = data.lang;
             applicaLingua(data.displayName, userLang);
             if (data.themeColor) document.documentElement.style.setProperty('--primary-color', data.themeColor);
-            document.getElementById("userName").innerText = data.displayName;
+            const nameEl = document.getElementById("userName");
+            if(nameEl) nameEl.innerText = data.displayName;
         } else {
-            // Se non ha ancora impostato il profilo, apri onboarding
             document.getElementById("onboardingModal").style.display = "flex";
         }
     } catch (e) {
-        console.error("Errore caricamento profilo:", e);
+        console.error("Errore profilo:", e);
     }
 }
 
+function applicaLingua(nome, lingua) {
+    const t = langPack[lingua];
+    const wTitle = document.getElementById("welcomeTitle");
+    const sBtn = document.getElementById("labelSaveBtn");
+    
+    if (wTitle) wTitle.innerHTML = `${t.welcome} ${nome} 🤙🏻`;
+    if (sBtn) sBtn.innerText = t.save;
+    
+    document.getElementById("titleSettings").innerText = t.settings;
+    document.getElementById("labelLogout").innerText = t.logout;
+    document.getElementById("btnVen").innerText = t.days.ven;
+    document.getElementById("btnSab").innerText = t.days.sab;
+    document.getElementById("btnDom").innerText = t.days.dom;
+    document.getElementById("labelVen").innerText = t.days.labels[0];
+    document.getElementById("labelSab").innerText = t.days.labels[1];
+    document.getElementById("labelDom").innerText = t.days.labels[2];
+
+    document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
+    document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
+    document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
+    document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
+    
+    document.getElementById("matchFoundTitle").innerText = t.matchTitle;
+    document.getElementById("labelLater").innerText = t.later;
+    document.getElementById("labelWhatsApp").innerText = t.waBtn;
+}
+
+// --- 5. STATO AUTENTICAZIONE ---
+auth.onAuthStateChanged(async (user) => {
+    const formLogin = document.getElementById("formLogin");
+    const appDiv = document.getElementById("app");
+    
+    if (user) {
+        currentUser = user.uid;
+        if(formLogin) formLogin.style.display = "none";
+        if(appDiv) appDiv.style.display = "block";
+        
+        await inizializzaUtente(user);
+        
+        const emailEl = document.getElementById("userEmail");
+        const photoEl = document.getElementById("userPhoto");
+        if (emailEl) emailEl.innerText = user.email;
+        if (photoEl && user.photoURL) photoEl.src = user.photoURL;
+        
+        await caricaDati();
+    } else {
+        currentUser = null;
+        if(formLogin) formLogin.style.display = "block";
+        if(appDiv) appDiv.style.display = "none";
+        inizializzaLogin();
+    }
+});
+
+// --- 6. AZIONI UTENTE ---
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     const lingua = document.getElementById("selectLingua").value;
-    if (nome.length < 2) return alert("Inserisci un nome valido!");
+    if (nome.length < 2) return alert("Inserisci un nome!");
 
     try {
-        await db.collection("users
+        await db.collection("users").doc(currentUser).set({
+            displayName: nome,
+            lang: lingua,
+            themeColor: "#2563eb"
+        }, { merge: true });
+
+        userLang = lingua;
+        document.getElementById("onboardingModal").style.display = "none";
+        applicaLingua(nome, lingua);
+    } catch (e) { alert("Errore"); }
+};
+
+window.saveAvailability = async () => {
+    const btnLabel = document.getElementById("labelSaveBtn");
+    const t = langPack[userLang];
+    const oldText = btnLabel.innerText;
+    btnLabel.innerText = t.saving;
+    
+    const av = {
+        venerdi: getCheckedVals("venerdi"),
+        sabato: getCheckedVals("sabato"),
+        domenica: getCheckedVals("domenica")
+    };
+
+    try {
+        await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
+        btnLabel.innerText = t.saved;
+        setTimeout(() => { btnLabel.innerText = t.save; }, 2000);
+        await controllaMatch(av);
+    } catch (e) { 
+        btnLabel.innerText = old
