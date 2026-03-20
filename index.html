@@ -6,6 +6,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
   <style>
+    body { font-family: Arial; padding: 20px; }
     .hidden { display: none; }
     .active { background-color: #4CAF50; color: white; }
     .disabled { opacity: 0.5; pointer-events: none; }
@@ -19,7 +20,7 @@
   <!-- ================= LOGIN ================= -->
   <div id="formLogin">
 
-    <h2>Login Looply</h2>
+    <h2>Looply Login</h2>
 
     <input type="email" id="email" placeholder="Email"><br><br>
     <input type="password" id="password" placeholder="Password"><br><br>
@@ -28,11 +29,11 @@
     <input type="text" id="phone" placeholder="Telefono"><br><br>
 
     <label>
-      <input type="checkbox" id="terms"> Accetto termini
+      <input type="checkbox" id="terms"> Accetto i termini
     </label><br>
 
     <label>
-      <input type="checkbox" id="privacy"> Accetto privacy
+      <input type="checkbox" id="privacy"> Accetto la privacy
     </label><br><br>
 
     <button id="enterBtn" onclick="login()">Login / Registrati</button>
@@ -46,12 +47,50 @@
   <!-- ================= APP ================= -->
   <div id="app" class="hidden">
 
-    <h2>Looply App</h2>
+    <h2>Looply</h2>
 
-    <h3>Seleziona giorni disponibili</h3>
+    <h3>Seleziona disponibilità</h3>
 
     <button class="day-btn" data-day="venerdi">Venerdì</button>
     <button class="day-btn" data-day="sabato">Sabato</button>
     <button class="day-btn" data-day="domenica">Domenica</button>
 
-    <div id="venerdi
+    <div id="venerdi-slots" class="slots disabled">
+      <h4>Venerdì</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <label><input type="checkbox" value="morning"> Mattina</label><br>
+      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label><br>
+    </div>
+
+    <div id="sabato-slots" class="slots disabled">
+      <h4>Sabato</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <label><input type="checkbox" value="morning"> Mattina</label><br>
+      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label><br>
+    </div>
+
+    <div id="domenica-slots" class="slots disabled">
+      <h4>Domenica</h4>
+      <label><input type="checkbox" class="always" value="any" checked> Sempre</label><br>
+      <label><input type="checkbox" value="morning"> Mattina</label><br>
+      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
+      <label><input type="checkbox" value="evening"> Sera</label><br>
+    </div>
+
+    <br>
+    <button onclick="saveAvailability()">Salva disponibilità</button>
+
+  </div>
+
+  <!-- ================= FIREBASE ================= -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+  <!-- TUO JS -->
+  <script src="script.js"></script>
+
+</body>
+</html>
