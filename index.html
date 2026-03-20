@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Looply - La tua Disponibilità</title>
+    <title>Looply - App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -10,30 +10,28 @@
 <body>
 
     <div class="container">
-        
         <div id="formLogin">
             <div class="header">
                 <h1>Looply</h1>
                 <p>Organizza la tua disponibilità</p>
             </div>
             <div class="card">
-                <button id="googleBtn" style="background: white; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; cursor: pointer; padding: 12px; border-radius: 8px; font-weight: 600;">
+                <button id="googleBtn" type="button" style="background: white; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; cursor: pointer; padding: 12px; border-radius: 8px;">
                     <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
                     Accedi con Google
                 </button>
                 <div style="text-align: center; margin: 15px 0; color: #9ca3af; font-size: 12px;">OPPURE</div>
-                <input type="email" id="email" placeholder="Email" style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                <input type="password" id="password" placeholder="Password" style="width: 100%; margin-bottom: 10px; padding: 10px; border: 1px solid #ddd; border-radius: 6px;">
-                <button onclick="window.loginEmail()" style="width: 100%;">Entra</button>
+                <input type="email" id="email" placeholder="Email">
+                <input type="password" id="password" placeholder="Password">
+                <button type="button" onclick="window.loginEmail()">Entra</button>
             </div>
         </div>
 
         <div id="app" style="display: none;">
             <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                 <h1 id="welcomeTitle">Ciao!</h1>
-                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 5px;"></i>
+                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280;"></i>
             </div>
-
             <div class="card">
                 <div class="days-row">
                     <div class="day-item">
@@ -64,15 +62,29 @@
                         </div>
                     </div>
                 </div>
-                <button class="mt-10" id="btnSave" onclick="window.saveAvailability()" style="width: 100%; margin-top: 20px;">Salva disponibilità</button>
+                <button id="btnSave" onclick="window.saveAvailability()" style="width: 100%; margin-top: 20px;">Salva disponibilità</button>
             </div>
         </div>
 
         <div id="settingsPage" style="display: none;">
             <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
-                <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="font-size: 20px; cursor: pointer; color: #111827; padding: 5px;"></i>
+                <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="cursor: pointer;"></i>
                 <h1>Impostazioni</h1>
             </div>
             <div class="card">
-                <div style="text-align: center; margin-bottom: 20px;">
-                    <img id="userPhoto" src="" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #2563eb; display: none;
+                <div style="text-align: center;">
+                    <img id="userPhoto" src="" style="width: 70px; border-radius: 50%; display: none; margin: 0 auto 10px;">
+                    <h3 id="userName">Utente</h3>
+                    <p id="userEmail"></p>
+                </div>
+                <button onclick="window.logout()" style="background: #fee2e2; color: #ef4444; margin-top: 20px;">Esci</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+    <script src="app.js"></script>
+</body>
+</html>
