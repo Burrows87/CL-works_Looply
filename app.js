@@ -19,23 +19,28 @@ let currentUser = null;
 auth.onAuthStateChanged(user => {
 
   if (user) {
+
     currentUser = user.uid;
+
+    console.log("SESSION ACTIVE:", user.email);
 
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
 
-    console.log("Logged in:", user.email);
-
   } else {
+
     currentUser = null;
+
+    console.log("NO SESSION");
 
     document.getElementById("formLogin").classList.remove("hidden");
     document.getElementById("app").classList.add("hidden");
+
   }
 
 });
 
-// ================= GOOGLE LOGIN (REDIRECT) =================
+// ================= GOOGLE LOGIN =================
 
 // CLICK BUTTON
 document.getElementById("googleBtn").addEventListener("click", () => {
@@ -57,7 +62,7 @@ auth.getRedirectResult()
       const user = result.user;
       currentUser = user.uid;
 
-      console.log("Login completato:", user.email);
+      console.log("Redirect login OK:", user.email);
 
       await db.collection("users").doc(currentUser).set({
         name: user.displayName,
@@ -77,7 +82,7 @@ auth.getRedirectResult()
 // ================= EMAIL LOGIN (PLACEHOLDER) =================
 
 window.login = function () {
-  alert("Login email non ancora implementato");
+  alert("Login email non configurato");
 };
 
 // ================= DAYS =================
