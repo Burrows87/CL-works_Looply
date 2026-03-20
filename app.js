@@ -28,6 +28,7 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
+  // preload dati
   const savedEmail = localStorage.getItem("looply_email");
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
@@ -36,6 +37,7 @@ window.addEventListener("DOMContentLoaded", () => {
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
+  // giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -43,6 +45,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
+  // fasce orarie + sempre
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -136,14 +139,12 @@ window.login = async function () {
 
     } catch (err) {
 
-      // REGISTER se utente non esiste
+      // REGISTRAZIONE se utente non trovato
       if (
         err.code === "auth/user-not-found" ||
         err.code === "auth/invalid-credential"
       ) {
-
         userCredential = await auth.createUserWithEmailAndPassword(email, password);
-
       } else {
         throw err;
       }
