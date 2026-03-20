@@ -28,14 +28,13 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // 🔹 Ricordami
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
 
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // 🔹 Click bottoni giorni
+  // Toggle giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -43,7 +42,7 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // 🔹 LOGICA "SEMPRE"
+  // Logica "Sempre"
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -55,16 +54,13 @@ window.addEventListener("DOMContentLoaded", () => {
         const always = container.querySelector(".always");
 
         if (cb.classList.contains("always") && cb.checked) {
-          // Se clicchi "Sempre" → spegne tutto il resto
           checkboxes.forEach(c => {
             if (c !== always) c.checked = false;
           });
         } else if (!cb.classList.contains("always") && cb.checked) {
-          // Se clicchi una fascia → spegne "Sempre"
           if (always) always.checked = false;
         }
 
-        // Se niente selezionato → riattiva "Sempre"
         const anyChecked = Array.from(checkboxes).some(c => c.checked);
 
         if (!anyChecked && always) {
@@ -77,7 +73,33 @@ window.addEventListener("DOMContentLoaded", () => {
 
   });
 
+  // 🔥 Controllo form per abilitare bottone login
+  setupFormValidation();
+
 });
+
+// ================= FORM VALIDATION =================
+
+function setupFormValidation() {
+
+  const btn = document.querySelector("#formLogin button");
+
+  function checkForm() {
+    const name = document.getElementById("username").value.trim();
+    const phone = document.getElementById("phone").value.trim();
+    const terms = document.getElementById("terms").checked;
+    const privacy = document.getElementById("privacy").checked;
+
+    btn.disabled = !(name && phone && terms && privacy);
+  }
+
+  document.getElementById("username").addEventListener("input", checkForm);
+  document.getElementById("phone").addEventListener("input", checkForm);
+  document.getElementById("terms").addEventListener("change", checkForm);
+  document.getElementById("privacy").addEventListener("change", checkForm);
+
+  checkForm();
+}
 
 // ================= LOGIN =================
 
@@ -86,9 +108,16 @@ window.login = async function () {
   const name = document.getElementById("username").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const remember = document.getElementById("rememberMe")?.checked;
+  const terms = document.getElementById("terms").checked;
+  const privacy = document.getElementById("privacy").checked;
 
   if (!name || !phone) {
     alert("Inserisci nome e telefono");
+    return;
+  }
+
+  if (!terms || !privacy) {
+    alert("Devi accettare termini e privacy");
     return;
   }
 
@@ -102,7 +131,6 @@ window.login = async function () {
       createdAt: new Date()
     });
 
-    // Ricordami
     if (remember) {
       localStorage.setItem("looply_name", name);
       localStorage.setItem("looply_phone", phone);
@@ -133,13 +161,11 @@ window.toggleDay = function(day) {
     btn.classList.add("active");
     slots.classList.remove("disabled");
 
-    // abilita checkbox
     slots.querySelectorAll("input").forEach(cb => {
       cb.disabled = false;
       cb.checked = false;
     });
 
-    // ✅ attiva "Sempre" di default
     const always = slots.querySelector(".always");
     if (always) always.checked = true;
 
@@ -147,7 +173,6 @@ window.toggleDay = function(day) {
     btn.classList.remove("active");
     slots.classList.add("disabled");
 
-    // reset
     slots.querySelectorAll("input").forEach(cb => {
       cb.checked = false;
       cb.disabled = true;
