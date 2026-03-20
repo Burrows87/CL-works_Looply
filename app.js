@@ -40,7 +40,7 @@ document.getElementById("phone").oninput = checkLogin;
 
 // ================= LOGIN =================
 
-async function login() {
+window.login = async function () { 
 
   const name = document.getElementById("username").value;
   const phone = document.getElementById("phone").value;
