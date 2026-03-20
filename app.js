@@ -132,8 +132,7 @@ days.forEach(day => {
 });
 
 // ================= SAVE =================
-
-window.saveAvailability = async function ()
+window.saveAvailability = async function () {
 
   if (!currentUser) {
     alert("Utente non loggato");
@@ -212,8 +211,7 @@ async function showMatch(day, slots, userId) {
 }
 
 // ================= WHATSAPP =================
-
-window.sendWhatsApp = async function ()
+window.sendWhatsApp = async function () {
 
   const userDoc = await db.collection("users").doc(currentMatchUser).get();
   const other = userDoc.data();
