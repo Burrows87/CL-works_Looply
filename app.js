@@ -1,4 +1,4 @@
-// ================= CONFIGURAZIONE =================
+// ================= CONFIGURAZIONE FIREBASE =================
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -6,44 +6,55 @@ const firebaseConfig = {
   storageBucket: "looply-app-21eb9.firebasestorage.app",
   messagingSenderId: "484354825970",
   appId: "1:484354825970:web:79bc652c6b39fb57d27a6b",
+  measurementId: "G-RH0H7FFPBJ"
 };
 
-// Inizializzazione
-firebase.initializeApp(firebaseConfig);
+// Inizializzazione sicura
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+}
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// ================= GESTIONE SESSIONE =================
-auth.onAuthStateChanged(user => {
+// ================= GESTIONE SESSIONE (onAuthStateChanged) =================
+auth.onAuthStateChanged(async (user) => {
   const formLogin = document.getElementById("formLogin");
   const appDiv = document.getElementById("app");
 
   if (user) {
-    console.log("Utente connesso:", user.email);
+    console.log("Accesso eseguito:", user.email);
     currentUser = user.uid;
+    
+    // Mostra l'app e nasconde il login
     formLogin.classList.add("hidden");
     appDiv.classList.remove("hidden");
+
+    // Carica i dati salvati dell'utente da Firestore
+    caricaDatiUtente();
   } else {
-    console.log("Nessun utente connesso");
+    console.log("Nessun utente collegato.");
     currentUser = null;
     formLogin.classList.remove("hidden");
     appDiv.classList.add("hidden");
   }
 });
 
-// ================= LOGIN GOOGLE (POPUP) =================
+// ================= LOGIN CON GOOGLE (POPUP) =================
 document.getElementById("googleBtn").addEventListener("click", async () => {
   console.log("Avvio Google Login...");
   const provider = new firebase.auth.GoogleAuthProvider();
+  
+  // Forza la scelta dell'account per evitare loop automatici
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   try {
     const result = await auth.signInWithPopup(provider);
     const user = result.user;
 
-    // Salvataggio immediato su Firestore
+    // Crea o aggiorna il profilo utente su Firestore
     await db.collection("users").doc(user.uid).set({
       name: user.displayName,
       email: user.email,
@@ -51,22 +62,22 @@ document.getElementById("googleBtn").addEventListener("click", async () => {
       lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
 
-    console.log("Login completato e dati salvati.");
-
+    console.log("Login e salvataggio profilo completati.");
   } catch (error) {
     console.error("Errore Login Google:", error);
-    alert("Errore: " + error.message);
+    alert("Errore durante il login: " + error.message);
   }
 });
 
 // ================= LOGOUT =================
 window.logout = function() {
   auth.signOut().then(() => {
-    location.reload(); // Ricarica la pagina per resettare lo stato dell'interfaccia
+    // Reset interfaccia manuale per sicurezza
+    location.reload();
   });
 };
 
-// ================= LOGICA DISPONIBILITÀ =================
+// ================= LOGICA GIORNI E SLOT =================
 document.querySelectorAll(".day-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     const day = btn.dataset.day;
@@ -94,12 +105,11 @@ function toggleDay(day) {
   }
 }
 
-// ================= SALVATAGGIO DISPONIBILITÀ =================
+// ================= SALVATAGGIO E CARICAMENTO FIRESTORE =================
+
+// Salva la disponibilità
 window.saveAvailability = async function () {
-  if (!currentUser) {
-    alert("Devi effettuare il login prima di salvare!");
-    return;
-  }
+  if (!currentUser) return alert("Effettua il login!");
 
   const availability = {
     venerdi: getDayData("venerdi"),
@@ -115,10 +125,37 @@ window.saveAvailability = async function () {
     
     alert("Disponibilità salvata con successo!");
   } catch (err) {
-    console.error("Errore salvataggio Firestore:", err);
+    console.error("Errore salvataggio:", err);
     alert("Errore durante il salvataggio.");
   }
 };
+
+// Carica la disponibilità esistente all'avvio
+async function caricaDatiUtente() {
+  try {
+    const doc = await db.collection("users").doc(currentUser).get();
+    if (doc.exists && doc.data().availability) {
+      const av = doc.data().availability;
+      
+      // Cicla sui giorni per ripristinare i bottoni e i checkbox
+      ["venerdi", "sabato", "domenica"].forEach(day => {
+        if (av[day]) {
+          // Attiva il giorno
+          toggleDay(day); 
+          // Seleziona i checkbox specifici
+          const container = document.getElementById(`${day}-slots`);
+          container.querySelectorAll("input").forEach(cb => {
+            if (av[day].includes(cb.value)) {
+              cb.checked = true;
+            }
+          });
+        }
+      });
+    }
+  } catch (error) {
+    console.error("Errore caricamento dati:", error);
+  }
+}
 
 function getDayData(day) {
   if (!selectedDays[day]) return null;
@@ -127,6 +164,7 @@ function getDayData(day) {
   return checked.length ? checked : ["any"];
 }
 
+// Placeholder Login Email
 window.loginEmail = function() { 
-  alert("Il login con email/password sarà disponibile a breve!"); 
+  alert("Login email in fase di sviluppo. Usa Google!"); 
 };
