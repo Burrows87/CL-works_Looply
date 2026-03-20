@@ -16,6 +16,50 @@ const db = firebase.firestore();
 
 let currentUser = null;
 
+// ================= SESSION HANDLER =================
+
+firebase.auth().onAuthStateChanged(user => {
+
+  if (user) {
+    currentUser = user.uid;
+
+    document.getElementById("formLogin").classList.add("hidden");
+    document.getElementById("app").classList.remove("hidden");
+
+  } else {
+    currentUser = null;
+
+    document.getElementById("formLogin").classList.remove("hidden");
+    document.getElementById("app").classList.add("hidden");
+  }
+
+});
+
+// ================= GOOGLE LOGIN =================
+
+window.loginWithGoogle = async function () {
+
+  const provider = new firebase.auth.GoogleAuthProvider();
+
+  try {
+    const result = await auth.signInWithPopup(provider);
+
+    const user = result.user;
+    currentUser = user.uid;
+
+    await db.collection("users").doc(currentUser).set({
+      name: user.displayName,
+      email: user.email,
+      photoURL: user.photoURL,
+      createdAt: new Date()
+    }, { merge: true });
+
+  } catch (err) {
+    console.error(err);
+    alert(err.message);
+  }
+};
+
 // ================= STATE =================
 
 let selectedDays = {
@@ -28,16 +72,6 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // preload dati
-  const savedEmail = localStorage.getItem("looply_email");
-  const savedName = localStorage.getItem("looply_name");
-  const savedPhone = localStorage.getItem("looply_phone");
-
-  if (savedEmail) document.getElementById("email").value = savedEmail;
-  if (savedName) document.getElementById("username").value = savedName;
-  if (savedPhone) document.getElementById("phone").value = savedPhone;
-
-  // giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -45,7 +79,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // fasce orarie + sempre
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -76,110 +109,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   });
 
-  setupFormValidation();
 });
-
-// ================= FORM VALIDATION =================
-
-function setupFormValidation() {
-
-  const btn = document.getElementById("enterBtn");
-
-  function checkForm() {
-    const email = document.getElementById("email").value.trim();
-    const name = document.getElementById("username").value.trim();
-    const phone = document.getElementById("phone").value.trim();
-    const terms = document.getElementById("terms").checked;
-    const privacy = document.getElementById("privacy").checked;
-
-    btn.disabled = !(email && name && phone && terms && privacy);
-  }
-
-  ["email", "username", "phone", "terms", "privacy"].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) {
-      el.addEventListener("input", checkForm);
-      el.addEventListener("change", checkForm);
-    }
-  });
-
-  checkForm();
-}
-
-// ================= LOGIN + REGISTER =================
-
-window.login = async function () {
-
-  const email = document.getElementById("email").value.trim();
-  const password = document.getElementById("password").value;
-  const name = document.getElementById("username").value.trim();
-  const phone = document.getElementById("phone").value.trim();
-  const remember = document.getElementById("rememberMe")?.checked;
-
-  const terms = document.getElementById("terms").checked;
-  const privacy = document.getElementById("privacy").checked;
-
-  if (!email || !password || !name || !phone) {
-    alert("Compila tutti i campi");
-    return;
-  }
-
-  if (!terms || !privacy) {
-    alert("Devi accettare termini e privacy");
-    return;
-  }
-
-  try {
-
-    let userCredential;
-
-    try {
-      // LOGIN
-      userCredential = await auth.signInWithEmailAndPassword(email, password);
-
-    } catch (err) {
-
-      // REGISTRAZIONE se utente non trovato
-      if (
-        err.code === "auth/user-not-found" ||
-        err.code === "auth/invalid-credential"
-      ) {
-        userCredential = await auth.createUserWithEmailAndPassword(email, password);
-      } else {
-        throw err;
-      }
-    }
-
-    const user = userCredential.user;
-    currentUser = user.uid;
-
-    await db.collection("users").doc(currentUser).set({
-      name,
-      phone,
-      email,
-      createdAt: new Date(),
-      termsAccepted: true,
-      privacyAccepted: true
-    }, { merge: true });
-
-    if (remember) {
-      localStorage.setItem("looply_email", email);
-      localStorage.setItem("looply_name", name);
-      localStorage.setItem("looply_phone", phone);
-    } else {
-      localStorage.removeItem("looply_email");
-      localStorage.removeItem("looply_name");
-      localStorage.removeItem("looply_phone");
-    }
-
-    document.getElementById("formLogin").classList.add("hidden");
-    document.getElementById("app").classList.remove("hidden");
-
-  } catch (err) {
-    console.error(err);
-    alert(err.message);
-  }
-};
 
 // ================= TOGGLE DAY =================
 
