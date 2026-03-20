@@ -206,7 +206,7 @@ async function showMatch(day, slots, userId) {
   const user = userDoc.data();
 
   document.getElementById("matchText").innerText =
-    ${user.name} - ${day} (${slots.join(", ")})';
+  `${user.name} - ${day} (${slots.join(", ")})`;
 
   document.getElementById("matchPopup").classList.remove("hidden");
 }
