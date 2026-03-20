@@ -2,7 +2,7 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Looply - La tua Disponibilità</title>
+    <title>Looply - App</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
@@ -10,7 +10,6 @@
 <body>
 
     <div class="container">
-        
         <div id="formLogin">
             <div class="header">
                 <h1>Looply</h1>
@@ -27,66 +26,70 @@
         <div id="app" style="display: none;">
             <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
                 <h1 id="welcomeTitle">Ciao!</h1>
-                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 5px;"></i>
+                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280;"></i>
             </div>
 
             <div class="card">
                 <div class="days-row">
                     <div class="day-item">
                         <button class="day-btn" data-day="venerdi">Ven</button>
-                        <div id="venerdi-slots" class="slots disabled">
-                            <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-                            <label><input type="checkbox" value="morning"> Mattina</label>
-                            <label><input type="checkbox" value="afternoon"> Pom.</label>
-                            <label><input type="checkbox" value="evening"> Sera</label>
-                        </div>
                     </div>
                     <div class="day-item">
                         <button class="day-btn" data-day="sabato">Sab</button>
-                        <div id="sabato-slots" class="slots disabled">
-                            <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-                            <label><input type="checkbox" value="morning"> Mattina</label>
-                            <label><input type="checkbox" value="afternoon"> Pom.</label>
-                            <label><input type="checkbox" value="evening"> Sera</label>
-                        </div>
                     </div>
                     <div class="day-item">
                         <button class="day-btn" data-day="domenica">Dom</button>
-                        <div id="domenica-slots" class="slots disabled">
-                            <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-                            <label><input type="checkbox" value="morning"> Mattina</label>
-                            <label><input type="checkbox" value="afternoon"> Pom.</label>
-                            <label><input type="checkbox" value="evening"> Sera</label>
-                        </div>
                     </div>
                 </div>
-                <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary" style="margin-top: 20px;">Salva disponibilità</button>
+
+                <div id="venerdi-slots" class="slots disabled">
+                    <p><b>Venerdì:</b></p>
+                    <label><input type="checkbox" value="any"> Sempre</label>
+                    <label><input type="checkbox" value="morning"> Mattina</label>
+                    <label><input type="checkbox" value="afternoon"> Pom.</label>
+                    <label><input type="checkbox" value="evening"> Sera</label>
+                </div>
+                <div id="sabato-slots" class="slots disabled">
+                    <p><b>Sabato:</b></p>
+                    <label><input type="checkbox" value="any"> Sempre</label>
+                    <label><input type="checkbox" value="morning"> Mattina</label>
+                    <label><input type="checkbox" value="afternoon"> Pom.</label>
+                    <label><input type="checkbox" value="evening"> Sera</label>
+                </div>
+                <div id="domenica-slots" class="slots disabled">
+                    <p><b>Domenica:</b></p>
+                    <label><input type="checkbox" value="any"> Sempre</label>
+                    <label><input type="checkbox" value="morning"> Mattina</label>
+                    <label><input type="checkbox" value="afternoon"> Pom.</label>
+                    <label><input type="checkbox" value="evening"> Sera</label>
+                </div>
+
+                <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary">Salva disponibilità</button>
             </div>
         </div>
 
         <div id="settingsPage" style="display: none;">
             <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
-                <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="cursor: pointer; font-size: 20px;"></i>
+                <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="cursor: pointer;"></i>
                 <h1>Impostazioni</h1>
             </div>
             <div class="card">
-                <div style="text-align: center; margin-bottom: 20px;">
+                <div style="text-align: center;">
                     <img id="userPhoto" src="" style="width: 70px; height: 70px; border-radius: 50%; display: none; margin: 0 auto 10px; border: 3px solid var(--primary-color);">
                     <h3 id="userName">Utente</h3>
                     <p id="userEmail" style="font-size: 12px; color: gray;"></p>
                 </div>
 
-                <div style="margin-top: 20px; border-top: 1px solid #eee; padding-top: 20px;">
-                    <p style="font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">Scegli il colore dei pulsanti</p>
-                    <div style="display: flex; gap: 15px; justify-content: center;">
-                        <div onclick="window.changeTheme('#2563eb')" style="width: 35px; height: 35px; border-radius: 50%; background: #2563eb; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
-                        <div onclick="window.changeTheme('#059669')" style="width: 35px; height: 35px; border-radius: 50%; background: #059669; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
-                        <div onclick="window.changeTheme('#7c3aed')" style="width: 35px; height: 35px; border-radius: 50%; background: #7c3aed; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
-                        <div onclick="window.changeTheme('#db2777')" style="width: 35px; height: 35px; border-radius: 50%; background: #db2777; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
-                        <div onclick="window.changeTheme('#ea580c')" style="width: 35px; height: 35px; border-radius: 50%; background: #ea580c; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.2);"></div>
+                <div style="margin-top: 25px; border-top: 1px solid #eee; padding-top: 20px;">
+                    <p style="font-size: 14px; font-weight: bold; margin-bottom: 12px; text-align: center;">Colore Pulsanti</p>
+                    <div style="display: flex; gap: 10px; justify-content: center;">
+                        <div onclick="window.changeTheme('#2563eb')" style="width: 35px; height: 35px; border-radius: 50%; background: #2563eb; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
+                        <div onclick="window.changeTheme('#059669')" style="width: 35px; height: 35px; border-radius: 50%; background: #059669; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
+                        <div onclick="window.changeTheme('#7c3aed')" style="width: 35px; height: 35px; border-radius: 50%; background: #7c3aed; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
+                        <div onclick="window.changeTheme('#db2777')" style="width: 35px; height: 35px; border-radius: 50%; background: #db2777; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
+                        <div onclick="window.changeTheme('#ea580c')" style="width: 35px; height: 35px; border-radius: 50%; background: #ea580c; cursor: pointer; border: 2px solid white; box-shadow: 0 2px 5px rgba(0,0,0,0.1);"></div>
                     </div>
                 </div>
-
                 <button onclick="window.logout()" style="background: #fee2e2; color: #ef4444; width: 100%; border: none; padding: 12px; border-radius: 8px; cursor: pointer; margin-top: 30px; font-weight: bold;">Esci</button>
             </div>
         </div>
