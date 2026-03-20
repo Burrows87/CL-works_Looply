@@ -28,7 +28,6 @@ let selectedDays = {
 
 window.addEventListener("DOMContentLoaded", () => {
 
-  // preload dati
   const savedEmail = localStorage.getItem("looply_email");
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
@@ -37,7 +36,6 @@ window.addEventListener("DOMContentLoaded", () => {
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
-  // toggle giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
@@ -45,7 +43,6 @@ window.addEventListener("DOMContentLoaded", () => {
     });
   });
 
-  // logica checkbox fasce + sempre
   document.querySelectorAll(".slots").forEach(container => {
 
     const checkboxes = container.querySelectorAll("input");
@@ -106,7 +103,7 @@ function setupFormValidation() {
   checkForm();
 }
 
-// ================= LOGIN / REGISTER =================
+// ================= LOGIN + REGISTER =================
 
 window.login = async function () {
 
@@ -134,13 +131,19 @@ window.login = async function () {
     let userCredential;
 
     try {
-      // prova login
+      // LOGIN
       userCredential = await auth.signInWithEmailAndPassword(email, password);
+
     } catch (err) {
 
-      // se utente non esiste → registrazione
-      if (err.code === "auth/user-not-found") {
+      // REGISTER se utente non esiste
+      if (
+        err.code === "auth/user-not-found" ||
+        err.code === "auth/invalid-credential"
+      ) {
+
         userCredential = await auth.createUserWithEmailAndPassword(email, password);
+
       } else {
         throw err;
       }
@@ -156,7 +159,7 @@ window.login = async function () {
       createdAt: new Date(),
       termsAccepted: true,
       privacyAccepted: true
-    });
+    }, { merge: true });
 
     if (remember) {
       localStorage.setItem("looply_email", email);
