@@ -1,6 +1,6 @@
 // ================= CONFIGURAZIONE =================
 const firebaseConfig = {
-  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
+  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
   projectId: "looply-app-21eb9",
   storageBucket: "looply-app-21eb9.firebasestorage.app",
