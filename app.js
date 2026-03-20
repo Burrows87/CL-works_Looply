@@ -15,7 +15,6 @@ const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
-let currentMatches = [];
 
 // ================= STATE =================
 
@@ -25,21 +24,56 @@ let selectedDays = {
   domenica: false
 };
 
-// ================= INIT =================
+// ================= DOM READY =================
 
 window.addEventListener("DOMContentLoaded", () => {
 
+  // remember me
+  const savedEmail = localStorage.getItem("looply_email");
   const savedName = localStorage.getItem("looply_name");
   const savedPhone = localStorage.getItem("looply_phone");
 
+  if (savedEmail) document.getElementById("email").value = savedEmail;
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
+  // Toggle giorni
   document.querySelectorAll(".day-btn").forEach(btn => {
     btn.addEventListener("click", () => {
       const day = btn.getAttribute("data-day");
       toggleDay(day);
     });
+  });
+
+  // Logica fasce + "sempre"
+  document.querySelectorAll(".slots").forEach(container => {
+
+    const checkboxes = container.querySelectorAll("input");
+
+    checkboxes.forEach(cb => {
+
+      cb.addEventListener("change", () => {
+
+        const always = container.querySelector(".always");
+
+        if (cb.classList.contains("always") && cb.checked) {
+          checkboxes.forEach(c => {
+            if (c !== always) c.checked = false;
+          });
+        } else if (!cb.classList.contains("always") && cb.checked) {
+          if (always) always.checked = false;
+        }
+
+        const anyChecked = Array.from(checkboxes).some(c => c.checked);
+
+        if (!anyChecked && always) {
+          always.checked = true;
+        }
+
+      });
+
+    });
+
   });
 
   setupFormValidation();
@@ -52,34 +86,38 @@ function setupFormValidation() {
   const btn = document.getElementById("enterBtn");
 
   function checkForm() {
+    const email = document.getElementById("email").value.trim();
     const name = document.getElementById("username").value.trim();
     const phone = document.getElementById("phone").value.trim();
     const terms = document.getElementById("terms").checked;
     const privacy = document.getElementById("privacy").checked;
 
-    btn.disabled = !(name && phone && terms && privacy);
+    btn.disabled = !(email && name && phone && terms && privacy);
   }
 
-  document.getElementById("username").addEventListener("input", checkForm);
-  document.getElementById("phone").addEventListener("input", checkForm);
-  document.getElementById("terms").addEventListener("change", checkForm);
-  document.getElementById("privacy").addEventListener("change", checkForm);
+  ["email", "username", "phone", "terms", "privacy"].forEach(id => {
+    document.getElementById(id).addEventListener("input", checkForm);
+    document.getElementById(id).addEventListener("change", checkForm);
+  });
 
   checkForm();
 }
 
-// ================= LOGIN =================
+// ================= LOGIN / REGISTER =================
 
 window.login = async function () {
 
+  const email = document.getElementById("email").value.trim();
+  const password = document.getElementById("password").value;
   const name = document.getElementById("username").value.trim();
   const phone = document.getElementById("phone").value.trim();
   const remember = document.getElementById("rememberMe")?.checked;
+
   const terms = document.getElementById("terms").checked;
   const privacy = document.getElementById("privacy").checked;
 
-  if (!name || !phone) {
-    alert("Inserisci nome e telefono");
+  if (!email || !password || !name || !phone) {
+    alert("Compila tutti i campi");
     return;
   }
 
@@ -89,21 +127,38 @@ window.login = async function () {
   }
 
   try {
-    const result = await auth.signInAnonymously();
+
+    // tenta login
+    let result;
+    try {
+      result = await auth.signInWithEmailAndPassword(email, password);
+    } catch (err) {
+
+      // se utente non esiste → registrazione
+      if (err.code === "auth/user-not-found") {
+        result = await auth.createUserWithEmailAndPassword(email, password);
+      } else {
+        throw err;
+      }
+    }
+
     currentUser = result.user.uid;
 
     await db.collection("users").doc(currentUser).set({
       name,
       phone,
+      email,
       createdAt: new Date(),
-      termsAccepted: terms,
-      privacyAccepted: privacy
+      termsAccepted: true,
+      privacyAccepted: true
     });
 
     if (remember) {
+      localStorage.setItem("looply_email", email);
       localStorage.setItem("looply_name", name);
       localStorage.setItem("looply_phone", phone);
     } else {
+      localStorage.removeItem("looply_email");
       localStorage.removeItem("looply_name");
       localStorage.removeItem("looply_phone");
     }
@@ -172,114 +227,6 @@ function getAvailability() {
   };
 }
 
-// ================= MATCHING =================
-
-async function findMatches() {
-
-  if (!currentUser) return [];
-
-  const currentUserDoc = await db.collection("users").doc(currentUser).get();
-  const myData = currentUserDoc.data();
-
-  const usersSnapshot = await db.collection("users").get();
-
-  const myAvailability = myData.availability || {};
-  const contacted = myData.contactedMatches || [];
-
-  let matches = [];
-
-  usersSnapshot.forEach(doc => {
-
-    if (doc.id === currentUser) return;
-
-    if (contacted.includes(doc.id)) return;
-
-    const user = doc.data();
-    const otherAvailability = user.availability || {};
-
-    const commonDays = [];
-
-    for (let day in myAvailability) {
-
-      if (!myAvailability[day] || !otherAvailability[day]) continue;
-
-      const mySlots = myAvailability[day];
-      const otherSlots = otherAvailability[day];
-
-      const hasMatch =
-        mySlots.includes("any") ||
-        otherSlots.includes("any") ||
-        mySlots.some(slot => otherSlots.includes(slot));
-
-      if (hasMatch) commonDays.push(day);
-    }
-
-    if (commonDays.length > 0) {
-      matches.push({
-        id: doc.id,
-        name: user.name,
-        phone: user.phone,
-        days: commonDays
-      });
-    }
-
-  });
-
-  return matches;
-}
-
-// ================= SHOW MATCHES =================
-
-async function showMatches() {
-
-  const matches = await findMatches();
-
-  if (matches.length === 0) {
-    alert("Nessun nuovo match trovato");
-    return;
-  }
-
-  currentMatches = matches;
-
-  const container = document.getElementById("matchesList");
-  container.innerHTML = "";
-
-  matches.forEach((match, index) => {
-
-    const div = document.createElement("div");
-
-    div.innerHTML = `
-      <p><strong>${match.name}</strong></p>
-      <p>Disponibile: ${match.days.join(", ")}</p>
-      <button onclick="openWhatsApp(${index})">Scrivi su WhatsApp</button>
-      <hr/>
-    `;
-
-    container.appendChild(div);
-  });
-
-  document.getElementById("matchPopup").classList.remove("hidden");
-}
-
-// ================= WHATSAPP =================
-
-window.openWhatsApp = async function(index) {
-
-  const match = currentMatches[index];
-
-  const message = encodeURIComponent(
-    `Ciao! Ho visto su Looply che siamo liberi ${match.days.join(", ")}. Ti va di uscire?`
-  );
-
-  const url = `https://wa.me/${match.phone}?text=${message}`;
-
-  await db.collection("users").doc(currentUser).update({
-    contactedMatches: firebase.firestore.FieldValue.arrayUnion(match.id)
-  });
-
-  window.open(url, "_blank");
-};
-
 // ================= SAVE =================
 
 window.saveAvailability = async function () {
@@ -296,16 +243,10 @@ window.saveAvailability = async function () {
       availability
     }, { merge: true });
 
-    await showMatches();
+    alert("Disponibilità salvata");
 
   } catch (error) {
     console.error(error);
     alert("Errore nel salvataggio");
   }
-};
-
-// ================= CLOSE POPUP =================
-
-window.closeMatch = function () {
-  document.getElementById("matchPopup").classList.add("hidden");
 };
