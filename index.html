@@ -40,15 +40,9 @@
 
             <div class="card">
                 <div class="days-row">
-                    <div class="day-item">
-                        <button class="day-btn" data-day="venerdi">Ven</button>
-                    </div>
-                    <div class="day-item">
-                        <button class="day-btn" data-day="sabato">Sab</button>
-                    </div>
-                    <div class="day-item">
-                        <button class="day-btn" data-day="domenica">Dom</button>
-                    </div>
+                    <div class="day-item"><button class="day-btn" data-day="venerdi">Ven</button></div>
+                    <div class="day-item"><button class="day-btn" data-day="sabato">Sab</button></div>
+                    <div class="day-item"><button class="day-btn" data-day="domenica">Dom</button></div>
                 </div>
 
                 <div id="venerdi-slots" class="slots disabled">
@@ -85,7 +79,6 @@
                     <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary">
                         <i class="fa-solid fa-floppy-disk"></i> Salva disponibilità
                     </button>
-                    
                     <button onclick="window.shareWhatsApp()" class="btn-whatsapp">
                         <i class="fa-brands fa-whatsapp"></i> Invia su WhatsApp
                     </button>
@@ -107,26 +100,6 @@
 
                 <div style="border-top: 1px solid #eee; padding-top: 20px;">
                     <p style="font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">Colore Interfaccia</p>
-                    <div style="display: flex; gap: 12px; justify-content: center;">
-                        <div class="color-dot" onclick="window.changeTheme('#2563eb')" style="background: #2563eb;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#059669')" style="background: #059669;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#7c3aed')" style="background: #7c3aed;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#db2777')" style="background: #db2777;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#ea580c')" style="background: #ea580c;"></div>
-                    </div>
-                </div>
-
-                <button onclick="window.logout()" class="btn-logout">
-                    <i class="fa-solid fa-right-from-bracket"></i> Esci dall'account
-                </button>
-            </div>
-        </div>
-    </div>
-
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-    
-    <script src="app.js"></script>
-</body>
-</html>
+                    <div class="colors-container">
+                        <div class="color-dot" onclick="window.changeTheme('#2563eb')" style="background-color: #2563eb !important;"></div>
+                        <div class="color-dot" onclick="window.changeTheme('#059669')" style="background-color: #05966
