@@ -8,6 +8,7 @@ const firebaseConfig = {
   appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
+// Inizializzazione Firebase
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
@@ -15,10 +16,11 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// ================= GESTIONE SESSIONE =================
+// ================= GESTIONE UTENTE =================
 auth.onAuthStateChanged(async (user) => {
   const formLogin = document.getElementById("formLogin");
   const appDiv = document.getElementById("app");
+  
   if (user) {
     currentUser = user.uid;
     formLogin.classList.add("hidden");
@@ -31,7 +33,7 @@ auth.onAuthStateChanged(async (user) => {
   }
 });
 
-// ================= LOGIN GOOGLE =================
+// LOGIN GOOGLE
 document.getElementById("googleBtn").addEventListener("click", async () => {
   const provider = new firebase.auth.GoogleAuthProvider();
   try {
@@ -41,63 +43,76 @@ document.getElementById("googleBtn").addEventListener("click", async () => {
       email: result.user.email,
       lastLogin: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-  } catch (e) { console.error(e); }
+  } catch (e) { console.error("Errore Login:", e); }
 });
 
 // ================= LOGICA INTERFACCIA =================
 
-// Click sui bottoni dei giorni
+// Gestione click sui bottoni dei giorni (Ven, Sab, Dom)
 document.querySelectorAll(".day-btn").forEach(btn => {
   btn.addEventListener("click", () => {
     const day = btn.dataset.day;
-    toggleDay(day, true); // true = attiva flag automatico
+    toggleDay(day, true); // Passiamo true perché è un'azione manuale
   });
 });
 
-function toggleDay(day, isManualClick = false) {
+function toggleDay(day, isManual = false) {
   const btn = document.querySelector(`[data-day="${day}"]`);
   const slots = document.getElementById(`${day}-slots`);
   
-  // Se è un caricamento dati, forziamo selectedDays a true
-  if (!isManualClick) selectedDays[day] = true; 
-  else selectedDays[day] = !selectedDays[day];
+  // Cambia lo stato del giorno
+  if (isManual) {
+    selectedDays[day] = !selectedDays[day];
+  } else {
+    selectedDays[day] = true;
+  }
 
   if (selectedDays[day]) {
     btn.classList.add("active");
     slots.classList.remove("disabled");
     
-    // Se clicco manualmente il giorno per attivarlo:
-    if (isManualClick) {
-        const anyCb = slots.querySelector('input[value="any"]');
-        anyCb.checked = true; // Flaggato in automatico
-        // Pulisce le altre fasce
-        slots.querySelectorAll('input:not([value="any"])').forEach(i => i.checked = false);
+    // LOGICA RICHIESTA: Se attivo il giorno manualmente, spunta "Sempre" di default
+    if (isManual) {
+      const alwaysCb = slots.querySelector('input[value="any"]');
+      alwaysCb.checked = true;
+      // Deseleziona le altre fasce per pulizia
+      slots.querySelectorAll('input:not([value="any"])').forEach(cb => cb.checked = false);
     }
   } else {
     btn.classList.remove("active");
     slots.classList.add("disabled");
-    slots.querySelectorAll("input").forEach(i => i.checked = false);
+    // Se spengo il giorno, pulisco tutti i checkbox
+    slots.querySelectorAll("input").forEach(cb => cb.checked = false);
   }
 }
 
-// Gestione intelligente dei Checkbox (Scambio Tutto vs Fasce)
+// GESTIONE SMART CHECKBOX (Incrocio tra "Sempre" e fasce orarie)
 document.querySelectorAll('.slots').forEach(container => {
   container.addEventListener('change', (e) => {
     const clicked = e.target;
-    const anyCb = container.querySelector('input[value="any"]');
+    const alwaysCb = container.querySelector('input[value="any"]');
     const fasceCbs = container.querySelectorAll('input:not([value="any"])');
 
     if (clicked.value === "any") {
-      if (clicked.checked) fasceCbs.forEach(i => i.checked = false);
+      // Se clicco "Sempre", deseleziono le altre fasce
+      if (clicked.checked) {
+        fasceCbs.forEach(cb => cb.checked = false);
+      }
     } else {
-      if (clicked.checked) anyCb.checked = false;
+      // Se clicco una fascia specifica, deseleziono "Sempre"
+      if (clicked.checked) {
+        alwaysCb.checked = false;
+      }
     }
   });
 });
 
-// ================= SALVATAGGIO / CARICAMENTO =================
+// ================= SALVATAGGIO E CARICAMENTO =================
 
 window.saveAvailability = async () => {
+  const btn = document.getElementById("btnSave");
+  const originalText = btn.innerText;
+  
   const av = {
     venerdi: getCheckedValues("venerdi"),
     sabato: getCheckedValues("sabato"),
@@ -105,12 +120,22 @@ window.saveAvailability = async () => {
   };
 
   try {
+    btn.disabled = true;
+    btn.innerText = "Salvataggio...";
+    
     await db.collection("users").doc(currentUser).set({ 
       availability: av,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
     }, { merge: true });
-    alert("✅ Salvato correttamente!");
-  } catch (e) { alert("Errore durante il salvataggio."); }
+    
+    alert("✅ Disponibilità salvata!");
+  } catch (e) {
+    alert("Errore nel salvataggio. Riprova.");
+    console.error(e);
+  } finally {
+    btn.disabled = false;
+    btn.innerText = originalText;
+  }
 };
 
 function getCheckedValues(day) {
@@ -124,13 +149,15 @@ async function caricaDati() {
   try {
     const doc = await db.collection("users").doc(currentUser).get();
     if (doc.exists && doc.data().availability) {
-      const av = doc.data().availability;
-      for (const d in av) {
-        if (av[d] && av[d].length > 0) {
-          toggleDay(d, false); // Attiva interfaccia senza reset manuale
-          const container = document.getElementById(`${d}-slots`);
+      const data = doc.data().availability;
+      for (const day in data) {
+        if (data[day] && data[day].length > 0) {
+          toggleDay(day, false); // Attiva l'interfaccia senza resettare i flag
+          const container = document.getElementById(`${day}-slots`);
           container.querySelectorAll("input").forEach(cb => {
-            if (av[d].includes(cb.value)) cb.checked = true;
+            if (data[day].includes(cb.value)) {
+              cb.checked = true;
+            }
           });
         }
       }
@@ -138,5 +165,6 @@ async function caricaDati() {
   } catch (e) { console.error("Errore caricamento:", e); }
 }
 
+// UTILS
 window.logout = () => auth.signOut().then(() => location.reload());
-window.loginEmail = () => alert("Effettua il login con Google.");
+window.loginEmail = () => alert("Login con email non ancora attivo. Usa Google!");
