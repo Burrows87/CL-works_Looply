@@ -1,188 +1,121 @@
-/* ================= RESET ================= */
+/* 1. VARIABILI E RESET */
+:root {
+    --primary-color: #2563eb; /* Colore di default (Blu) */
+    --bg-color: #f9fafb;
+    --card-bg: #ffffff;
+    --text-main: #111827;
+    --text-muted: #6b7280;
+    --border-color: #e5e7eb;
+}
 
 * {
-  box-sizing: border-box;
-  margin: 0;
-  padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
 }
 
 body {
-  background: #f5f7fb;
-  color: #111827;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    display: flex;
+    justify-content: center;
+    padding: 20px;
 }
-
-/* ================= LAYOUT ================= */
 
 .container {
-  max-width: 420px;
-  margin: 0 auto;
-  padding: 20px;
+    width: 100%;
+    max-width: 400px; /* Ottimizzato per Mobile */
 }
 
-.hidden {
-  display: none;
-}
-
-/* ================= HEADER ================= */
-
+/* 2. HEADER E CARD */
 .header {
-  text-align: center;
-  margin-bottom: 20px;
+    margin-bottom: 20px;
+    text-align: left;
 }
 
 .header h1 {
-  font-size: 26px;
-  font-weight: 600;
+    font-size: 24px;
+    font-weight: 800;
+    color: var(--text-main);
 }
-
-.header p {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-/* ================= CARD ================= */
 
 .card {
-  background: white;
-  border-radius: 18px;
-  padding: 20px;
-  margin-top: 20px;
-  box-shadow: 0 6px 20px rgba(0,0,0,0.08);
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 16px;
+    box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+    border: 1px solid var(--border-color);
 }
 
-/* ================= INPUT ================= */
-
-input {
-  width: 100%;
-  padding: 14px;
-  margin-top: 10px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  color: #111827;
-  outline: none;
-}
-
-input::placeholder {
-  color: #9ca3af;
-}
-
-/* ================= BUTTON ================= */
-
-button {
-  width: 100%;
-  padding: 14px;
-  margin-top: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #2563eb;
-  color: white;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
-}
-
-button:hover {
-  background: #1d4ed8;
-}
-
-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* ================= CHECKBOX LABEL ================= */
-
-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 14px;
-  color: #374151;
-}
-
-/* ================= DAYS ROW ================= */
-
+/* 3. BOTTONI GIORNI (Ven, Sab, Dom) */
 .days-row {
-  display: flex;
-  gap: 10px;
-  margin-top: 15px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
 }
-
-/* ================= DAY ITEM ================= */
 
 .day-item {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
 }
-
-/* ================= DAY BUTTON ================= */
 
 .day-btn {
-  padding: 12px;
-  border-radius: 12px;
-  border: none;
-  background: #e5e7eb;
-  font-weight: 600;
-  cursor: pointer;
-  transition: 0.2s;
+    width: 100%;
+    padding: 12px;
+    border-radius: 10px;
+    border: 2px solid var(--border-color);
+    background: white;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s ease;
 }
 
+/* QUESTO È IL PUNTO CHIAVE: USA LA VARIABILE */
 .day-btn.active {
-  background: #2563eb;
-  color: white;
+    background-color: var(--primary-color) !important;
+    border-color: var(--primary-color) !important;
+    color: white;
 }
 
-/* ================= SLOTS (CHECKBOXES) ================= */
-
+/* 4. SLOT ORARI (Checkboxes) */
 .slots {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  padding: 8px;
-  border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fafafa;
-  transition: 0.2s;
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+    padding: 10px;
+    background: #f3f4f6;
+    border-radius: 10px;
+    transition: opacity 0.3s;
 }
 
 .slots.disabled {
-  opacity: 0.5;
-  pointer-events: none;
+    opacity: 0.3;
+    pointer-events: none;
 }
 
-/* checkbox label */
 .slots label {
-  font-size: 14px;
-  color: #374151;
-  display: flex;
-  align-items: center;
-  gap: 6px;
+    font-size: 14px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    cursor: pointer;
 }
 
-/* ================= MATCH POPUP ================= */
-
-#matchPopup {
-  position: fixed;
-  bottom: 0;
-  left: 0;
-  right: 0;
-
-  background: white;
-  padding: 20px;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
-  text-align: center;
+/* 5. BOTTONI AZIONE */
+.btn-primary, #btnSave {
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    padding: 14px;
+    border-radius: 12px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    width: 100%;
+    transition: opacity 0.2s;
 }
 
-/* ================= UTILS ================= */
-
-.mt-10 {
-  margin-top: 10px;
-}
+.btn-primary:active, #btnSave:active {
+    opacity: 0.8;
