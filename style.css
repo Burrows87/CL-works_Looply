@@ -12,7 +12,7 @@
     margin: 0;
     padding: 0;
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu su iPhone */
 }
 
 body {
@@ -29,21 +29,15 @@ body {
     max-width: 420px;
 }
 
-/* 2. CARD E HEADER */
-.card {
-    background: var(--card-bg);
-    padding: 20px;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border-color);
-    margin-bottom: 20px;
-}
-
+/* 2. HEADER E TITOLO 🤙🏻 */
 .header h1 {
     font-size: 28px;
     font-weight: 800;
     margin-bottom: 5px;
     letter-spacing: -1px;
+    display: flex;
+    align-items: center;
+    gap: 8px; /* Spazio per l'emoji */
 }
 
 .header p {
@@ -51,7 +45,17 @@ body {
     margin-bottom: 20px;
 }
 
-/* 3. GIORNI E SLOT */
+/* 3. CARD PRINCIPALE */
+.card {
+    background: var(--card-bg);
+    padding: 20px;
+    border-radius: 22px;
+    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
+    border: 1px solid var(--border-color);
+    margin-bottom: 20px;
+}
+
+/* 4. GIORNI E SLOT */
 .days-row {
     display: flex;
     justify-content: space-between;
@@ -110,7 +114,7 @@ body {
     cursor: pointer;
 }
 
-/* 4. PULSANTI */
+/* 5. PULSANTI */
 .btn-primary {
     background-color: var(--primary-color) !important;
     color: white;
@@ -121,7 +125,10 @@ body {
     font-weight: 700;
     font-size: 16px;
     cursor: pointer;
-    transition: opacity 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
 }
 
 .btn-google {
@@ -138,12 +145,13 @@ body {
     cursor: pointer;
 }
 
-/* 5. COLORI IMPOSTAZIONI (FIX IPHONE) */
+/* 6. COLORI IMPOSTAZIONI (FIX IPHONE) */
 .colors-container {
     display: flex;
     justify-content: center;
     gap: 12px;
     padding: 20px 0;
+    flex-wrap: wrap;
 }
 
 .color-dot {
@@ -159,19 +167,7 @@ body {
 
 .color-dot:active { transform: scale(0.85); }
 
-.btn-logout {
-    background: #fee2e2;
-    color: #ef4444;
-    width: 100%;
-    border: none;
-    padding: 12px;
-    border-radius: 10px;
-    font-weight: 700;
-    margin-top: 20px;
-    cursor: pointer;
-}
-
-/* 6. POPUP MATCH & WHATSAPP */
+/* 7. POPUP MATCH & WHATSAPP */
 .btn-whatsapp {
     background-color: #25d366 !important;
     color: white;
@@ -192,19 +188,5 @@ body {
 #matchModal .card {
     border: none;
     box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    animation: popIn 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
-
-/* 7. ANIMAZIONI */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes popIn {
-    0% { transform: scale(0.9); opacity: 0; }
-    100% { transform: scale(1); opacity: 1; }
-}
-
-/* Utility per icone animate */
-.fa-spin { animation: spin 1s linear infinite; }
-@
