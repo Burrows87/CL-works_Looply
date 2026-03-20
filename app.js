@@ -1,3 +1,5 @@
+window.onload = function () {
+
 // ================= FIREBASE INIT =================
 
 const firebaseConfig = {
