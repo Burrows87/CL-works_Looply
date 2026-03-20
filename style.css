@@ -1,4 +1,4 @@
-/* 1. VARIABILI E BASE */
+/* 1. VARIABILI E RESET */
 :root {
     --primary-color: #2563eb; 
     --bg-color: #f3f4f6;
@@ -40,9 +40,15 @@ body {
 }
 
 .header h1 {
-    font-size: 26px;
+    font-size: 28px;
     font-weight: 800;
     margin-bottom: 5px;
+    letter-spacing: -1px;
+}
+
+.header p {
+    color: #6b7280;
+    margin-bottom: 20px;
 }
 
 /* 3. GIORNI E SLOT */
@@ -62,14 +68,17 @@ body {
     border: 2px solid var(--border-color);
     background: white;
     font-weight: 700;
+    font-size: 15px;
     cursor: pointer;
-    transition: all 0.2s;
+    transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .day-btn.active {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     color: white !important;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
 }
 
 .slots {
@@ -83,45 +92,62 @@ body {
 
 .slots:not(.disabled) {
     display: block;
-    animation: fadeIn 0.3s ease;
+    animation: slideDown 0.3s ease-out;
 }
 
 .slots-grid {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: 10px;
+    gap: 12px;
+}
+
+.slots label {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 14px;
+    font-weight: 500;
+    cursor: pointer;
 }
 
 /* 4. PULSANTI */
 .btn-primary {
     background-color: var(--primary-color) !important;
-    color: white; width: 100%; padding: 15px; border: none;
-    border-radius: 14px; font-weight: 700; cursor: pointer;
-}
-
-.btn-whatsapp {
-    background-color: #25d366 !important;
-    color: white; width: 100%; padding: 15px; border: none;
-    border-radius: 14px; font-weight: 700; cursor: pointer;
+    color: white;
+    width: 100%;
+    padding: 16px;
+    border: none;
+    border-radius: 14px;
+    font-weight: 700;
+    font-size: 16px;
+    cursor: pointer;
+    transition: opacity 0.2s;
 }
 
 .btn-google {
-    width: 100%; padding: 14px; border: 1px solid var(--border-color);
-    background: white; border-radius: 12px; font-weight: 600; cursor: pointer;
-    display: flex; align-items: center; justify-content: center; gap: 10px;
+    width: 100%;
+    padding: 14px;
+    border: 1px solid var(--border-color);
+    background: white;
+    border-radius: 14px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
 }
 
-/* 5. FIX COLORI IMPOSTAZIONI (IMPORTANTE PER IPHONE) */
+/* 5. COLORI IMPOSTAZIONI (FIX IPHONE) */
 .colors-container {
     display: flex;
     justify-content: center;
     gap: 12px;
     padding: 20px 0;
-    flex-wrap: wrap;
 }
 
 .color-dot {
-    display: block !important; /* Forza la visibilità */
+    display: block !important;
     width: 42px !important;
     height: 42px !important;
     border-radius: 50% !important;
@@ -131,26 +157,54 @@ body {
     transition: transform 0.2s;
 }
 
-.color-dot:active { transform: scale(0.9); }
+.color-dot:active { transform: scale(0.85); }
 
 .btn-logout {
-    background: #fee2e2; color: #ef4444; width: 100%; border: none;
-    padding: 12px; border-radius: 10px; font-weight: 700; margin-top: 20px;
+    background: #fee2e2;
+    color: #ef4444;
+    width: 100%;
+    border: none;
+    padding: 12px;
+    border-radius: 10px;
+    font-weight: 700;
+    margin-top: 20px;
+    cursor: pointer;
 }
 
-/* 6. ANIMAZIONI E POPUP MATCH */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(-5px); }
+/* 6. POPUP MATCH & WHATSAPP */
+.btn-whatsapp {
+    background-color: #25d366 !important;
+    color: white;
+    width: 100%;
+    padding: 18px;
+    border: none;
+    border-radius: 16px;
+    font-weight: 800;
+    font-size: 17px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    box-shadow: 0 10px 20px rgba(37, 211, 102, 0.2);
+}
+
+#matchModal .card {
+    border: none;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+/* 7. ANIMAZIONI */
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
     to { opacity: 1; transform: translateY(0); }
 }
 
 @keyframes popIn {
-    0% { transform: scale(0.8); opacity: 0; }
+    0% { transform: scale(0.9); opacity: 0; }
     100% { transform: scale(1); opacity: 1; }
 }
 
-/* Stile per il Modal del Match */
-#matchModal .card {
-    border: none;
-    box-shadow: 0 20px 50px rgba(0,0,0,0.3);
-}
+/* Utility per icone animate */
+.fa-spin { animation: spin 1s linear infinite; }
+@
