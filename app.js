@@ -1,3 +1,4 @@
+alert("Il codice è caricato!")
 // 1. CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
