@@ -1,3 +1,4 @@
+// 1. CONFIGURAZIONE (Verificata)
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU", 
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -11,64 +12,71 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// USA IL POPUP: Interrompe il loop di ricaricamento della pagina
+// 2. FUNZIONE LOGIN (Cambiata in Popup per evitare il loop)
 window.startLogin = function() {
     const provider = new firebase.auth.GoogleAuthProvider();
+    // Forza la scelta dell'account
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
     auth.signInWithPopup(provider)
         .then((result) => {
             console.log("Login riuscito:", result.user.displayName);
+            // Non serve ricaricare, onAuthStateChanged farà il resto
         })
         .catch((error) => {
-            console.error("Errore Login:", error);
-            alert("Errore: " + error.message);
+            console.error("Errore Login:", error.code);
+            alert("Errore durante il login: " + error.message);
         });
 };
 
+// 3. GESTORE STATO (Senza reload automatici)
 auth.onAuthStateChanged(async (user) => {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
 
     if (user) {
-        // MOSTRA SUBITO L'APP: Questo blocca visivamente il loop
-        loginDiv.style.display = "none";
-        appDiv.style.display = "block";
+        console.log("Utente loggato con UID:", user.uid);
+        
+        // Blocca il loop visivo: nascondi login e mostra app subito
+        if (loginDiv) loginDiv.style.display = "none";
+        if (appDiv) appDiv.style.display = "block";
 
         try {
             const doc = await db.collection("users").doc(user.uid).get();
             if (doc.exists && doc.data().displayName) {
                 document.getElementById("welcomeTitle").innerText = `Ciao ${doc.data().displayName} 🤙🏻`;
-                // Carica qui le disponibilità se presenti
             } else {
                 document.getElementById("onboardingModal").style.display = "flex";
             }
         } catch (e) {
-            console.error("Firestore error:", e);
+            console.error("Errore Firestore:", e);
         }
     } else {
-        loginDiv.style.display = "flex";
-        appDiv.style.display = "none";
+        if (loginDiv) loginDiv.style.display = "flex";
+        if (appDiv) appDiv.style.display = "none";
     }
 });
 
-// Funzione Onboarding
+// 4. ALTRE FUNZIONI (Onboarding e Logout)
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     if (nome.length < 2) return alert("Inserisci un nome!");
+    
     await db.collection("users").doc(auth.currentUser.uid).set({
-        displayName: nome, lang: 'it'
+        displayName: nome, lang: 'it', availability: {}
     }, { merge: true });
+    
     document.getElementById("onboardingModal").style.display = "none";
     document.getElementById("welcomeTitle").innerText = `Ciao ${nome} 🤙🏻`;
 };
 
-// Navigazione
 window.logout = () => auth.signOut().then(() => {
-    // Invece di reload, puliamo l'interfaccia manualmente
+    // Invece di reload, puliamo l'interfaccia
     document.getElementById("app").style.display = "none";
     document.getElementById("formLogin").style.display = "flex";
 });
 
-// Gestione click pulsanti giorni
+// Gestione interruttori giorni
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const d = btn.dataset.day;
