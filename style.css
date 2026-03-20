@@ -99,41 +99,48 @@ label {
   color: #374151;
 }
 
-/* ================= DAYS ================= */
+/* ================= DAYS ROW ================= */
 
-.day-block {
-  background: #f9fafb;
-  border-radius: 14px;
+.days-row {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+/* ogni blocco giorno */
+
+.day-item {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+/* pulsante giorno */
+
+.day-btn {
   padding: 12px;
-  margin-bottom: 10px;
+  border-radius: 12px;
+  border: none;
+  background: #e5e7eb;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s;
+}
+
+.day-btn.active {
+  background: #2563eb;
+  color: white;
+}
+
+/* dropdown fascia oraria */
+
+.slot-select {
+  padding: 10px;
+  border-radius: 10px;
   border: 1px solid #e5e7eb;
-}
-
-.day-block > button {
-  background: #e5e7eb;
-  color: #111827;
-  margin-bottom: 8px;
-}
-
-.day-block > button.selected {
-  background: #22c55e;
-  color: white;
-}
-
-/* slots */
-
-.day-block div button {
-  width: auto;
-  padding: 8px 10px;
-  font-size: 13px;
-  margin: 4px;
-  background: #e5e7eb;
-  color: #111827;
-}
-
-.day-block div button.selected {
-  background: #22c55e;
-  color: white;
+  background: #fff;
+  font-size: 14px;
 }
 
 /* ================= MATCH POPUP ================= */
