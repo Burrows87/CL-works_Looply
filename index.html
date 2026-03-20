@@ -18,28 +18,42 @@
 <body>
 
 <!-- LOGIN -->
-<div id="formLogin" class="container">
-  <h2>Login</h2>
+  <div id="formLogin" class="container">
+  
+  <div class="header">
+    <h1>Looply</h1>
+    <p>Trova amici quando siete liberi</p>
+  </div>
 
-  <input id="username" placeholder="Nome">
-  <input id="phone" placeholder="Telefono (es. 393...)">
+  <div class="card">
+    <input id="username" placeholder="Nome">
+    <input id="phone" placeholder="Telefono (es. 393...)">
 
-  <label><input type="checkbox" id="terms"> Termini</label>
-  <label><input type="checkbox" id="privacy"> Privacy</label>
+    <label><input type="checkbox" id="terms"> Accetto i termini</label>
+    <label><input type="checkbox" id="privacy"> Accetto la privacy</label>
 
-  <button id="enterBtn" onclick="login()" disabled>Entra</button>
-</div>
+    <button id="enterBtn" onclick="login()" disabled>Entra</button>
+  </div>
+
+  </div>
+
 
 <!-- APP -->
-<div id="app" class="hidden container">
+  <div id="app" class="hidden container">
 
-  <h2>Disponibilità</h2>
+  <div class="header">
+    <h1>Disponibilità</h1>
+    <p>Seleziona i giorni in cui sei libero</p>
+  </div>
 
-  <div id="daysContainer"></div>
+  <div class="card">
+    <div id="daysContainer"></div>
 
-  <button onclick="saveAvailability()">Salva</button>
+    <button onclick="saveAvailability()">Salva disponibilità</button>
+  </div>
 
-</div>
+  </div>
+
 
 <!-- MATCH POPUP -->
 <div id="matchPopup" class="hidden">
