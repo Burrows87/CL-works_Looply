@@ -1,5 +1,3 @@
-// ================= FIREBASE INIT =================
-
 const firebaseConfig = {
   apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7H8SUX6LiiSNJFjU",
   authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -18,15 +16,15 @@ let currentUser = null;
 
 // ================= SESSION =================
 
-firebase.auth().onAuthStateChanged(user => {
+auth.onAuthStateChanged(user => {
 
   if (user) {
     currentUser = user.uid;
 
-    console.log("Logged in:", user.email);
-
     document.getElementById("formLogin").classList.add("hidden");
     document.getElementById("app").classList.remove("hidden");
+
+    console.log("Logged in:", user.email);
 
   } else {
     currentUser = null;
@@ -37,21 +35,29 @@ firebase.auth().onAuthStateChanged(user => {
 
 });
 
-// ================= GOOGLE LOGIN =================
+// ================= GOOGLE LOGIN (REDIRECT) =================
 
-function loginWithGoogle() {
+// CLICK BUTTON
+document.getElementById("googleBtn").addEventListener("click", () => {
 
-  console.log("CLICK GOOGLE LOGIN");
+  console.log("Google login click");
 
   const provider = new firebase.auth.GoogleAuthProvider();
 
-  auth.signInWithPopup(provider)
-    .then(async (result) => {
+  auth.signInWithRedirect(provider);
+
+});
+
+// HANDLE REDIRECT RESULT
+auth.getRedirectResult()
+  .then(async (result) => {
+
+    if (result.user) {
 
       const user = result.user;
       currentUser = user.uid;
 
-      console.log("Login success:", user.email);
+      console.log("Login completato:", user.email);
 
       await db.collection("users").doc(currentUser).set({
         name: user.displayName,
@@ -60,30 +66,19 @@ function loginWithGoogle() {
         createdAt: new Date()
       }, { merge: true });
 
-    })
-    .catch(err => {
-      console.error("Google login error:", err);
-      alert(err.message);
-    });
+    }
 
-}
+  })
+  .catch(err => {
+    console.error("Redirect error:", err);
+    alert(err.message);
+  });
 
-// Esponi globalmente (importante)
-window.loginWithGoogle = loginWithGoogle;
+// ================= EMAIL LOGIN (PLACEHOLDER) =================
 
-// ================= EVENT LISTENER BOTTONI =================
-
-document.addEventListener("DOMContentLoaded", () => {
-
-  const googleBtn = document.getElementById("googleBtn");
-
-  if (googleBtn) {
-    googleBtn.addEventListener("click", loginWithGoogle);
-  } else {
-    console.error("googleBtn NON trovato nel DOM");
-  }
-
-});
+window.login = function () {
+  alert("Login email non ancora implementato");
+};
 
 // ================= DAYS =================
 
@@ -93,47 +88,13 @@ let selectedDays = {
   domenica: false
 };
 
-document.addEventListener("DOMContentLoaded", () => {
+document.querySelectorAll(".day-btn").forEach(btn => {
 
-  document.querySelectorAll(".day-btn").forEach(btn => {
-    btn.addEventListener("click", () => {
-      toggleDay(btn.dataset.day);
-    });
-  });
-
-  document.querySelectorAll(".slots").forEach(container => {
-
-    const checkboxes = container.querySelectorAll("input");
-
-    checkboxes.forEach(cb => {
-
-      cb.addEventListener("change", () => {
-
-        const always = container.querySelector(".always");
-
-        if (cb.classList.contains("always") && cb.checked) {
-          checkboxes.forEach(c => {
-            if (c !== always) c.checked = false;
-          });
-        } else if (!cb.classList.contains("always") && cb.checked) {
-          if (always) always.checked = false;
-        }
-
-        const anyChecked = Array.from(checkboxes).some(c => c.checked);
-
-        if (!anyChecked && always) {
-          always.checked = true;
-        }
-
-      });
-
-    });
-
+  btn.addEventListener("click", () => {
+    toggleDay(btn.dataset.day);
   });
 
 });
-
-// ================= TOGGLE DAY =================
 
 function toggleDay(day) {
 
@@ -143,6 +104,7 @@ function toggleDay(day) {
   selectedDays[day] = !selectedDays[day];
 
   if (selectedDays[day]) {
+
     btn.classList.add("active");
     slots.classList.remove("disabled");
 
@@ -155,6 +117,7 @@ function toggleDay(day) {
     if (always) always.checked = true;
 
   } else {
+
     btn.classList.remove("active");
     slots.classList.add("disabled");
 
@@ -162,6 +125,7 @@ function toggleDay(day) {
       cb.checked = false;
       cb.disabled = true;
     });
+
   }
 }
 
@@ -192,7 +156,7 @@ function getAvailability() {
 
 // ================= SAVE =================
 
-async function saveAvailability() {
+window.saveAvailability = async function () {
 
   if (!currentUser) {
     alert("Utente non loggato");
@@ -202,6 +166,7 @@ async function saveAvailability() {
   const availability = getAvailability();
 
   try {
+
     await db.collection("users").doc(currentUser).set({
       availability
     }, { merge: true });
@@ -212,6 +177,4 @@ async function saveAvailability() {
     console.error(err);
     alert("Errore salvataggio");
   }
-}
-
-window.saveAvailability = saveAvailability;
+};
