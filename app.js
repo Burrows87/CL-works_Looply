@@ -15,24 +15,21 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- 2. REGISTRAZIONE SERVICE WORKER (PWA) ---
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => {
-        navigator.serviceWorker.register('/sw.js').catch(err => console.log("SW error:", err));
-    });
-}
-
-// --- 3. GESTIONE LOGIN (FIX IPHONE/SAFARI) ---
-document.addEventListener("DOMContentLoaded", () => {
+// --- 2. INIZIALIZZAZIONE LOGIN (Fix per tasto "morto") ---
+function inizializzaLogin() {
     const googleBtn = document.getElementById("googleBtn");
     if (googleBtn) {
-        googleBtn.onclick = () => {
+        googleBtn.onclick = (e) => {
+            e.preventDefault();
             const provider = new firebase.auth.GoogleAuthProvider();
             auth.signInWithRedirect(provider);
         };
+    } else if (document.getElementById("formLogin").style.display !== "none") {
+        setTimeout(inizializzaLogin, 500);
     }
-});
+}
 
+// --- 3. STATO AUTENTICAZIONE ---
 auth.onAuthStateChanged(async (user) => {
     const formLogin = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
@@ -42,20 +39,26 @@ auth.onAuthStateChanged(async (user) => {
         formLogin.style.display = "none";
         appDiv.style.display = "block";
         
+        // Update UI
         document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "!");
         document.getElementById("userName").innerText = user.displayName || "Utente";
         document.getElementById("userEmail").innerText = user.email;
-        if (user.photoURL) document.getElementById("userPhoto").src = user.photoURL;
+        if (user.photoURL) {
+            const img = document.getElementById("userPhoto");
+            img.src = user.photoURL;
+            img.style.display = "block";
+        }
 
         await caricaEControlla();
     } else {
         currentUser = null;
         formLogin.style.display = "block";
         appDiv.style.display = "none";
+        inizializzaLogin();
     }
 });
 
-// --- 4. LOGICA GIORNI E SLOT ---
+// --- 4. GESTIONE GIORNI ---
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
@@ -73,11 +76,11 @@ document.querySelectorAll(".day-btn").forEach(btn => {
     };
 });
 
-// --- 5. SALVATAGGIO E WHATSAPP PERSONALE ---
+// --- 5. SALVATAGGIO ---
 window.saveAvailability = async () => {
     const btn = document.getElementById("btnSave");
     const oldText = btn.innerHTML;
-    btn.innerHTML = "Salvataggio...";
+    btn.innerHTML = '<i class="fa-solid fa-circle-notch fa-spin"></i> Salvo...';
     
     const av = {
         venerdi: getCheckedVals("venerdi"),
@@ -90,24 +93,16 @@ window.saveAvailability = async () => {
             availability: av,
             displayName: auth.currentUser.displayName 
         }, { merge: true });
-        alert("✅ Salvato! Ora controllo se qualcuno è libero come te...");
-        await controllaMatch(av); // Controlla subito dopo il salva
-    } catch (e) { alert("Errore"); }
-    btn.innerHTML = oldText;
-};
+        
+        btn.innerHTML = '✅ Salvato!';
+        setTimeout(() => { btn.innerHTML = oldText; }, 2000);
 
-window.shareWhatsApp = () => {
-    let msg = "🗓 *Le mie disponibilità Looply:*%0A%0A";
-    let hasData = false;
-    ["venerdi", "sabato", "domenica"].forEach(d => {
-        const vals = getCheckedVals(d);
-        if (vals && vals.length > 0) {
-            msg += `*${d.toUpperCase()}*: ${vals.join(", ")}%0A`;
-            hasData = true;
-        }
-    });
-    if (!hasData) return alert("Seleziona qualcosa!");
-    window.open(`https://wa.me/?text=${msg}`, '_blank');
+        // Avvia la ricerca di match
+        await controllaMatch(av); 
+    } catch (e) { 
+        alert("Errore connessione");
+        btn.innerHTML = oldText;
+    }
 };
 
 function getCheckedVals(day) {
@@ -115,21 +110,25 @@ function getCheckedVals(day) {
     return Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
 }
 
-// --- 6. LOGICA MATCH (IL CUORE) ---
+// --- 6. LOGICA MATCH & POPUP ---
 async function controllaMatch(miaAv) {
     if (!miaAv) return;
     const snapshot = await db.collection("users").get();
     
+    let matchTrovato = false;
+
     snapshot.forEach(doc => {
-        if (doc.id !== currentUser) {
+        if (doc.id !== currentUser && !matchTrovato) {
             const altro = doc.data();
             const altraAv = altro.availability;
+            
             if (altraAv) {
                 ["venerdi", "sabato", "domenica"].forEach(g => {
                     if (miaAv[g] && altraAv[g]) {
                         const comuni = miaAv[g].filter(f => altraAv[g].includes(f));
-                        if (comuni.length > 0) {
-                            mostraPopupMatch(altro.displayName || "Tizio", g, comuni[0]);
+                        if (comuni.length > 0 && !matchTrovato) {
+                            mostraPopupMatch(altro.displayName || "Qualcuno", g, comuni[0]);
+                            matchTrovato = true;
                         }
                     }
                 });
@@ -140,18 +139,31 @@ async function controllaMatch(miaAv) {
 
 function mostraPopupMatch(nome, giorno, fascia) {
     const modal = document.getElementById("matchModal");
-    document.getElementById("matchText").innerHTML = `🎉 Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`;
-    const msg = `Ciao ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo?`;
-    document.getElementById("matchWA").onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    const text = document.getElementById("matchText");
+    const btnWA = document.getElementById("matchWA");
+
+    text.innerHTML = `🔥 <b>Grande!</b> Tu e <b>${nome}</b> siete entrambi liberi <b>${giorno} ${fascia}</b>!`;
+    
+    // Messaggio WhatsApp precompilato
+    const messaggio = `Ciao ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, che facciamo? 😊`;
+    btnWA.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(messaggio)}`, '_blank');
+
+    // Vibrazione (se supportata)
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
     modal.style.display = "flex";
 }
 
-window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
+window.closeMatch = () => {
+    document.getElementById("matchModal").style.display = "none";
+};
 
-// --- 7. TEMA E CARICAMENTO ---
+// --- 7. IMPOSTAZIONI E TEMA ---
 window.changeTheme = async (color) => {
     document.documentElement.style.setProperty('--primary-color', color);
-    if (currentUser) await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
+    if (currentUser) {
+        await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
+    }
 };
 
 async function caricaEControlla() {
@@ -164,18 +176,37 @@ async function caricaEControlla() {
                 const fasce = data.availability[d];
                 if (fasce && fasce.length > 0) {
                     selectedDays[d] = true;
-                    document.querySelector(`[data-day="${d}"]`).classList.add("active");
+                    const btn = document.querySelector(`[data-day="${d}"]`);
+                    if (btn) btn.classList.add("active");
                     const slots = document.getElementById(d + "-slots");
-                    slots.classList.remove("disabled");
-                    slots.querySelectorAll("input").forEach(cb => { if (fasce.includes(cb.value)) cb.checked = true; });
+                    if (slots) {
+                        slots.classList.remove("disabled");
+                        slots.querySelectorAll("input").forEach(cb => {
+                            if (fasce.includes(cb.value)) cb.checked = true;
+                        });
+                    }
                 }
             }
-            // Dopo aver caricato, controlla se c'è già un match
+            // Controllo match all'avvio
             await controllaMatch(data.availability);
         }
     }
 }
 
-window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
-window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
+// --- 8. NAVIGAZIONE ---
+window.openSettings = () => {
+    document.getElementById("app").style.display = "none";
+    document.getElementById("settingsPage").style.display = "block";
+};
+window.closeSettings = () => {
+    document.getElementById("settingsPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+};
 window.logout = () => auth.signOut().then(() => location.reload());
+
+// --- 9. SERVICE WORKER ---
+if ('serviceWorker' in navigator) {
+    window.addEventListener('load', () => {
+        navigator.serviceWorker.register('/sw.js').catch(err => console.log("SW Error", err));
+    });
+}
