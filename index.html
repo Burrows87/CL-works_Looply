@@ -1,119 +1,101 @@
 <!DOCTYPE html>
 <html lang="it">
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Looply</title>
 
-<title>Looply</title>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-auth-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.2/firebase-firestore-compat.js"></script>
 
-<link rel="stylesheet" href="style.css">
-
-<!-- ✅ PWA -->
-<link rel="manifest" href="manifest.json">
-<meta name="theme-color" content="#2563eb">
-
-<!-- Firebase -->
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
-
+  <style>
+    body { font-family: Arial; padding: 20px; }
+    .hidden { display: none; }
+    .day-btn { margin: 5px; padding: 10px; cursor: pointer; }
+    .active { background: green; color: white; }
+    .disabled { opacity: 0.5; pointer-events: none; }
+  </style>
 </head>
 
 <body>
 
-<!-- LOGIN -->
-<div id="formLogin" class="container">
+<!-- ================= LOGIN ================= -->
 
-  <div class="header">
-    <h1>Looply</h1>
-    <p>Trova amici quando siete liberi</p>
-  </div>
+<div id="formLogin">
 
-  <div class="card">
-    <input id="username" placeholder="Nome">
-    <input id="phone" placeholder="Telefono (es. 393...)">
+  <h2>Registrazione / Login</h2>
 
-    <label>
-      <input type="checkbox" id="rememberMe"> Ricordami
-    </label>
-    
-    <label>
-      <input type="checkbox" id="terms"> Accetto i termini
-    </label>
+  <input id="email" type="email" placeholder="Email"><br><br>
+  <input id="password" type="password" placeholder="Password"><br><br>
 
-    <label>
-      <input type="checkbox" id="privacy"> Accetto la privacy
-    </label>
+  <input id="username" type="text" placeholder="Nome"><br><br>
+  <input id="phone" type="text" placeholder="Telefono"><br><br>
 
-    <!-- ✅ Bottone aggiornato -->
-    <button id="enterBtn" onclick="login()" disabled>Entra</button>
-  </div>
+  <label>
+    <input type="checkbox" id="terms">
+    Accetto i termini
+  </label><br>
 
-</div>
+  <label>
+    <input type="checkbox" id="privacy">
+    Accetto la privacy
+  </label><br><br>
 
-<!-- APP -->
-<div id="app" class="hidden container">
+  <label>
+    <input type="checkbox" id="rememberMe">
+    Ricordami
+  </label><br><br>
 
-  <div class="header">
-    <h1>Disponibilità</h1>
-    <p>Seleziona i giorni in cui sei libero</p>
-  </div>
-
-  <div class="card">
-
-    <div class="days-row">
-
-      <!-- VENERDÌ -->
-      <div class="day-item">
-        <button class="day-btn" data-day="venerdi">Venerdì</button>
-
-        <div id="venerdi-slots" class="slots disabled">
-          <label><input type="checkbox" value="any" class="always"> Sempre</label>
-          <label><input type="checkbox" value="mattina"> Mattina</label>
-          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-          <label><input type="checkbox" value="sera"> Sera</label>
-        </div>
-      </div>
-
-      <!-- SABATO -->
-      <div class="day-item">
-        <button class="day-btn" data-day="sabato">Sabato</button>
-
-        <div id="sabato-slots" class="slots disabled">
-          <label><input type="checkbox" value="any" class="always"> Sempre</label>
-          <label><input type="checkbox" value="mattina"> Mattina</label>
-          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-          <label><input type="checkbox" value="sera"> Sera</label>
-        </div>
-      </div>
-
-      <!-- DOMENICA -->
-      <div class="day-item">
-        <button class="day-btn" data-day="domenica">Domenica</button>
-
-        <div id="domenica-slots" class="slots disabled">
-          <label><input type="checkbox" value="any" class="always"> Sempre</label>
-          <label><input type="checkbox" value="mattina"> Mattina</label>
-          <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label>
-          <label><input type="checkbox" value="sera"> Sera</label>
-        </div>
-      </div>
-
-    </div>
-
-    <button onclick="saveAvailability()">Salva disponibilità</button>
-
-  </div>
+  <button id="enterBtn" onclick="login()" disabled>Entra</button>
 
 </div>
 
-<!-- MATCH POPUP -->
-<div id="matchPopup" class="hidden">
-  <h3>🎉 Match trovato!</h3>
-  <p id="matchText"></p>
+<!-- ================= APP ================= -->
 
-  <button onclick="sendWhatsApp()">WhatsApp</button>
-  <button onclick="closeMatch()">Chiudi</button>
+<div id="app" class="hidden">
+
+  <h2>Looply</h2>
+
+  <h3>Seleziona giorni</h3>
+
+  <button class="day-btn" data-day="venerdi">Venerdì</button>
+  <button class="day-btn" data-day="sabato">Sabato</button>
+  <button class="day-btn" data-day="domenica">Domenica</button>
+
+  <hr>
+
+  <!-- VENERDI -->
+  <div id="venerdi-slots" class="slots disabled">
+    <h4>Venerdì</h4>
+    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
+    <label><input type="checkbox" value="mattina"> Mattina</label><br>
+    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
+    <label><input type="checkbox" value="sera"> Sera</label><br>
+  </div>
+
+  <!-- SABATO -->
+  <div id="sabato-slots" class="slots disabled">
+    <h4>Sabato</h4>
+    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
+    <label><input type="checkbox" value="mattina"> Mattina</label><br>
+    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
+    <label><input type="checkbox" value="sera"> Sera</label><br>
+  </div>
+
+  <!-- DOMENICA -->
+  <div id="domenica-slots" class="slots disabled">
+    <h4>Domenica</h4>
+    <label><input type="checkbox" class="always" value="always" checked> Sempre</label><br>
+    <label><input type="checkbox" value="mattina"> Mattina</label><br>
+    <label><input type="checkbox" value="pomeriggio"> Pomeriggio</label><br>
+    <label><input type="checkbox" value="sera"> Sera</label><br>
+  </div>
+
+  <br>
+
+  <button onclick="saveAvailability()">Salva disponibilità</button>
+
 </div>
 
 <script src="app.js"></script>
