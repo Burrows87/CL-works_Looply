@@ -1,105 +1,54 @@
-/* ================= RESET ================= */
-
 * {
   box-sizing: border-box;
   margin: 0;
   padding: 0;
-  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial;
+  font-family: Arial;
 }
 
 body {
   background: #f5f7fb;
-  color: #111827;
 }
-
-/* ================= LAYOUT ================= */
 
 .container {
   max-width: 420px;
-  margin: 0 auto;
+  margin: auto;
   padding: 20px;
 }
 
-/* ================= HEADER ================= */
+.hidden {
+  display: none;
+}
 
 .header {
   text-align: center;
   margin-bottom: 20px;
 }
 
-.header h1 {
-  font-size: 26px;
-  font-weight: 600;
-}
-
-.header p {
-  color: #6b7280;
-  font-size: 14px;
-}
-
-/* ================= CARD ================= */
-
 .card {
   background: white;
-  border-radius: 18px;
   padding: 20px;
-  margin-top: 20px;
+  border-radius: 16px;
   box-shadow: 0 6px 20px rgba(0,0,0,0.08);
 }
 
-/* ================= INPUT ================= */
-
 input {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   margin-top: 10px;
-  border-radius: 12px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  color: #111827;
-  outline: none;
+  border-radius: 10px;
+  border: 1px solid #ccc;
 }
-
-input::placeholder {
-  color: #9ca3af;
-}
-
-/* ================= BUTTON ================= */
 
 button {
   width: 100%;
-  padding: 14px;
+  padding: 12px;
   margin-top: 12px;
-  border-radius: 12px;
+  border-radius: 10px;
   border: none;
   background: #2563eb;
   color: white;
-  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
-
-button:hover {
-  background: #1d4ed8;
-}
-
-button:disabled {
-  background: #9ca3af;
-  cursor: not-allowed;
-}
-
-/* ================= CHECKBOX ================= */
-
-label {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-top: 10px;
-  font-size: 14px;
-  color: #374151;
-}
-
-/* ================= DAYS ROW ================= */
 
 .days-row {
   display: flex;
@@ -107,26 +56,19 @@ label {
   margin-top: 15px;
 }
 
-/* ogni blocco giorno */
-
 .day-item {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
-  position: relative; /* IMPORTANTE */
 }
 
-/* pulsante giorno */
-
 .day-btn {
-  padding: 12px;
-  border-radius: 12px;
+  padding: 10px;
+  border-radius: 10px;
   border: none;
   background: #e5e7eb;
-  font-weight: 600;
   cursor: pointer;
-  transition: 0.2s;
 }
 
 .day-btn.active {
@@ -134,40 +76,23 @@ label {
   color: white;
 }
 
-/* dropdown fascia oraria */
-
 .slot-select {
   width: 100%;
   padding: 10px;
   border-radius: 10px;
-  border: 1px solid #e5e7eb;
-  background: #fff;
-  font-size: 14px;
-
-  position: relative;   /* FIX */
-  z-index: 10;          /* FIX IMPORTANTE */
-  pointer-events: auto;  /* FIX */
+  border: 1px solid #ccc;
+  background: white;
 }
-
-/* ================= MATCH POPUP ================= */
 
 #matchPopup {
   position: fixed;
   bottom: 0;
   left: 0;
   right: 0;
-
   background: white;
   padding: 20px;
-  border-top-left-radius: 20px;
-  border-top-right-radius: 20px;
-
-  box-shadow: 0 -10px 30px rgba(0,0,0,0.1);
   text-align: center;
-}
-
-/* ================= UTILS ================= */
-
-.hidden {
-  display: none;
+  border-top-left-radius: 16px;
+  border-top-right-radius: 16px;
+  box-shadow: 0 -5px 20px rgba(0,0,0,0.1);
 }
