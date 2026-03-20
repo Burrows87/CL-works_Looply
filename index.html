@@ -3,82 +3,79 @@
 <head>
   <meta charset="UTF-8">
   <title>Looply</title>
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; padding: 20px; background-color: #f4f4f9; }
-    .hidden { display: none !important; }
-    .active { background-color: #4CAF50 !important; color: white; border-color: #388E3C; }
-    .disabled { opacity: 0.4; pointer-events: none; }
-    .day-btn { margin: 5px; padding: 12px 20px; cursor: pointer; border: 1px solid #ccc; border-radius: 5px; transition: 0.3s; }
-    .slots { margin: 15px 0; padding: 15px; border: 1px solid #ddd; background: white; border-radius: 8px; }
-    input[type="email"], input[type="password"] { width: 100%; padding: 10px; margin-bottom: 10px; border: 1px solid #ccc; border-radius: 4px; box-sizing: border-box; }
-    button#googleBtn { width: 100%; padding: 12px; cursor: pointer; background: #4285F4; color: white; border: none; border-radius: 4px; font-weight: bold; }
-    .save-btn { width: 100%; padding: 15px; background: #2196F3; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
-  </style>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <link rel="stylesheet" href="style.css">
 </head>
 <body>
 
-  <div id="formLogin">
-    <div style="max-width: 400px; margin: auto; background: white; padding: 30px; border-radius: 10px; box-shadow: 0 4px 10px rgba(0,0,0,0.1);">
-      <h2 style="text-align: center;">Looply Login</h2>
-      <input type="email" id="email" placeholder="Email">
-      <input type="password" id="password" placeholder="Password">
+  <div class="container">
+    
+    <div id="formLogin">
+      <div class="header">
+        <h1>Looply</h1>
+        <p>Organizza la tua disponibilità</p>
+      </div>
       
-      <div style="font-size: 14px; margin-bottom: 15px;">
-        <label><input type="checkbox" id="terms"> Accetto i termini</label><br>
-        <label><input type="checkbox" id="privacy"> Accetto la privacy</label>
+      <div class="card">
+        <button id="googleBtn" style="background: #ffffff; color: #111827; border: 1px solid #e5e7eb;">
+          <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18" style="margin-right: 10px; vertical-align: middle;">
+          Accedi con Google
+        </button>
+        
+        <div style="text-align: center; margin: 15px 0; color: #9ca3af; font-size: 12px;">OPPURE</div>
+        
+        <input type="email" id="email" placeholder="Email">
+        <input type="password" id="password" placeholder="Password">
+        <button onclick="loginEmail()">Login / Registrati</button>
+      </div>
+    </div>
+
+    <div id="app" class="hidden">
+      <div class="header">
+        <h1>Ciao!</h1>
+        <p>Seleziona i giorni in cui sei disponibile</p>
+        <button onclick="logout()" style="width: auto; padding: 5px 15px; background: #fee2e2; color: #ef4444; font-size: 12px; margin-top: 5px;">Esci</button>
       </div>
 
-      <button onclick="loginEmail()" style="width: 100%; padding: 10px; margin-bottom: 10px; cursor: pointer;">Accedi / Registrati</button>
-      <div style="text-align: center; margin: 10px 0; color: #666;">oppure</div>
-      <button id="googleBtn">Accedi con Google</button>
-    </div>
-  </div>
+      <div class="card">
+        <div class="days-row">
+          <div class="day-item">
+            <button class="day-btn" data-day="venerdi">Ven</button>
+            <div id="venerdi-slots" class="slots disabled">
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
+            </div>
+          </div>
 
-  <div id="app" class="hidden" style="max-width: 600px; margin: auto;">
-    <div style="display: flex; justify-content: space-between; align-items: center;">
-      <h2>Looply</h2>
-      <button onclick="logout()" style="padding: 5px 10px; cursor: pointer;">Esci</button>
-    </div>
-    
-    <h3>Seleziona la tua disponibilità</h3>
-    <div style="display: flex; justify-content: space-around; margin-bottom: 20px;">
-      <button class="day-btn" data-day="venerdi">Venerdì</button>
-      <button class="day-btn" data-day="sabato">Sabato</button>
-      <button class="day-btn" data-day="domenica">Domenica</button>
-    </div>
+          <div class="day-item">
+            <button class="day-btn" data-day="sabato">Sab</button>
+            <div id="sabato-slots" class="slots disabled">
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
+            </div>
+          </div>
 
-    <div id="venerdi-slots" class="slots disabled">
-      <h4>Disponibilità Venerdì</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
-      <label><input type="checkbox" value="morning"> Mattina</label><br>
-      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label>
-    </div>
+          <div class="day-item">
+            <button class="day-btn" data-day="domenica">Dom</button>
+            <div id="domenica-slots" class="slots disabled">
+              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="afternoon"> Pom.</label>
+              <label><input type="checkbox" value="evening"> Sera</label>
+            </div>
+          </div>
+        </div>
 
-    <div id="sabato-slots" class="slots disabled">
-      <h4>Disponibilità Sabato</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
-      <label><input type="checkbox" value="morning"> Mattina</label><br>
-      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label>
-    </div>
-
-    <div id="domenica-slots" class="slots disabled">
-      <h4>Disponibilità Domenica</h4>
-      <label><input type="checkbox" class="always" value="any" checked> Tutto il giorno</label><br>
-      <label><input type="checkbox" value="morning"> Mattina</label><br>
-      <label><input type="checkbox" value="afternoon"> Pomeriggio</label><br>
-      <label><input type="checkbox" value="evening"> Sera</label>
+        <button class="mt-10" onclick="saveAvailability()">Salva disponibilità</button>
+      </div>
     </div>
 
-    <button class="save-btn" onclick="saveAvailability()">Salva disponibilità</button>
   </div>
 
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
-
   <script src="app.js"></script>
 </body>
 </html>
