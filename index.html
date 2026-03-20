@@ -50,6 +50,46 @@
   <div class="card">
     <div id="daysContainer"></div>
 
+    <div class="days-row">
+
+  <!-- Venerdì -->
+  <div class="day-item">
+    <button class="day-btn" onclick="toggleDay('venerdi')">Venerdì</button>
+
+    <select id="venerdi-slot" class="slot-select" disabled>
+      <option value="">Seleziona fascia (opzionale)</option>
+      <option value="mattina">Mattina</option>
+      <option value="pomeriggio">Pomeriggio</option>
+      <option value="sera">Sera</option>
+    </select>
+  </div>
+
+  <!-- Sabato -->
+  <div class="day-item">
+    <button class="day-btn" onclick="toggleDay('sabato')">Sabato</button>
+
+    <select id="sabato-slot" class="slot-select" disabled>
+      <option value="">Seleziona fascia (opzionale)</option>
+      <option value="mattina">Mattina</option>
+      <option value="pomeriggio">Pomeriggio</option>
+      <option value="sera">Sera</option>
+    </select>
+  </div>
+
+  <!-- Domenica -->
+  <div class="day-item">
+    <button class="day-btn" onclick="toggleDay('domenica')">Domenica</button>
+
+    <select id="domenica-slot" class="slot-select" disabled>
+      <option value="">Seleziona fascia (opzionale)</option>
+      <option value="mattina">Mattina</option>
+      <option value="pomeriggio">Pomeriggio</option>
+      <option value="sera">Sera</option>
+    </select>
+  </div>
+
+    </div>
+
     <button onclick="saveAvailability()">Salva disponibilità</button>
   </div>
 
