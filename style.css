@@ -114,11 +114,7 @@ label {
   display: flex;
   flex-direction: column;
   gap: 8px;
-}
-
-.slot-select {
-  position: relative;
-  z-index: 2;
+  position: relative; /* IMPORTANTE */
 }
 
 /* pulsante giorno */
@@ -141,11 +137,16 @@ label {
 /* dropdown fascia oraria */
 
 .slot-select {
+  width: 100%;
   padding: 10px;
   border-radius: 10px;
   border: 1px solid #e5e7eb;
   background: #fff;
   font-size: 14px;
+
+  position: relative;   /* FIX */
+  z-index: 10;          /* FIX IMPORTANTE */
+  pointer-events: auto;  /* FIX */
 }
 
 /* ================= MATCH POPUP ================= */
