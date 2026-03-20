@@ -26,6 +26,14 @@ window.addEventListener("DOMContentLoaded", () => {
   if (savedName) document.getElementById("username").value = savedName;
   if (savedPhone) document.getElementById("phone").value = savedPhone;
 
+  // 🔴 COLLEGA I BOTTONI AI CLICK
+  document.querySelectorAll(".day-btn").forEach(btn => {
+    btn.addEventListener("click", () => {
+      const day = btn.getAttribute("data-day");
+      toggleDay(day);
+    });
+  });
+
 });
 
 // ================= LOGIN =================
