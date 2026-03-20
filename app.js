@@ -14,39 +14,38 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- NAVIGAZIONE ---
-window.openSettings = () => {
-    document.getElementById("app").style.display = "none";
-    document.getElementById("settingsPage").style.display = "block";
-};
-
-window.closeSettings = () => {
-    document.getElementById("settingsPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
-};
-
-// --- PERSONALIZZAZIONE TEMA ---
-window.changeTheme = async (color) => {
-    document.documentElement.style.setProperty('--primary-color', color);
-    if (currentUser) {
-        await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
+// --- LOGIN CON REDIRECT (OTTIMIZZATO PER MOBILE) ---
+document.addEventListener("DOMContentLoaded", () => {
+    const googleBtn = document.getElementById("googleBtn");
+    if (googleBtn) {
+        googleBtn.onclick = () => {
+            const provider = new firebase.auth.GoogleAuthProvider();
+            // Forza il redirect invece del popup
+            auth.signInWithRedirect(provider);
+        };
     }
-};
+});
 
-// --- GESTIONE AUTH ---
+// Gestisce il ritorno dal redirect di Google
+auth.getRedirectResult().then((result) => {
+    if (result.user) console.log("Login riuscito dopo redirect!");
+}).catch((error) => {
+    if (error.code !== 'auth/no-auth-event') {
+        console.error("Errore nel redirect:", error.message);
+    }
+});
+
+// --- STATO AUTH ---
 auth.onAuthStateChanged(async (user) => {
     const formLogin = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
-    
     if (user) {
         currentUser = user.uid;
         formLogin.style.display = "none";
         appDiv.style.display = "block";
-        
         document.getElementById("welcomeTitle").innerText = "Ciao " + (user.displayName ? user.displayName.split(' ')[0] : "!");
         document.getElementById("userName").innerText = user.displayName || "Utente";
         document.getElementById("userEmail").innerText = user.email;
-        
         if (user.photoURL) {
             const img = document.getElementById("userPhoto");
             img.src = user.photoURL;
@@ -57,25 +56,29 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = null;
         formLogin.style.display = "block";
         appDiv.style.display = "none";
-        document.getElementById("settingsPage").style.display = "none";
     }
 });
 
-document.getElementById("googleBtn").onclick = () => {
-    const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithPopup(provider).catch(e => console.error(e));
+// --- NAVIGAZIONE E TEMA ---
+window.openSettings = () => {
+    document.getElementById("app").style.display = "none";
+    document.getElementById("settingsPage").style.display = "block";
 };
-
-window.logout = () => auth.signOut().then(() => location.reload());
+window.closeSettings = () => {
+    document.getElementById("settingsPage").style.display = "none";
+    document.getElementById("app").style.display = "block";
+};
+window.changeTheme = async (color) => {
+    document.documentElement.style.setProperty('--primary-color', color);
+    if (currentUser) await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
+};
 
 // --- LOGICA GIORNI ---
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
         const slots = document.getElementById(day + "-slots");
-        
         selectedDays[day] = !selectedDays[day];
-        
         if (selectedDays[day]) {
             btn.classList.add("active");
             slots.classList.remove("disabled");
@@ -88,23 +91,17 @@ document.querySelectorAll(".day-btn").forEach(btn => {
     };
 });
 
-// --- SALVATAGGIO E CARICAMENTO ---
+// --- SALVATAGGIO ---
 window.saveAvailability = async () => {
     const btn = document.getElementById("btnSave");
     btn.innerText = "Salvataggio...";
-    
-    const av = {
-        venerdi: getVals("venerdi"),
-        sabato: getVals("sabato"),
-        domenica: getVals("domenica")
-    };
-
+    const av = { venerdi: getVals("venerdi"), sabato: getVals("sabato"), domenica: getVals("domenica") };
     try {
         await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
         btn.innerText = "Salva disponibilità";
-        alert("✅ Disponibilità salvata!");
+        alert("✅ Salvato!");
     } catch (e) {
-        alert("Errore");
+        alert("Errore salvataggio");
         btn.innerText = "Salva disponibilità";
     }
 };
@@ -119,13 +116,7 @@ async function caricaDati() {
     const doc = await db.collection("users").doc(currentUser).get();
     if (doc.exists) {
         const data = doc.data();
-        
-        // Applica tema salvato
-        if (data.themeColor) {
-            document.documentElement.style.setProperty('--primary-color', data.themeColor);
-        }
-
-        // Applica disponibilità
+        if (data.themeColor) document.documentElement.style.setProperty('--primary-color', data.themeColor);
         if (data.availability) {
             const av = data.availability;
             for (const d in av) {
@@ -133,13 +124,17 @@ async function caricaDati() {
                     const btn = document.querySelector(`[data-day="${d}"]`);
                     const slots = document.getElementById(d + "-slots");
                     selectedDays[d] = true;
-                    btn.classList.add("active");
-                    slots.classList.remove("disabled");
-                    slots.querySelectorAll("input").forEach(cb => {
-                        if (av[d].includes(cb.value)) cb.checked = true;
-                    });
+                    if(btn) btn.classList.add("active");
+                    if(slots) {
+                        slots.classList.remove("disabled");
+                        slots.querySelectorAll("input").forEach(cb => {
+                            if (av[d].includes(cb.value)) cb.checked = true;
+                        });
+                    }
                 }
             }
         }
     }
 }
+
+window.logout = () => auth.signOut().then(() => location.reload());
