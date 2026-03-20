@@ -20,7 +20,7 @@ let currentMatchUser = null;
 // ================= DOM READY =================
 
 window.addEventListener("DOMContentLoaded", () => {
-  createDaysUI(); // se la usi per generare i 3 giorni
+  // niente createDaysUI (rimosso per evitare errori)
 });
 
 // ================= LOGIN =================
@@ -134,6 +134,8 @@ async function checkMatches(myId) {
   const myDoc = await db.collection("users").doc(myId).get();
   const myData = myDoc.data();
 
+  if (!myData || !myData.availability) return;
+
   const snapshot = await db.collection("users").get();
 
   snapshot.forEach(doc => {
@@ -185,7 +187,7 @@ function sendWhatsApp() {
   window.open(`https://wa.me/${phone}?text=${message}`, "_blank");
 }
 
-// ================= LISTENER MATCH (OPZIONALE) =================
+// ================= LISTENER MATCH =================
 
 function listenMatches() {
   db.collection("users").onSnapshot(() => {
