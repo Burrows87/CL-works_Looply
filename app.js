@@ -1,6 +1,6 @@
 // 1. CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
-    apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
+    apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
     projectId: "looply-app-21eb9",
     storageBucket: "looply-app-21eb9.firebasestorage.app",
@@ -50,39 +50,26 @@ const langPack = {
     }
 };
 
-// --- 3. LOGICA TRADUZIONE ---
-function applicaLingua(nome, lingua) {
-    const t = langPack[lingua];
-    
-    // Header & Buttons
-    document.getElementById("welcomeTitle").innerHTML = `${t.welcome} ${nome} 🤙🏻`;
-    document.getElementById("labelSaveBtn").innerText = t.save;
-    document.getElementById("titleSettings").innerText = t.settings;
-    document.getElementById("labelLogout").innerText = t.logout;
-    
-    // Days Buttons
-    document.getElementById("btnVen").innerText = t.days.ven;
-    document.getElementById("btnSab").innerText = t.days.sab;
-    document.getElementById("btnDom").innerText = t.days.dom;
+// --- 3. FIX LOGIN PER MOBILE (REDIRECT) ---
+auth.getRedirectResult().then((result) => {
+    if (result.user) console.log("Login completato con successo!");
+}).catch((error) => {
+    console.error("Errore Login Redirect:", error.message);
+});
 
-    // Day Labels
-    document.getElementById("labelVen").innerText = t.days.labels[0];
-    document.getElementById("labelSab").innerText = t.days.labels[1];
-    document.getElementById("labelDom").innerText = t.days.labels[2];
-
-    // Slots Text
-    document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
-    document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
-    document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
-    document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
-
-    // Match Modal
-    document.getElementById("matchFoundTitle").innerText = t.matchTitle;
-    document.getElementById("labelLater").innerText = t.later;
-    document.getElementById("labelWhatsApp").innerText = t.waBtn;
+function inizializzaLogin() {
+    const btn = document.getElementById("googleBtn");
+    if (btn) {
+        btn.onclick = (e) => {
+            e.preventDefault();
+            const provider = new firebase.auth.GoogleAuthProvider();
+            provider.setCustomParameters({ prompt: 'select_account' });
+            auth.signInWithRedirect(provider);
+        };
+    }
 }
 
-// --- 4. GESTIONE PROFILO & ONBOARDING ---
+// --- 4. GESTIONE PROFILO & LINGUA ---
 async function inizializzaUtente(user) {
     const userDoc = await db.collection("users").doc(user.uid).get();
     
@@ -91,6 +78,7 @@ async function inizializzaUtente(user) {
         userLang = data.lang;
         applicaLingua(data.displayName, userLang);
         if (data.themeColor) document.documentElement.style.setProperty('--primary-color', data.themeColor);
+        document.getElementById("userName").innerText = data.displayName;
     } else {
         document.getElementById("onboardingModal").style.display = "flex";
     }
@@ -99,41 +87,66 @@ async function inizializzaUtente(user) {
 window.saveOnboarding = async () => {
     const nome = document.getElementById("inputNome").value.trim();
     const lingua = document.getElementById("selectLingua").value;
-    if (nome.length < 2) return;
+    if (nome.length < 2) return alert("Inserisci un nome valido!");
 
-    await db.collection("users").doc(currentUser).set({
-        displayName: nome,
-        lang: lingua,
-        themeColor: "#2563eb"
-    }, { merge: true });
+    try {
+        await db.collection("users").doc(currentUser).set({
+            displayName: nome,
+            lang: lingua,
+            themeColor: "#2563eb"
+        }, { merge: true });
 
-    userLang = lingua;
-    document.getElementById("onboardingModal").style.display = "none";
-    applicaLingua(nome, lingua);
+        userLang = lingua;
+        document.getElementById("onboardingModal").style.display = "none";
+        applicaLingua(nome, lingua);
+    } catch (e) { alert("Errore nel salvataggio"); }
 };
 
-// --- 5. CUORE DELL'APP (MATCH & SALVATAGGIO) ---
+function applicaLingua(nome, lingua) {
+    const t = langPack[lingua];
+    document.getElementById("welcomeTitle").innerHTML = `${t.welcome} ${nome} 🤙🏻`;
+    document.getElementById("labelSaveBtn").innerText = t.save;
+    document.getElementById("titleSettings").innerText = t.settings;
+    document.getElementById("labelLogout").innerText = t.logout;
+    document.getElementById("btnVen").innerText = t.days.ven;
+    document.getElementById("btnSab").innerText = t.days.sab;
+    document.getElementById("btnDom").innerText = t.days.dom;
+    document.getElementById("labelVen").innerText = t.days.labels[0];
+    document.getElementById("labelSab").innerText = t.days.labels[1];
+    document.getElementById("labelDom").innerText = t.days.labels[2];
+
+    document.querySelectorAll(".txtAlways").forEach(el => el.innerText = t.slots.always);
+    document.querySelectorAll(".txtMorning").forEach(el => el.innerText = t.slots.morning);
+    document.querySelectorAll(".txtAfternoon").forEach(el => el.innerText = t.slots.afternoon);
+    document.querySelectorAll(".txtEvening").forEach(el => el.innerText = t.slots.evening);
+    
+    document.getElementById("matchFoundTitle").innerText = t.matchTitle;
+    document.getElementById("labelLater").innerText = t.later;
+    document.getElementById("labelWhatsApp").innerText = t.waBtn;
+}
+
+// --- 5. STATO AUTENTICAZIONE ---
 auth.onAuthStateChanged(async (user) => {
+    const formLogin = document.getElementById("formLogin");
+    const appDiv = document.getElementById("app");
+    
     if (user) {
         currentUser = user.uid;
-        document.getElementById("formLogin").style.display = "none";
-        document.getElementById("app").style.display = "block";
+        formLogin.style.display = "none";
+        appDiv.style.display = "block";
         await inizializzaUtente(user);
-        
         document.getElementById("userEmail").innerText = user.email;
-        if (user.photoURL) {
-            const img = document.getElementById("userPhoto");
-            img.src = user.photoURL;
-            img.style.display = "block";
-        }
+        if (user.photoURL) document.getElementById("userPhoto").src = user.photoURL;
         await caricaDati();
     } else {
-        document.getElementById("formLogin").style.display = "block";
-        document.getElementById("app").style.display = "none";
+        currentUser = null;
+        formLogin.style.display = "block";
+        appDiv.style.display = "none";
         inizializzaLogin();
     }
 });
 
+// --- 6. CORE LOGIC (SALVA & MATCH) ---
 window.saveAvailability = async () => {
     const btnText = document.getElementById("labelSaveBtn");
     const t = langPack[userLang];
@@ -145,93 +158,7 @@ window.saveAvailability = async () => {
         domenica: getCheckedVals("domenica")
     };
 
-    await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
-    btnText.innerText = t.saved;
-    setTimeout(() => { btnText.innerText = t.save; }, 2000);
-    await controllaMatch(av);
-};
-
-async function controllaMatch(miaAv) {
-    const snapshot = await db.collection("users").get();
-    let matchTrovato = false;
-    const t = langPack[userLang];
-
-    snapshot.forEach(doc => {
-        if (doc.id !== currentUser && !matchTrovato) {
-            const altro = doc.data();
-            const altraAv = altro.availability;
-            if (altraAv) {
-                ["venerdi", "sabato", "domenica"].forEach(g => {
-                    if (miaAv[g] && altraAv[g]) {
-                        const comuni = miaAv[g].filter(f => altraAv[g].includes(f));
-                        if (comuni.length > 0 && !matchTrovato) {
-                            const giornoTradotto = document.getElementById(`label${g.charAt(0).toUpperCase() + g.slice(1)}`).innerText;
-                            mostraPopupMatch(altro.displayName, giornoTradotto, comuni[0]);
-                            matchTrovato = true;
-                        }
-                    }
-                });
-            }
-        }
-    });
-}
-
-function mostraPopupMatch(nome, giorno, fascia) {
-    const t = langPack[userLang];
-    document.getElementById("matchText").innerHTML = t.matchText(nome, giorno, fascia);
-    
-    const btnWA = document.getElementById("matchWA");
-    btnWA.onclick = () => {
-        const msg = t.waMsg(nome, giorno, fascia);
-        window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
-    };
-
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-    document.getElementById("matchModal").style.display = "flex";
-}
-
-// --- 6. UTILITY & NAVIGAZIONE ---
-function getCheckedVals(day) {
-    if (!selectedDays[day]) return null;
-    return Array.from(document.getElementById(day + "-slots").querySelectorAll("input:checked")).map(c => c.value);
-}
-
-async function caricaDati() {
-    const doc = await db.collection("users").doc(currentUser).get();
-    if (doc.exists && doc.data().availability) {
-        const av = doc.data().availability;
-        for (const d in av) {
-            if (av[d] && av[d].length > 0) {
-                selectedDays[d] = true;
-                document.querySelector(`[data-day="${d}"]`).classList.add("active");
-                const s = document.getElementById(d + "-slots");
-                s.classList.remove("disabled");
-                s.querySelectorAll("input").forEach(cb => { if (av[d].includes(cb.value)) cb.checked = true; });
-            }
-        }
-    }
-}
-
-document.querySelectorAll(".day-btn").forEach(btn => {
-    btn.onclick = () => {
-        const d = btn.dataset.day;
-        selectedDays[d] = !selectedDays[d];
-        btn.classList.toggle("active");
-        document.getElementById(d + "-slots").classList.toggle("disabled");
-    };
-});
-
-window.changeTheme = (color) => {
-    document.documentElement.style.setProperty('--primary-color', color);
-    db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
-};
-
-window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
-window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
-window.logout = () => auth.signOut().then(() => location.reload());
-window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
-
-function inizializzaLogin() {
-    const b = document.getElementById("googleBtn");
-    if (b) b.onclick = () => auth.signInWithRedirect(new firebase.auth.GoogleAuthProvider());
-}
+    try {
+        await db.collection("users").doc(currentUser).set({ availability: av }, { merge: true });
+        btnText.innerText = t.saved;
+        setTimeout(() => { btnText.innerText = t
