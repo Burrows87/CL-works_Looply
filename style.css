@@ -1,77 +1,67 @@
 :root {
-    --primary-color: #2563eb; /* Colore iniziale (blu) */
-    --bg-main: #f9fafb;
-    --border-gray: #e5e7eb;
+    --primary-color: #2563eb;
 }
 
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: sans-serif; }
-
-body { background: var(--bg-main); display: flex; justify-content: center; padding: 20px; }
-
+body { background: #f9fafb; display: flex; justify-content: center; padding: 20px; }
 .container { width: 100%; max-width: 400px; }
+.card { background: white; padding: 20px; border-radius: 16px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); border: 1px solid #e5e7eb; }
 
-.card { 
-    background: white; 
-    padding: 20px; 
-    border-radius: 16px; 
-    box-shadow: 0 4px 6px rgba(0,0,0,0.05); 
-    border: 1px solid var(--border-gray); 
+/* ALLINEAMENTO ORIZZONTALE */
+.days-row {
+    display: flex;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 20px;
 }
 
-.header h1 { font-size: 24px; margin-bottom: 5px; }
+.day-item { flex: 1; }
 
-/* PULSANTI GIORNI - REATTIVI AL COLORE */
 .day-btn {
     width: 100%;
-    padding: 12px;
-    margin-bottom: 5px;
-    border-radius: 10px;
-    border: 2px solid var(--border-gray);
+    padding: 15px 5px;
+    border-radius: 12px;
+    border: 2px solid #e5e7eb;
     background: white;
     font-weight: bold;
     cursor: pointer;
+    transition: 0.2s;
 }
 
+/* REATTIVITÀ AL COLORE SCELTO */
 .day-btn.active {
     background-color: var(--primary-color) !important;
     border-color: var(--primary-color) !important;
     color: white !important;
 }
 
-/* TASTO SALVA - REATTIVO AL COLORE */
+.slots {
+    background: #f3f4f6;
+    padding: 15px;
+    border-radius: 12px;
+    margin-bottom: 10px;
+    display: none; /* Nascondi di default, mostra solo se attivo */
+}
+
+.slots:not(.disabled) {
+    display: block;
+}
+
+.slots label { display: block; margin: 8px 0; cursor: pointer; }
+
 .btn-primary {
     background-color: var(--primary-color) !important;
     color: white;
     width: 100%;
-    padding: 14px;
+    padding: 15px;
     border: none;
     border-radius: 12px;
     font-weight: bold;
     cursor: pointer;
+    margin-top: 10px;
 }
-
-.slots {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 8px;
-    background: #f3f4f6;
-    padding: 10px;
-    border-radius: 10px;
-    margin-bottom: 15px;
-}
-
-.slots.disabled { opacity: 0.3; pointer-events: none; }
 
 .btn-google {
-    width: 100%;
-    padding: 12px;
-    border: 1px solid var(--border-gray);
-    background: white;
-    border-radius: 10px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    cursor: pointer;
-    font-weight: bold;
+    width: 100%; padding: 12px; border: 1px solid #e5e7eb; background: white; border-radius: 10px;
+    display: flex; align-items: center; justify-content: center; gap: 10px; font-weight: bold; cursor: pointer;
 }
