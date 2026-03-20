@@ -223,7 +223,7 @@ async function sendWhatsApp() {
 
   const message = `Ciao ${other.name}! Sono ${me.name} da Looply 😊`;
 
-  const const url = `https://wa.me/${other.phone}?text=${encodeURIComponent(message)}`;
+  const url = `https://wa.me/${other.phone}?text=${encodeURIComponent(message)}`;
 
   window.open(url, "_blank");
 }
