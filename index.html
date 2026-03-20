@@ -2,9 +2,10 @@
 <html lang="it">
 <head>
   <meta charset="UTF-8">
-  <title>Looply - La tua Disponibilità</title>
+  <title>Looply - La tua App</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
 </head>
 <body>
 
@@ -15,15 +16,12 @@
         <h1>Looply</h1>
         <p>Organizza la tua disponibilità</p>
       </div>
-      
       <div class="card">
-        <button id="googleBtn" style="background: #ffffff; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
+        <button id="googleBtn" style="background: white; color: #111827; border: 1px solid #e5e7eb; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%;">
           <img src="https://upload.wikimedia.org/wikipedia/commons/5/53/Google_%22G%22_Logo.svg" width="18">
           Accedi con Google
         </button>
-        
         <div style="text-align: center; margin: 15px 0; color: #9ca3af; font-size: 12px;">OPPURE</div>
-        
         <input type="email" id="email" placeholder="Email">
         <input type="password" id="password" placeholder="Password">
         <button onclick="loginEmail()">Entra</button>
@@ -31,48 +29,61 @@
     </div>
 
     <div id="app" class="hidden">
-      <div class="header">
-        <h1>Ciao!</h1>
-        <p>Seleziona i tuoi giorni e orari</p>
-        <button onclick="logout()" style="width: auto; padding: 4px 12px; background: #fee2e2; color: #ef4444; font-size: 11px; margin-top: 8px;">Esci</button>
+      <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 10px 0;">
+        <h1 id="welcomeTitle">Ciao!</h1>
+        <i class="fa-solid fa-gear" onclick="openSettings()" style="font-size: 22px; cursor: pointer; color: #6b7280;"></i>
       </div>
 
       <div class="card">
         <div class="days-row">
-          
           <div class="day-item">
             <button class="day-btn" data-day="venerdi">Ven</button>
             <div id="venerdi-slots" class="slots disabled">
               <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="morning"> Matt.</label>
               <label><input type="checkbox" value="afternoon"> Pom.</label>
               <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
-
           <div class="day-item">
             <button class="day-btn" data-day="sabato">Sab</button>
             <div id="sabato-slots" class="slots disabled">
               <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="morning"> Matt.</label>
               <label><input type="checkbox" value="afternoon"> Pom.</label>
               <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
-
           <div class="day-item">
             <button class="day-btn" data-day="domenica">Dom</button>
             <div id="domenica-slots" class="slots disabled">
               <label><input type="checkbox" value="any"> <b>Sempre</b></label>
-              <label><input type="checkbox" value="morning"> Mattina</label>
+              <label><input type="checkbox" value="morning"> Matt.</label>
               <label><input type="checkbox" value="afternoon"> Pom.</label>
               <label><input type="checkbox" value="evening"> Sera</label>
             </div>
           </div>
-
         </div>
-
         <button class="mt-10" id="btnSave" onclick="saveAvailability()">Salva disponibilità</button>
+      </div>
+    </div>
+
+    <div id="settingsPage" class="hidden">
+      <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
+        <i class="fa-solid fa-arrow-left" onclick="closeSettings()" style="font-size: 20px; cursor: pointer; color: #111827;"></i>
+        <h1>Impostazioni</h1>
+      </div>
+      
+      <div class="card">
+        <div style="text-align: center; margin-bottom: 20px;">
+          <img id="userPhoto" src="" style="width: 70px; height: 70px; border-radius: 50%; border: 2px solid #2563eb; display: none; margin: 0 auto 10px;">
+          <h3 id="userName" style="margin: 5px 0;">Utente</h3>
+          <p id="userEmail" style="color: #6b7280; font-size: 13px;"></p>
+        </div>
+        
+        <hr style="border: 0; border-top: 1px solid #f3f4f6; margin: 20px 0;">
+        
+        <button onclick="logout()" style="background: #fee2e2; color: #ef4444; border: none;">Esci dall'account</button>
       </div>
     </div>
 
