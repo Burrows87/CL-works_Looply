@@ -1,4 +1,7 @@
-// CONFIGURAZIONE
+// 1. MESSAGGIO DI TEST (Se vedi questo all'apertura, JS sta caricando)
+console.log("Script caricato correttamente");
+
+// 2. CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -8,41 +11,50 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione con controllo errori
-try {
-    if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-    console.log("Firebase inizializzato");
-} catch (e) {
-    console.error("Errore inizializzazione:", e);
+// Inizializzazione sicura
+if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
 }
 
 const auth = firebase.auth();
 
-// FUNZIONE LOGIN
+// 3. FUNZIONE DI LOGIN (Attaccata direttamente a window)
 window.startLogin = function() {
-    console.log("Cliccato!");
+    alert("Hai cliccato il pulsante! Provo a connettermi a Google...");
+    
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    
-    // Usiamo il REDIRECT (più affidabile su mobile)
-    auth.signInWithRedirect(provider);
+
+    // Usiamo il REDIRECT: è l'unico modo per evitare che il telefono blocchi tutto
+    auth.signInWithRedirect(provider).catch(function(error) {
+        alert("Errore durante l'avvio: " + error.message);
+    });
 };
 
-// GESTORE STATO
-auth.onAuthStateChanged((user) => {
+// 4. GESTORE DELLO STATO (Cosa succede dopo il login)
+auth.onAuthStateChanged(function(user) {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
-    
+    const welcome = document.getElementById("welcomeTitle");
+
     if (user) {
-        console.log("Utente OK:", user.displayName);
-        if(loginDiv) loginDiv.style.display = "none";
-        if(appDiv) appDiv.style.display = "block";
-        document.getElementById("welcomeTitle").innerHTML = "Ciao " + user.displayName.split(' ')[0] + " 🤙🏻";
+        console.log("Utente loggato:", user.displayName);
+        if (loginDiv) loginDiv.style.display = "none";
+        if (appDiv) appDiv.style.display = "block";
+        if (welcome) {
+            var nome = user.displayName ? user.displayName.split(' ')[0] : "Utente";
+            welcome.innerHTML = "Ciao " + nome + " 🤙🏻";
+        }
     } else {
-        console.log("Nessun utente");
-        if(loginDiv) loginDiv.style.display = "block";
-        if(appDiv) appDiv.style.display = "none";
+        console.log("Nessun utente loggato");
+        if (loginDiv) loginDiv.style.display = "block";
+        if (appDiv) appDiv.style.display = "none";
     }
 });
 
-window.logout = () => auth.signOut().then(() => location.reload());
+// Funzione logout
+window.logout = function() {
+    auth.signOut().then(function() {
+        location.reload();
+    });
+};
