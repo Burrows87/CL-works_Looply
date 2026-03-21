@@ -2,47 +2,63 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Looply</title>
+    <title>Looply - Weekend</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* Stili di emergenza se style.css non carica */
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; display: flex; justify-content: center; }
-        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
-        .header h1 { color: #2563eb; font-size: 32px; margin-bottom: 5px; }
-        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px; }
-        .btn-google { background: white; border: 1px solid #ddd; padding: 12px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; font-weight: bold; }
+        :root { --primary: #2563eb; --bg: #f3f4f6; }
+        body { font-family: -apple-system, sans-serif; background: var(--bg); margin: 0; display: flex; justify-content: center; padding: 20px; }
+        .container { width: 100%; max-width: 400px; text-align: center; }
+        .card { background: white; padding: 25px; border-radius: 20px; shadow: 0 10px 15px -3px rgba(0,0,0,0.1); margin-top: 20px; }
+        h1 { color: var(--primary); font-size: 32px; margin-bottom: 10px; }
+        
+        .btn-google { 
+            background: white; border: 1px solid #ddd; padding: 15px; border-radius: 12px; 
+            width: 100%; font-weight: bold; display: flex; align-items: center; 
+            justify-content: center; gap: 10px; cursor: pointer; transition: 0.2s;
+        }
+        .btn-google:active { transform: scale(0.98); background: #f9f9f9; }
+        
         #app { display: none; }
+        .hidden { display: none !important; }
+        
+        /* Loading Overlay */
+        #loader { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: white; display: flex; align-items: center; justify-content: center; z-index: 999; }
     </style>
 </head>
 <body>
 
+    <div id="loader">
+        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: var(--primary);"></i>
+    </div>
+
     <div class="container">
         
         <div id="formLogin">
-            <div class="header">
-                <h1>Looply</h1>
-                <p>Organizza il tuo weekend</p>
-            </div>
+            <h1>Looply</h1>
+            <p style="color: #6b7280;">Organizza il tuo weekend con gli amici</p>
             <div class="card">
                 <button type="button" class="btn-google" onclick="window.startLogin()">
-                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
+                    <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20">
                     Accedi con Google
                 </button>
             </div>
         </div>
 
         <div id="app">
-            <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
-                <h1 id="welcomeTitle">Ciao 🤙🏻</h1>
-                <button onclick="window.logout()" style="background:none; border:none; color:#6b7280; font-size: 20px;"><i class="fa-solid fa-right-from-bracket"></i></button>
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <h1 id="welcomeTitle" style="font-size: 24px;">Ciao 🤙🏻</h1>
+                <button onclick="window.logout()" style="background:none; border:none; color:#9ca3af; font-size: 20px;">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                </button>
             </div>
+            
             <div class="card">
-                <p>Siamo dentro! Ora puoi configurare i tuoi giorni.</p>
-                </div>
+                <p>Sei loggato correttamente! 🎉</p>
+                <p style="font-size: 14px; color: #6b7280;">Stiamo configurando il database per i match...</p>
+            </div>
         </div>
 
     </div>
@@ -51,7 +67,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <script src="app.js?v=3.1"></script>
+    <script src="app.js?v=5.0"></script>
 
 </body>
 </html>
