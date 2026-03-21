@@ -1,4 +1,4 @@
-// 1. CONFIGURAZIONE (Verificata dai tuoi screenshot)
+// CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
     apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -8,7 +8,7 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione Firebase
+// Inizializzazione
 if (!firebase.apps.length) {
     firebase.initializeApp(firebaseConfig);
 }
@@ -16,49 +16,44 @@ if (!firebase.apps.length) {
 const auth = firebase.auth();
 const db = firebase.firestore();
 
-// 2. FUNZIONE DI LOGIN (REDIRECT)
-// Il redirect è necessario per evitare blocchi popup e l'errore 404 sui domini non verificati
+// --- LOGIN CON REDIRECT (Anti-Blocco) ---
 window.startLogin = function() {
-    console.log("Tentativo di login avviato...");
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
     
-    // Cambiamo pagina verso Google
+    // Usiamo il Redirect per bypassare i blocchi dei browser mobile
     auth.signInWithRedirect(provider);
 };
 
-// 3. GESTORE DELLO STATO (Cosa succede quando torni da Google)
+// Gestione del ritorno dal login
+auth.getRedirectResult().then((result) => {
+    if (result.user) console.log("Login completato con successo");
+}).catch((error) => {
+    console.error("Errore nel redirect:", error.message);
+});
+
+// --- CONTROLLO STATO UTENTE ---
 auth.onAuthStateChanged(async (user) => {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
     const welcome = document.getElementById("welcomeTitle");
 
     if (user) {
-        console.log("Utente loggato con successo:", user.displayName);
-        
-        // Mostra l'app, nascondi il login
-        if (loginDiv) loginDiv.style.display = "none";
-        if (appDiv) appDiv.style.display = "block";
-        
-        // Saluto personalizzato
-        if (welcome) {
+        // Utente Loggato
+        if(loginDiv) loginDiv.style.display = "none";
+        if(appDiv) appDiv.style.display = "block";
+        if(welcome) {
             const nome = user.displayName ? user.displayName.split(' ')[0] : "Utente";
-            welcome.innerHTML = `Ciao ${nome} 🤙🏻`;
+            welcome.innerHTML = "Ciao " + nome + " 🤙🏻";
         }
-
-        // Qui caricheremo i dati dal database in seguito
     } else {
-        console.log("Nessun utente rilevato, mostro il login.");
-        if (loginDiv) loginDiv.style.display = "block";
-        if (appDiv) appDiv.style.display = "none";
+        // Utente non loggato
+        if(loginDiv) loginDiv.style.display = "block";
+        if(appDiv) appDiv.style.display = "none";
     }
 });
 
-// 4. FUNZIONE LOGOUT
+// Logout
 window.logout = function() {
-    auth.signOut().then(() => {
-        window.location.reload();
-    }).catch((error) => {
-        console.error("Errore logout:", error);
-    });
+    auth.signOut().then(() => location.reload());
 };
