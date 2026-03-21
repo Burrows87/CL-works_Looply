@@ -10,18 +10,17 @@ const firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// 1. CATTURA IL RISULTATO DEL LOGIN DOPO IL RITORNO (IL PEZZO MANCANTE)
-auth.getRedirectResult()
-    .then((result) => {
-        if (result.user) {
-            console.log("✅ Login agganciato con successo!");
-        }
-    })
-    .catch((error) => {
-        console.error("Errore nel recupero redirect:", error.message);
-    });
+// --- IL FIX PER IL LOOP ---
+// Questa funzione intercetta l'utente che torna da Google
+auth.getRedirectResult().then((result) => {
+    if (result.user) {
+        console.log("✅ Login agganciato dopo il redirect!");
+    }
+}).catch((error) => {
+    console.error("Errore redirect:", error.message);
+});
 
-// 2. GESTORE STATO UTENTE
+// --- GESTORE INTERFACCIA ---
 auth.onAuthStateChanged((user) => {
     const loader = document.getElementById("loader");
     const loginDiv = document.getElementById("formLogin");
@@ -29,7 +28,7 @@ auth.onAuthStateChanged((user) => {
     const welcomeTitle = document.getElementById("welcomeTitle");
 
     if (user) {
-        console.log("✅ STATO: LOGGATO COME", user.displayName);
+        console.log("✅ UTENTE LOGGATO VERAMENTE:", user.displayName);
         if(loginDiv) loginDiv.style.display = "none";
         if(appDiv) appDiv.style.display = "block";
         if(welcomeTitle) welcomeTitle.innerText = "Ciao " + user.displayName.split(' ')[0] + " 🤙🏻";
@@ -41,14 +40,12 @@ auth.onAuthStateChanged((user) => {
     if (loader) loader.style.display = "none";
 });
 
-// 3. FUNZIONE TASTO LOGIN
+// --- FUNZIONI TASTI ---
 window.startLogin = function () {
-    console.log("🚀 Avvio Redirect...");
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithRedirect(provider);
 };
 
-// 4. LOGOUT
 window.logout = function() {
     auth.signOut().then(() => window.location.reload());
 };
