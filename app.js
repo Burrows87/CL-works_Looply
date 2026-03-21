@@ -1,10 +1,10 @@
 const firebaseConfig = {
-    apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
-    authDomain: "looply-app-21eb9.firebaseapp.com",
-    projectId: "looply-app-21eb9",
-    storageBucket: "looply-app-21eb9.firebasestorage.app",
-    messagingSenderId: "484354825970",
-    appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
+  apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
+  authDomain: "looply-app-21eb9.firebaseapp.com",
+  projectId: "looply-app-21eb9",
+  storageBucket: "looply-app-21eb9.firebasestorage.app",
+  messagingSenderId: "484354825970",
+  appId: "1:484354825970:web:79bc652c6b39fb57d27a6b",
 };
 
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
