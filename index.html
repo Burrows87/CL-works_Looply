@@ -2,155 +2,47 @@
 <html lang="it">
 <head>
     <meta charset="UTF-8">
-    <title>Looply - Weekend Organizer</title>
+    <title>Looply</title>
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     
-    <link rel="manifest" href="manifest.json">
-    <meta name="apple-mobile-web-app-capable" content="yes">
-    <meta name="apple-mobile-web-app-status-bar-style" content="default">
-    <meta name="apple-mobile-web-app-title" content="Looply">
-    <meta name="theme-color" content="#2563eb">
-
     <link rel="stylesheet" href="style.css">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
     
     <style>
-        /* Fix rapido per assicurarci che il titolo sia leggibile */
-        #welcomeTitle {
-            font-size: 22px;
-            font-weight: 800;
-            color: #1f2937;
-            margin: 0;
-            display: flex;
-            align-items: center;
-            gap: 5px;
-        }
-        .loading-overlay {
-            position: fixed;
-            top: 0; left: 0; width: 100%; height: 100%;
-            background: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            z-index: 10000;
-        }
+        /* Stili di emergenza se style.css non carica */
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; background-color: #f3f4f6; margin: 0; display: flex; justify-content: center; }
+        .container { width: 100%; max-width: 400px; padding: 20px; text-align: center; }
+        .header h1 { color: #2563eb; font-size: 32px; margin-bottom: 5px; }
+        .card { background: white; padding: 20px; border-radius: 15px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); margin-top: 20px; }
+        .btn-google { background: white; border: 1px solid #ddd; padding: 12px 20px; border-radius: 8px; cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px; width: 100%; font-weight: bold; }
+        #app { display: none; }
     </style>
 </head>
 <body>
 
-    <div id="initialLoader" class="loading-overlay">
-        <i class="fa-solid fa-circle-notch fa-spin" style="font-size: 40px; color: #2563eb;"></i>
-    </div>
-
     <div class="container">
         
-        <div id="formLogin" style="display: none;">
+        <div id="formLogin">
             <div class="header">
                 <h1>Looply</h1>
                 <p>Organizza il tuo weekend</p>
             </div>
             <div class="card">
-                <button id="googleBtn" type="button" class="btn-google" onclick="window.startLogin()">
+                <button type="button" class="btn-google" onclick="window.startLogin()">
                     <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="18" alt="G">
                     Accedi con Google
                 </button>
-                <p style="font-size: 11px; color: #9ca3af; margin-top: 15px; text-align: center;">
-                    Usa il tuo account Google per sincronizzare i match
-                </p>
             </div>
         </div>
 
-        <div id="app" style="display: none;">
-            <div class="header" style="display: flex; justify-content: space-between; align-items: center; padding: 15px 0;">
+        <div id="app">
+            <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
                 <h1 id="welcomeTitle">Ciao 🤙🏻</h1>
-                <i class="fa-solid fa-gear" onclick="window.openSettings()" style="font-size: 24px; cursor: pointer; color: #6b7280; padding: 10px;"></i>
-            </div>
-
-            <div class="card">
-                <p style="text-align: center; color: #6b7280; font-size: 14px; margin-bottom: 20px;">Quando sei libero questo weekend?</p>
-                
-                <div class="days-row">
-                    <div class="day-item"><button class="day-btn" data-day="venerdi">Ven</button></div>
-                    <div class="day-item"><button class="day-btn" data-day="sabato">Sab</button></div>
-                    <div class="day-item"><button class="day-btn" data-day="domenica">Dom</button></div>
-                </div>
-
-                <div id="venerdi-slots" class="slots disabled">
-                    <p class="slot-title" style="color: #2563eb; font-weight: bold; margin-bottom: 10px;">Venerdì</p>
-                    <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
-                    </div>
-                </div>
-
-                <div id="sabato-slots" class="slots disabled">
-                    <p class="slot-title" style="color: #2563eb; font-weight: bold; margin-bottom: 10px;">Sabato</p>
-                    <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
-                    </div>
-                </div>
-
-                <div id="domenica-slots" class="slots disabled">
-                    <p class="slot-title" style="color: #2563eb; font-weight: bold; margin-bottom: 10px;">Domenica</p>
-                    <div class="slots-grid">
-                        <label><input type="checkbox" value="Sempre"> Sempre</label>
-                        <label><input type="checkbox" value="Mattina"> Mattina</label>
-                        <label><input type="checkbox" value="Pomeriggio"> Pom.</label>
-                        <label><input type="checkbox" value="Sera"> Sera</label>
-                    </div>
-                </div>
-
-                <div style="margin-top: 25px;">
-                    <button id="btnSave" onclick="window.saveAvailability()" class="btn-primary">
-                        <i class="fa-solid fa-floppy-disk"></i> Salva e controlla Match
-                    </button>
-                </div>
-            </div>
-        </div>
-
-        <div id="settingsPage" style="display: none;">
-            <div class="header" style="display: flex; align-items: center; gap: 15px; padding: 10px 0;">
-                <i class="fa-solid fa-arrow-left" onclick="window.closeSettings()" style="cursor: pointer; font-size: 20px;"></i>
-                <h1>Impostazioni</h1>
+                <button onclick="window.logout()" style="background:none; border:none; color:#6b7280; font-size: 20px;"><i class="fa-solid fa-right-from-bracket"></i></button>
             </div>
             <div class="card">
-                <div style="text-align: center; margin-bottom: 25px;">
-                    <img id="userPhoto" src="" style="width: 85px; height: 85px; border-radius: 50%; display: none; margin: 0 auto 10px; border: 3px solid var(--primary-color); object-fit: cover;">
-                    <h3 id="userName">Caricamento...</h3>
-                    <p id="userEmail" style="font-size: 12px; color: #6b7280;"></p>
+                <p>Siamo dentro! Ora puoi configurare i tuoi giorni.</p>
                 </div>
-
-                <div style="border-top: 1px solid #f3f4f6; padding-top: 20px;">
-                    <p style="font-size: 14px; font-weight: bold; margin-bottom: 15px; text-align: center;">Colore Tema</p>
-                    <div class="colors-container">
-                        <div class="color-dot" onclick="window.changeTheme('#2563eb')" style="background-color: #2563eb;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#059669')" style="background-color: #059669;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#7c3aed')" style="background-color: #7c3aed;"></div>
-                        <div class="color-dot" onclick="window.changeTheme('#db2777')" style="background-color: #db2777;"></div>
-                    </div>
-                </div>
-
-                <button onclick="window.logout()" class="btn-logout" style="margin-top: 30px;">
-                    <i class="fa-solid fa-right-from-bracket"></i> Disconnetti
-                </button>
-            </div>
-        </div>
-
-        <div id="matchModal" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:9999; justify-content:center; align-items:center; padding:20px;">
-            <div class="card" style="text-align:center; max-width: 320px; border: 2px solid #2563eb;">
-                <div style="font-size: 60px; margin-bottom: 15px;">🎉</div>
-                <h2 style="margin-bottom: 10px;">Ottime notizie!</h2>
-                <p id="matchText" style="margin-bottom: 25px; line-height: 1.6; font-size: 15px;"></p>
-                <button id="matchWA" class="btn-whatsapp">
-                    <i class="fa-brands fa-whatsapp"></i> Contatta su WhatsApp
-                </button>
-                <button onclick="window.closeMatch()" style="background:none; border:none; color:#9ca3af; cursor:pointer; font-size:14px; margin-top: 20px; text-decoration: underline;">Chiudi</button>
-            </div>
         </div>
 
     </div>
@@ -159,6 +51,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
     
-    <script src="app.js?v=1.2"></script>
+    <script src="app.js?v=3.1"></script>
+
 </body>
 </html>
