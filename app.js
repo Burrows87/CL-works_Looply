@@ -8,50 +8,45 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione sicura
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+// Inizializzazione
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 const db = firebase.firestore();
 
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- 2. FUNZIONE LOGIN (Chiamata solo dal tasto HTML) ---
+// --- 2. LOGIN CON REDIRECT (Il più stabile su Mobile/GitHub) ---
 window.startLogin = function() {
-    console.log("Pulsante cliccato: avvio login...");
+    console.log("Avvio redirect Google...");
     const provider = new firebase.auth.GoogleAuthProvider();
     provider.setCustomParameters({ prompt: 'select_account' });
-    
-    // Usiamo il Popup: è l'unico che non ricarica la pagina e ferma il loop
-    auth.signInWithPopup(provider)
-        .then((result) => {
-            console.log("Login riuscito:", result.user.displayName);
-        })
-        .catch((error) => {
-            console.error("Errore durante il login:", error.code);
-            // Se il popup è bloccato (es. su Safari), usiamo il redirect come emergenza
-            if (error.code === 'auth/popup-closed-by-user' || error.code === 'auth/cancelled-popup-request') return;
-            alert("Il browser ha bloccato la finestra. Controlla le impostazioni popup o riprova.");
-        });
+    auth.signInWithRedirect(provider);
 };
 
-// --- 3. GESTORE STATO (Controlla se sei loggato senza ricaricare) ---
+// Gestione del ritorno dal redirect (fondamentale per evitare loop)
+auth.getRedirectResult().then((result) => {
+    if (result.user) console.log("Ritorno dal login riuscito:", result.user.displayName);
+}).catch((error) => {
+    if (error.code === 'auth/api-key-not-valid') {
+        alert("Errore: Chiave API non autorizzata. Verifica le restrizioni su Google Cloud Console!");
+    } else {
+        console.error("Errore Redirect:", error);
+    }
+});
+
+// --- 3. GESTORE STATO UTENTE ---
 auth.onAuthStateChanged(async (user) => {
     const loader = document.getElementById("initialLoader");
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
 
     if (user) {
-        console.log("Stato: Utente loggato", user.uid);
         currentUser = user.uid;
-        
-        // UI Switch
         if(loginDiv) loginDiv.style.display = "none";
         if(appDiv) appDiv.style.display = "block";
 
-        // Nome e Foto
+        // Aggiorna Interfaccia
         const title = document.getElementById("welcomeTitle");
         if (title) title.innerHTML = `Ciao ${user.displayName.split(' ')[0]} 🤙🏻`;
         
@@ -64,13 +59,12 @@ auth.onAuthStateChanged(async (user) => {
 
         await caricaDatiUtente();
     } else {
-        console.log("Stato: Nessun utente");
         currentUser = null;
         if(loginDiv) loginDiv.style.display = "block";
         if(appDiv) appDiv.style.display = "none";
     }
 
-    // Nascondi caricamento iniziale
+    // Nascondi caricamento
     if (loader) {
         loader.style.opacity = "0";
         setTimeout(() => loader.style.display = "none", 500);
@@ -83,7 +77,6 @@ document.querySelectorAll(".day-btn").forEach(btn => {
         const day = btn.dataset.day;
         const slots = document.getElementById(day + "-slots");
         selectedDays[day] = !selectedDays[day];
-        
         btn.classList.toggle("active", selectedDays[day]);
         if(slots) slots.classList.toggle("disabled", !selectedDays[day]);
     };
@@ -108,4 +101,84 @@ window.saveAvailability = async () => {
             updatedAt: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
 
-        btn.innerHTML
+        btn.innerHTML = '✅ Salvato!';
+        setTimeout(() => btn.innerHTML = originalText, 2000);
+        await controllaMatch(av);
+    } catch (e) {
+        alert("Errore database. Verifica le regole Firestore!");
+        btn.innerHTML = originalText;
+    }
+};
+
+function getCheckedVals(day) {
+    if (!selectedDays[day]) return null;
+    const container = document.getElementById(day + "-slots");
+    return container ? Array.from(container.querySelectorAll("input:checked")).map(c => c.value) : null;
+}
+
+async function controllaMatch(miaAv) {
+    const snapshot = await db.collection("users").get();
+    let matchTrovato = false;
+    snapshot.forEach(doc => {
+        if (doc.id !== currentUser && !matchTrovato) {
+            const altro = doc.data();
+            if (altro.availability) {
+                ["venerdi", "sabato", "domenica"].forEach(g => {
+                    if (miaAv[g] && altro.availability[g]) {
+                        const comuni = miaAv[g].filter(f => altro.availability[g].includes(f));
+                        if (comuni.length > 0 && !matchTrovato) {
+                            mostraPopupMatch(altro.displayName, g, comuni[0]);
+                            matchTrovato = true;
+                        }
+                    }
+                });
+            }
+        }
+    });
+}
+
+function mostraPopupMatch(nome, giorno, fascia) {
+    const modal = document.getElementById("matchModal");
+    document.getElementById("matchText").innerHTML = `🎉 <b>Match!</b> Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`;
+    const msg = `Ciao ${nome}, siamo liberi ${giorno} ${fascia}, ci becchiamo? 🤙🏻`;
+    document.getElementById("matchWA").onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    modal.style.display = "flex";
+}
+
+window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
+
+// --- 6. TEMA E CARICAMENTO ---
+window.changeTheme = async (color) => {
+    document.documentElement.style.setProperty('--primary-color', color);
+    if (currentUser) await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
+};
+
+async function caricaDatiUtente() {
+    const doc = await db.collection("users").doc(currentUser).get();
+    if (doc.exists) {
+        const data = doc.data();
+        if (data.themeColor) document.documentElement.style.setProperty('--primary-color', data.themeColor);
+        if (data.availability) {
+            for (const d in data.availability) {
+                const fasce = data.availability[d];
+                if (fasce && fasce.length > 0) {
+                    selectedDays[d] = true;
+                    document.querySelector(`[data-day="${d}"]`)?.classList.add("active");
+                    const s = document.getElementById(d + "-slots");
+                    if(s) {
+                        s.classList.remove("disabled");
+                        fasce.forEach(f => {
+                            const cb = s.querySelector(`input[value="${f}"]`);
+                            if(cb) cb.checked = true;
+                        });
+                    }
+                }
+            }
+        }
+    }
+}
+
+// --- 7. NAVIGAZIONE ---
+window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
+window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
+window.logout = () => auth.signOut().then(() => location.reload());
