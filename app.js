@@ -7,51 +7,51 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// FORZA LA MEMORIA DEL LOGIN
+// Forza la persistenza locale
 auth.setPersistence(firebase.auth.Auth.Persistence.LOCAL);
 
-// --- GESTIONE RITORNO DA GOOGLE ---
-auth.getRedirectResult().then((result) => {
-    if (result.user) {
-        console.log("Login agganciato dal redirect!", result.user.displayName);
-    }
-}).catch((error) => {
-    console.error("Errore nel recupero redirect:", error.code);
-});
-
-// --- CONTROLLO STATO IN TEMPO REALE ---
-auth.onAuthStateChanged((user) => {
-    const loader = document.getElementById("loader");
+// FUNZIONE UI PER CAMBIARE SCHERMATA
+function showApp(user) {
     const loginDiv = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
-    const welcomeTitle = document.getElementById("welcomeTitle");
+    const loader = document.getElementById("loader");
+    const welcome = document.getElementById("welcomeTitle");
 
     if (user) {
-        console.log("Stato: LOGGATO VERAMENTE -", user.displayName);
         if(loginDiv) loginDiv.style.display = "none";
         if(appDiv) appDiv.style.display = "block";
-        if(welcomeTitle) welcomeTitle.innerText = "Ciao " + user.displayName.split(' ')[0] + " 🤙🏻";
+        if(welcome) welcome.innerText = "Ciao " + user.displayName.split(' ')[0] + " 🤙🏻";
+        console.log("ACCESSO CONFERMATO:", user.displayName);
     } else {
-        console.log("Stato: Non loggato");
         if(loginDiv) loginDiv.style.display = "block";
         if(appDiv) appDiv.style.display = "none";
     }
-    
-    if (loader) loader.style.display = "none";
+    if(loader) loader.style.display = "none";
+}
+
+// GESTORE STATO
+auth.onAuthStateChanged((user) => {
+    showApp(user);
 });
 
-// FUNZIONE TASTO
+// RECUPERO REDIRECT (Fondamentale al ritorno da Google)
+auth.getRedirectResult().then((result) => {
+    if (result.user) {
+        showApp(result.user);
+    }
+}).catch((error) => {
+    console.error("Errore Redirect:", error.code);
+});
+
+// FUNZIONE LOGIN
 window.startLogin = function() {
-    console.log("Avvio Redirect...");
     const provider = new firebase.auth.GoogleAuthProvider();
     auth.signInWithRedirect(provider);
 };
 
-// LOGOUT
 window.logout = function() {
-    auth.signOut().then(() => window.location.reload());
+    auth.signOut().then(() => location.reload());
 };
