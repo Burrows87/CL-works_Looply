@@ -1,4 +1,4 @@
-// 1. CONFIGURAZIONE FIREBASE
+// 1. CONFIGURAZIONE FIREBASE (Usa la chiave senza la "u" extra se presente)
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -15,35 +15,32 @@ const db = firebase.firestore();
 let currentUser = null;
 let selectedDays = { venerdi: false, sabato: false, domenica: false };
 
-// --- 2. FIX LOGIN (PER ANDROID/IOS) ---
-function inizializzaLogin() {
+// --- 2. FIX LOGIN (USA POPUP INVECE DI REDIRECT) ---
+// Il Popup evita il ricaricamento della pagina e interrompe il loop
+window.startLogin = function() {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    provider.setCustomParameters({ prompt: 'select_account' });
+    
+    auth.signInWithPopup(provider)
+        .then((result) => {
+            console.log("Login successo:", result.user.displayName);
+        })
+        .catch((error) => {
+            console.error("Errore login:", error);
+            // Se il popup viene bloccato, prova il redirect come fallback
+            if (error.code === 'auth/popup-blocked') {
+                auth.signInWithRedirect(provider);
+            }
+        });
+};
+
+// Colleghiamo il tasto subito
+document.addEventListener("DOMContentLoaded", () => {
     const googleBtn = document.getElementById("googleBtn");
-    if (googleBtn) {
-        googleBtn.onclick = (e) => {
-            e.preventDefault();
-            const provider = new firebase.auth.GoogleAuthProvider();
-            auth.signInWithRedirect(provider);
-        };
-    } else {
-        setTimeout(inizializzaLogin, 500);
-    }
-}
+    if (googleBtn) googleBtn.onclick = window.startLogin;
+});
 
-// --- 3. GESTIONE NOME E EMOJI (CON RE-TRY) ---
-function scriviBenvenuto(user) {
-    const title = document.getElementById("welcomeTitle");
-    if (title && user) {
-        const nome = user.displayName ? user.displayName.split(' ')[0] : "Utente";
-        // Usiamo innerHTML per forzare il rendering dell'emoji
-        title.innerHTML = `Ciao ${nome} 🤙🏻`;
-        console.log("Nome inserito con successo");
-    } else {
-        // Se l'elemento non è ancora pronto, riprova tra 100ms
-        setTimeout(() => scriviBenvenuto(user), 100);
-    }
-}
-
-// --- 4. STATO AUTENTICAZIONE ---
+// --- 3. STATO AUTENTICAZIONE ---
 auth.onAuthStateChanged(async (user) => {
     const formLogin = document.getElementById("formLogin");
     const appDiv = document.getElementById("app");
@@ -53,19 +50,19 @@ auth.onAuthStateChanged(async (user) => {
         formLogin.style.display = "none";
         appDiv.style.display = "block";
         
-        // Avviamo la scrittura del nome
-        scriviBenvenuto(user);
+        // Scrive il benvenuto
+        const title = document.getElementById("welcomeTitle");
+        if (title) {
+            const nome = user.displayName ? user.displayName.split(' ')[0] : "Utente";
+            title.innerHTML = `Ciao ${nome} 🤙🏻`;
+        }
         
-        // Aggiorna altri dati
-        const userName = document.getElementById("userName");
-        const userEmail = document.getElementById("userEmail");
-        const userPhoto = document.getElementById("userPhoto");
-
-        if(userName) userName.innerText = user.displayName || "Utente";
-        if(userEmail) userEmail.innerText = user.email;
-        if(userPhoto && user.photoURL) {
-            userPhoto.src = user.photoURL;
-            userPhoto.style.display = "block";
+        // Impostazioni profilo
+        if(document.getElementById("userName")) document.getElementById("userName").innerText = user.displayName || "Utente";
+        if(document.getElementById("userEmail")) document.getElementById("userEmail").innerText = user.email;
+        if(document.getElementById("userPhoto") && user.photoURL) {
+            document.getElementById("userPhoto").src = user.photoURL;
+            document.getElementById("userPhoto").style.display = "block";
         }
 
         await caricaEControlla();
@@ -73,29 +70,26 @@ auth.onAuthStateChanged(async (user) => {
         currentUser = null;
         formLogin.style.display = "block";
         appDiv.style.display = "none";
-        inizializzaLogin();
     }
 });
 
-// --- 5. LOGICA GIORNI ---
+// --- 4. LOGICA GIORNI E SLOT ---
 document.querySelectorAll(".day-btn").forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
         const slots = document.getElementById(day + "-slots");
         selectedDays[day] = !selectedDays[day];
         
-        if (selectedDays[day]) {
-            btn.classList.add("active");
-            slots.classList.remove("disabled");
-        } else {
-            btn.classList.remove("active");
-            slots.classList.add("disabled");
+        btn.classList.toggle("active", selectedDays[day]);
+        slots.classList.toggle("disabled", !selectedDays[day]);
+        
+        if (!selectedDays[day]) {
             slots.querySelectorAll("input").forEach(i => i.checked = false);
         }
     };
 });
 
-// --- 6. SALVATAGGIO ---
+// --- 5. SALVATAGGIO ---
 window.saveAvailability = async () => {
     const btn = document.getElementById("btnSave");
     const oldText = btn.innerHTML;
@@ -110,14 +104,16 @@ window.saveAvailability = async () => {
     try {
         await db.collection("users").doc(currentUser).set({ 
             availability: av,
-            displayName: auth.currentUser.displayName 
+            displayName: auth.currentUser.displayName,
+            lastUpdate: firebase.firestore.FieldValue.serverTimestamp()
         }, { merge: true });
         
         btn.innerHTML = '✅ Salvato!';
         setTimeout(() => { btn.innerHTML = oldText; }, 2000);
         await controllaMatch(av); 
     } catch (e) { 
-        alert("Errore salvataggio");
+        console.error(e);
+        alert("Errore salvataggio. Controlla le regole Firestore.");
         btn.innerHTML = oldText;
     }
 };
@@ -128,7 +124,7 @@ function getCheckedVals(day) {
     return Array.from(container.querySelectorAll("input:checked")).map(c => c.value);
 }
 
-// --- 7. LOGICA MATCH ---
+// --- 6. LOGICA MATCH E TEMA (RESTANTE) ---
 async function controllaMatch(miaAv) {
     if (!miaAv) return;
     const snapshot = await db.collection("users").get();
@@ -161,14 +157,11 @@ function mostraPopupMatch(nome, giorno, fascia) {
     text.innerHTML = `🎉 <b>Match!</b> Tu e <b>${nome}</b> siete liberi <b>${giorno} ${fascia}</b>!`;
     const messaggio = `Ciao ${nome}! Ho visto su Looply che siamo liberi entrambi ${giorno} ${fascia}, usciamo? 🤙🏻`;
     btnWA.onclick = () => window.open(`https://wa.me/?text=${encodeURIComponent(messaggio)}`, '_blank');
-
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
     modal.style.display = "flex";
 }
 
 window.closeMatch = () => document.getElementById("matchModal").style.display = "none";
 
-// --- 8. TEMA E CARICAMENTO ---
 window.changeTheme = async (color) => {
     document.documentElement.style.setProperty('--primary-color', color);
     if (currentUser) await db.collection("users").doc(currentUser).set({ themeColor: color }, { merge: true });
@@ -184,8 +177,7 @@ async function caricaEControlla() {
                 const fasce = data.availability[d];
                 if (fasce && fasce.length > 0) {
                     selectedDays[d] = true;
-                    const b = document.querySelector(`[data-day="${d}"]`);
-                    if(b) b.classList.add("active");
+                    document.querySelector(`[data-day="${d}"]`)?.classList.add("active");
                     const s = document.getElementById(d + "-slots");
                     if(s) {
                         s.classList.remove("disabled");
@@ -193,22 +185,10 @@ async function caricaEControlla() {
                     }
                 }
             }
-            await controllaMatch(data.availability);
         }
     }
 }
 
-// --- 9. NAVIGAZIONE ---
-window.openSettings = () => {
-    document.getElementById("app").style.display = "none";
-    document.getElementById("settingsPage").style.display = "block";
-};
-window.closeSettings = () => {
-    document.getElementById("settingsPage").style.display = "none";
-    document.getElementById("app").style.display = "block";
-};
+window.openSettings = () => { document.getElementById("app").style.display = "none"; document.getElementById("settingsPage").style.display = "block"; };
+window.closeSettings = () => { document.getElementById("settingsPage").style.display = "none"; document.getElementById("app").style.display = "block"; };
 window.logout = () => auth.signOut().then(() => location.reload());
-
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => { navigator.serviceWorker.register('/sw.js').catch(e => {}); });
-}
