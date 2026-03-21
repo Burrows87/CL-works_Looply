@@ -1,6 +1,5 @@
-// CONFIGURAZIONE FIREBASE
 const firebaseConfig = {
-    apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU", // <--- RICONTROLLA QUESTA CHIAVE
+    apiKey: "AIzaSyAGVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
     projectId: "looply-app-21eb9",
     storageBucket: "looply-app-21eb9.firebasestorage.app",
@@ -8,18 +7,21 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializzazione sicura
-try {
-    if (!firebase.apps.length) {
-        firebase.initializeApp(firebaseConfig);
-    }
-} catch (e) {
-    console.error("Errore inizializzazione Firebase:", e);
-}
-
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 const auth = firebase.auth();
 
-// GESTIONE STATO UTENTE
+// 1. CATTURA IL RISULTATO DEL LOGIN DOPO IL RITORNO (IL PEZZO MANCANTE)
+auth.getRedirectResult()
+    .then((result) => {
+        if (result.user) {
+            console.log("✅ Login agganciato con successo!");
+        }
+    })
+    .catch((error) => {
+        console.error("Errore nel recupero redirect:", error.message);
+    });
+
+// 2. GESTORE STATO UTENTE
 auth.onAuthStateChanged((user) => {
     const loader = document.getElementById("loader");
     const loginDiv = document.getElementById("formLogin");
@@ -27,30 +29,26 @@ auth.onAuthStateChanged((user) => {
     const welcomeTitle = document.getElementById("welcomeTitle");
 
     if (user) {
-        console.log("✅ UTENTE LOGGATO:", user.displayName);
+        console.log("✅ STATO: LOGGATO COME", user.displayName);
         if(loginDiv) loginDiv.style.display = "none";
         if(appDiv) appDiv.style.display = "block";
         if(welcomeTitle) welcomeTitle.innerText = "Ciao " + user.displayName.split(' ')[0] + " 🤙🏻";
     } else {
-        console.log("❌ UTENTE NON LOGGATO");
+        console.log("❌ STATO: NON LOGGATO");
         if(loginDiv) loginDiv.style.display = "block";
         if(appDiv) appDiv.style.display = "none";
     }
-    
-    // Rimuovi il loader rotante
     if (loader) loader.style.display = "none";
 });
 
-// FUNZIONE LOGIN
-window.startLogin = function() {
-    console.log("🚀 Tentativo di login...");
+// 3. FUNZIONE TASTO LOGIN
+window.startLogin = function () {
+    console.log("🚀 Avvio Redirect...");
     const provider = new firebase.auth.GoogleAuthProvider();
-    auth.signInWithRedirect(provider).catch((error) => {
-        alert("Errore immediato: " + error.message);
-    });
+    auth.signInWithRedirect(provider);
 };
 
-// LOGOUT
+// 4. LOGOUT
 window.logout = function() {
     auth.signOut().then(() => window.location.reload());
 };
