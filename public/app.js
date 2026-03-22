@@ -51,16 +51,16 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- 4. GESTIONE AUTENTICAZIONE (Versione Anti-Loop) ---
+// --- 4. GESTIONE AUTENTICAZIONE (Versione Blindata) ---
 
-let isAppReady = false; // Flag per evitare loop durante il caricamento
+let isLoggingOut = false; // Impedisce il loop se premiamo "Esci"
 
 onAuthStateChanged(auth, (user) => {
-    if (user) {
+    if (user && !isLoggingOut) {
         console.log("Accesso confermato per:", user.displayName);
         
-        // Cambiamo schermata solo se non siamo già in dashboard
-        if (dashboardScreen.style.display !== 'block') {
+        // Evitiamo di ricaricare se siamo già dentro
+        if (dashboardScreen.style.display === 'none' || dashboardScreen.style.display === '') {
             loginScreen.style.display = 'none';
             dashboardScreen.style.display = 'block';
             userDisplayName.textContent = user.displayName;
@@ -70,10 +70,18 @@ onAuthStateChanged(auth, (user) => {
         console.log("Nessun utente rilevato, mostro login.");
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
+        isLoggingOut = false; // Reset per il prossimo login
     }
-    isAppReady = true;
 });
 
+// Aggiorna anche la funzione di Logout
+document.getElementById('btn-logout').addEventListener('click', () => {
+    isLoggingOut = true; // Segnaliamo che il logout è intenzionale
+    signOut(auth).catch(err => {
+        isLoggingOut = false;
+        console.error("Errore logout:", err);
+    });
+});
 
 // Logout
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
