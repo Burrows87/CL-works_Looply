@@ -231,29 +231,30 @@ if ('serviceWorker' in navigator) {
   });
 }
 
+
 // --- 9. LOGICA DI LOGIN EFFETTIVA ---
 const googleLoginBtn = document.getElementById('btn-google-login');
 
 if (googleLoginBtn) {
-    googleLoginBtn.addEventListener('click', async () => {
+    // Rimuoviamo eventuali altri listener per sicurezza e aggiungiamo questo
+    googleLoginBtn.onclick = async (e) => {
+        e.preventDefault(); // Impedisce comportamenti strani del form
+        
+        console.log("Pulsante cliccato: avvio procedura...");
+        
         try {
-            console.log("Avvio login con Google...");
+            // Proviamo con il Popup
             await signInWithPopup(auth, provider);
-            // Non serve altro qui, onAuthStateChanged si accorgerà del login
+            console.log("Login riuscito con successo");
         } catch (error) {
             console.error("Errore durante il login:", error);
-            alert("Errore nel login: " + error.message);
+            
+            // Se il popup viene bloccato, l'errore solitamente è 'auth/popup-blocked'
+            if (error.code === 'auth/popup-blocked') {
+                alert("Il popup di Google è stato bloccato dal browser. Abilitalo per continuare.");
+            } else {
+                alert("Errore nel login: " + error.message);
+            }
         }
-    });
-}
-
-// Logica Logout (già che ci siamo)
-const logoutBtn = document.getElementById('btn-logout');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        isLoggingOut = true; // Impedisce loop strani
-        signOut(auth).then(() => {
-            location.reload(); // Torna al login pulito
-        });
-    });
+    };
 }
