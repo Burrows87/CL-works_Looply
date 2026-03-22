@@ -176,9 +176,29 @@
             
             <main>
                 <div id="create-event-section" class="card">
-                    <h3>Quando ci sei?</h3>
-                    <p class="subtitle">Tocca un giorno per scegliere l'orario</p>
-                    
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px;">
+        <div style="text-align: left;">
+            <h3 style="margin: 0;">Quando ci sei?</h3>
+            <p class="subtitle" style="margin: 0; font-size: 0.85rem;">Tocca un giorno per scegliere l'orario</p>
+        </div>
+        <button id="btn-open-settings" type="button" style="background: none; border: none; cursor: pointer; width: auto; padding: 5px; line-height: 0;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#999" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            </svg>
+        </button>
+    </div>
+
+    <div id="settings-panel" style="display: none; background: #f8f9fa; border-radius: 10px; padding: 15px; margin-bottom: 20px; border: 1px dashed #ccc; animation: fadeIn 0.3s ease;">
+        <p style="font-size: 0.8rem; font-weight: bold; margin-bottom: 10px; color: #555;">Scegli il tuo tema:</p>
+        <div style="display: flex; gap: 10px; justify-content: space-around;">
+            <div class="color-dot" data-color="#4285F4" style="background:#4285F4; width:30px; height:30px; border-radius:50%; cursor:pointer; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.2);"></div>
+            <div class="color-dot" data-color="#34A853" style="background:#34A853; width:30px; height:30px; border-radius:50%; cursor:pointer; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.2);"></div>
+            <div class="color-dot" data-color="#EA4335" style="background:#EA4335; width:30px; height:30px; border-radius:50%; cursor:pointer; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.2);"></div>
+            <div class="color-dot" data-color="#FBBC05" style="background:#FBBC05; width:30px; height:30px; border-radius:50%; cursor:pointer; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.2);"></div>
+            <div class="color-dot" data-color="#8E44AD" style="background:#8E44AD; width:30px; height:30px; border-radius:50%; cursor:pointer; border: 2px solid #fff; box-shadow: 0 0 3px rgba(0,0,0,0.2);"></div>
+        </div>
+    </div>
                     <div class="availability-container">
                         <div class="day-group">
                             <button type="button" class="day-toggle" id="btn-venerdi">Venerdì</button>  
