@@ -6,6 +6,31 @@
     <title>Looply - Organizza il tuo weekend</title>
     <link rel="stylesheet" href="style.css">
     <link rel="apple-touch-icon" href="icon.png">
+    <style>
+        /* Aggiungo qui i piccoli stili necessari per le fasce orarie */
+        .day-group { margin-bottom: 20px; text-align: left; }
+        .time-slots { 
+            display: none; 
+            gap: 8px; 
+            margin-top: 10px; 
+            padding-left: 15px;
+            flex-wrap: wrap;
+        }
+        .slot-btn {
+            padding: 6px 15px !important;
+            font-size: 0.85rem !important;
+            border: 1px solid #ddd;
+            background: #fff;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .slot-btn.selected {
+            background-color: #4285F4 !important;
+            color: white !important;
+            border-color: #4285F4;
+        }
+    </style>
 </head>
 <body>
 
@@ -27,27 +52,47 @@
             
             <main>
                 <div id="create-event-section" class="card">
-                    <h3>Nuovo Weekend</h3>
-                    <input type="text" id="event-title" placeholder="Nome (es. Lago di Como)">
+                    <h3>Quando sei libero?</h3>
+                    <p style="font-size: 0.9rem; color: #666; margin-bottom: 15px;">Seleziona i giorni e clicca sulle fasce orarie</p>
                     
-                    <div class="days-selector">
-                        <input type="checkbox" id="ven" class="day-check" value="venerdi">
-                        <label for="ven">Ven</label>
+                    <div class="availability-container">
+                        <div class="day-group">
+                            <input type="checkbox" id="ven" class="day-check" value="Venerdì">
+                            <label for="ven">Venerdì</label>
+                            <div class="time-slots" id="slots-ven">
+                                <button type="button" class="slot-btn" data-day="Venerdì">Pomeriggio</button>
+                                <button type="button" class="slot-btn" data-day="Venerdì">Sera</button>
+                            </div>
+                        </div>
 
-                        <input type="checkbox" id="sab" class="day-check" value="sabato">
-                        <label for="sab">Sab</label>
+                        <div class="day-group">
+                            <input type="checkbox" id="sab" class="day-check" value="Sabato">
+                            <label for="sab">Sabato</label>
+                            <div class="time-slots" id="slots-sab">
+                                <button type="button" class="slot-btn" data-day="Sabato">Mattina</button>
+                                <button type="button" class="slot-btn" data-day="Sabato">Pomeriggio</button>
+                                <button type="button" class="slot-btn" data-day="Sabato">Sera</button>
+                            </div>
+                        </div>
 
-                        <input type="checkbox" id="dom" class="day-check" value="domenica">
-                        <label for="dom">Dom</label>
+                        <div class="day-group">
+                            <input type="checkbox" id="dom" class="day-check" value="Domenica">
+                            <label for="dom">Domenica</label>
+                            <div class="time-slots" id="slots-dom">
+                                <button type="button" class="slot-btn" data-day="Domenica">Mattina</button>
+                                <button type="button" class="slot-btn" data-day="Domenica">Pomeriggio</button>
+                                <button type="button" class="slot-btn" data-day="Domenica">Sera</button>
+                            </div>
+                        </div>
                     </div>
 
-                    <button id="btn-save-event" class="primary">Salva Evento</button>
+                    <button id="btn-save-event" class="primary" style="margin-top: 15px;">Invia Disponibilità</button>
                 </div>
 
                 <div id="events-list-container" class="card" style="margin-top: 2rem;">
-                    <h3>I tuoi Weekend</h3>
+                    <h3>Chi è libero</h3>
                     <div id="events-list">
-                        <p>Caricamento eventi...</p>
+                        <p>Caricamento...</p>
                     </div>
                 </div>
             </main>
