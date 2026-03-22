@@ -46,76 +46,80 @@ const applyThemeColor = (color) => {
     if (metaTheme) metaTheme.setAttribute('content', color);
 };
 
-// --- 4. AUTENTICAZIONE ---
+// --- 4. AUTENTICAZIONE E REGISTRAZIONE ---
 let isLoggingOut = false;
 
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
+        // Cerchiamo il profilo su Firestore con la sintassi v10
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists()) {
+            // UTENTE GIÀ REGISTRATO: Vai alla Dashboard
             const dati = userDoc.data();
             loginScreen.style.setProperty('display', 'none', 'important');
-            if(document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none'; 
+            document.getElementById('registration-screen').style.display = 'none';
             dashboardScreen.style.setProperty('display', 'block', 'important');
-            userDisplayName.textContent = dati.nome; 
             
-            // CARICA IL COLORE SALVATO
+            userDisplayName.textContent = dati.nome;
             if (dati.themeColor) applyThemeColor(dati.themeColor);
-
+            
+            console.log("Accesso eseguito come:", dati.nome);
         } else {
+            // UTENTE NUOVO: Mostra il form "Come ti chiami?"
             loginScreen.style.setProperty('display', 'none', 'important');
             dashboardScreen.style.setProperty('display', 'none', 'important');
             document.getElementById('registration-screen').style.display = 'block';
+            console.log("Profilo non trovato. Richiesta registrazione...");
         }
     } else {
+        // Nessun utente loggato
         loginScreen.style.setProperty('display', 'block', 'important');
         dashboardScreen.style.setProperty('display', 'none', 'important');
-        if(document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none';
+        document.getElementById('registration-screen').style.display = 'none';
         isLoggingOut = false;
     }
 });
 
-document.getElementById('btn-google-login').addEventListener('click', async () => {
-    const terms = document.getElementById('check-terms').checked;
-    const privacy = document.getElementById('check-privacy').checked;
-    if (terms && privacy) {
-        try {
-            provider.setCustomParameters({ prompt: 'select_account' });
-            await signInWithPopup(auth, provider);
-        } catch (error) { console.error("Errore login:", error); }
-    }
-});
-
-document.getElementById('btn-logout').addEventListener('click', () => {
-    isLoggingOut = true;
-    signOut(auth);
-});
-
-// --- 5. SALVATAGGIO PROFILO ED EVENTI ---
+// --- 5. SALVATAGGIO PROFILO (ANTI-BUG WHATSAPP) ---
 
 document.getElementById('btn-save-profile').addEventListener('click', async () => {
     const nomeScelto = document.getElementById('reg-name').value;
     const telScelto = document.getElementById('reg-phone').value;
     const user = auth.currentUser;
 
-    if (nomeScelto.length < 2 || telScelto.length < 9) return alert("Inserisci un nome e un numero validi!");
+    if (!user) return;
 
+    // PULIZIA NUMERO: Rimuove tutto ciò che non è un numero
     let telPulito = telScelto.replace(/\D/g, '');
-    if (!telPulito.startsWith('39')) telPulito = '39' + telPulito;
+
+    // Se il numero ha 10 cifre, aggiungiamo il 39 davanti
+    if (telPulito.length === 10 && !telPulito.startsWith('39')) {
+        telPulito = '39' + telPulito;
+    }
+
+    if (nomeScelto.trim().length < 2 || telPulito.length < 10) {
+        return alert("Per favore, inserisci un nome valido e un numero completo.");
+    }
 
     try {
+        // Salvataggio su Firestore (Sintassi v10)
         await setDoc(doc(db, "users", user.uid), {
-            nome: nomeScelto,
+            nome: nomeScelto.trim(),
             telefono: telPulito,
             email: user.email,
             uid: user.uid,
             dataCreazione: new Date()
         });
-        alert("Profilo creato!");
-        location.reload();
-    } catch (e) { alert("Errore: " + e.message); }
+
+        alert("Profilo creato correttamente!");
+        location.reload(); // Ricarica per entrare nella Dashboard
+
+    } catch (e) { 
+        console.error("Errore:", e);
+        alert("Errore nel salvataggio: " + e.message); 
+    }
 });
 
 document.getElementById('btn-save-event').onclick = async () => {
@@ -162,10 +166,14 @@ function cercaMatchInTempoReale(mieiSlot) {
 }
 
 function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
+    // Pulizia finale del numero per sicurezza anti-bug
+    const numeroPulito = numeroAmico.replace(/\D/g, '');
     const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
-    const url = `https://wa.me/${numeroAmico}?text=${encodeURIComponent(testo)}`;
+    const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
+    
     if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nVuoi scrivergli su WhatsApp?`)) {
-        window.location.href = url;
+        // window.open è più stabile per aprire l'app WhatsApp esterna
+        window.open(url, '_blank');
     }
 }
 
