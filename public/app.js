@@ -70,7 +70,6 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 // --- 5. SALVATAGGIO ---
-// --- 5. SALVATAGGIO ---
 document.getElementById('btn-save-event').onclick = async () => {
     console.log("Pulsante cliccato!"); 
     const selectedSlots = [];
@@ -124,7 +123,7 @@ function proponiWhatsApp(nomeAmico, giorno, fascia) {
     const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
     const url = `https://wa.me/?text=${encodeURIComponent(testo)}`;
     if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nVuoi scrivergli su WhatsApp?`)) {
-        window.open(url, '_blank');
+        window.location.href = url;
     }
 }
 
