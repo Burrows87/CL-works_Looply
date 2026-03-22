@@ -171,16 +171,22 @@ function cercaMatchInTempoReale(mieiSlot) {
 }
 
 function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
-    // Pulizia finale del numero per sicurezza anti-bug
-    const numeroPulito = numeroAmico.replace(/\D/g, '');
+    if (!numeroAmico || numeroAmico === "") {
+        console.error("Match trovato ma manca il numero di:", nomeAmico);
+        return; 
+    }
+
+    // Trasforma in stringa e pulisce
+    const numeroPulito = String(numeroAmico).replace(/\D/g, '');
     const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
     const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
     
     if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nVuoi scrivergli su WhatsApp?`)) {
-        // window.open è più stabile per aprire l'app WhatsApp esterna
         window.open(url, '_blank');
     }
 }
+
+
 
 function resetInterfaccia() {
     document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
