@@ -230,3 +230,30 @@ if ('serviceWorker' in navigator) {
       .catch(err => console.error('Errore registrazione SW:', err));
   });
 }
+
+// --- 9. LOGICA DI LOGIN EFFETTIVA ---
+const googleLoginBtn = document.getElementById('btn-google-login');
+
+if (googleLoginBtn) {
+    googleLoginBtn.addEventListener('click', async () => {
+        try {
+            console.log("Avvio login con Google...");
+            await signInWithPopup(auth, provider);
+            // Non serve altro qui, onAuthStateChanged si accorgerà del login
+        } catch (error) {
+            console.error("Errore durante il login:", error);
+            alert("Errore nel login: " + error.message);
+        }
+    });
+}
+
+// Logica Logout (già che ci siamo)
+const logoutBtn = document.getElementById('btn-logout');
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', () => {
+        isLoggingOut = true; // Impedisce loop strani
+        signOut(auth).then(() => {
+            location.reload(); // Torna al login pulito
+        });
+    });
+}
