@@ -47,7 +47,6 @@ onAuthStateChanged(auth, (user) => {
         loginScreen.style.setProperty('display', 'none', 'important');
         dashboardScreen.style.setProperty('display', 'block', 'important');
         userDisplayName.textContent = user.displayName;
-        caricaDisponibilita();
     } else {
         loginScreen.style.setProperty('display', 'block', 'important');
         dashboardScreen.style.setProperty('display', 'none', 'important');
