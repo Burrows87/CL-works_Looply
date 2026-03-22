@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, getDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. CONFIGURAZIONE ---
 const firebaseConfig = {
@@ -38,6 +38,14 @@ document.addEventListener('click', (e) => {
     }
 });
 
+// Funzione per applicare il colore
+const applyThemeColor = (color) => {
+    if (!color) return;
+    document.documentElement.style.setProperty('--primary-color', color);
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', color);
+};
+
 // --- 4. AUTENTICAZIONE ---
 let isLoggingOut = false;
 
@@ -52,6 +60,10 @@ onAuthStateChanged(auth, async (user) => {
             if(document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none'; 
             dashboardScreen.style.setProperty('display', 'block', 'important');
             userDisplayName.textContent = dati.nome; 
+            
+            // CARICA IL COLORE SALVATO
+            if (dati.themeColor) applyThemeColor(dati.themeColor);
+
         } else {
             loginScreen.style.setProperty('display', 'none', 'important');
             dashboardScreen.style.setProperty('display', 'none', 'important');
@@ -83,7 +95,6 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 
 // --- 5. SALVATAGGIO PROFILO ED EVENTI ---
 
-// Salvataggio Profilo
 document.getElementById('btn-save-profile').addEventListener('click', async () => {
     const nomeScelto = document.getElementById('reg-name').value;
     const telScelto = document.getElementById('reg-phone').value;
@@ -107,7 +118,6 @@ document.getElementById('btn-save-profile').addEventListener('click', async () =
     } catch (e) { alert("Errore: " + e.message); }
 });
 
-// Salvataggio Evento
 document.getElementById('btn-save-event').onclick = async () => {
     const selectedSlots = [];
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
@@ -168,56 +178,40 @@ function resetInterfaccia() {
 // --- 7. LOGICA PRIVACY ---
 const checkTerms = document.getElementById('check-terms');
 const checkPrivacy = document.getElementById('check-privacy');
-function validaCheck() { document.getElementById('btn-google-login').disabled = !(checkTerms.checked && checkPrivacy.checked); }
+function validaCheck() { 
+    const btn = document.getElementById('btn-google-login');
+    if(btn) btn.disabled = !(checkTerms.checked && checkPrivacy.checked); 
+}
 if (checkTerms && checkPrivacy) {
     checkTerms.onchange = validaCheck;
     checkPrivacy.onchange = validaCheck;
 }
-// --- GESTIONE IMPOSTAZIONI E TEMI COLORATI ---
 
-// 1. Funzione per cambiare il colore nell'interfaccia (CSS Variables)
-const applyThemeColor = (color) => {
-    if (!color) return;
-    document.documentElement.style.setProperty('--primary-color', color);
-    
-    // Opzionale: cambia anche il colore della barra di stato mobile
-    const metaTheme = document.querySelector('meta[name="theme-color"]');
-    if (metaTheme) metaTheme.setAttribute('content', color);
-};
-
-// 2. Apri/Chiudi il pannello impostazioni
+// --- 8. IMPOSTAZIONI TEMA ---
 document.getElementById('btn-open-settings').addEventListener('click', () => {
     const panel = document.getElementById('settings-panel');
     const isHidden = panel.style.display === 'none';
     panel.style.display = isHidden ? 'block' : 'none';
     
-    // Rotazione animata dell'ingranaggio (tocco di classe)
     const icon = document.querySelector('#btn-open-settings svg');
-    icon.style.transition = 'transform 0.3s ease';
-    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+    if(icon) {
+        icon.style.transition = 'transform 0.3s ease';
+        icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+    }
 });
 
-// 3. Gestione click sui pallini colorati
 document.querySelectorAll('.color-dot').forEach(dot => {
     dot.addEventListener('click', async (e) => {
         const selectedColor = e.target.getAttribute('data-color');
-        
-        // Applica subito il colore per un feedback istantaneo
         applyThemeColor(selectedColor);
         
-        // Salva la preferenza nel database Firebase
         const user = auth.currentUser;
         if (user) {
             try {
-                // Importante: assicurati che 'db', 'doc' e 'updateDoc' siano importati da firestore
-                const userRef = doc(db, "users", user.uid);
-                await updateDoc(userRef, {
+                await updateDoc(doc(db, "users", user.uid), {
                     themeColor: selectedColor
                 });
-                console.log("Tema salvato con successo!");
-            } catch (error) {
-                console.error("Errore durante il salvataggio del tema:", error);
-            }
+            } catch (error) { console.error("Errore salvataggio tema:", error); }
         }
     });
 });
