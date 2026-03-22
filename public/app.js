@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- 1. CONFIGURAZIONE (Metti i tuoi dati qui!) ---
+// --- 1. CONFIGURAZIONE ---
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -32,22 +32,24 @@ onAuthStateChanged(auth, (user) => {
         loginScreen.style.display = 'none';
         dashboardScreen.style.display = 'block';
         userDisplayName.textContent = user.displayName;
-        caricaEventi(); // Avvia la lettura dei dati quando l'utente entra
+        caricaEventi(); 
     } else {
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
     }
 });
 
-// --- 4. SALVATAGGIO NUOVO EVENTO ---
+// --- 4. LOGICA MATCH & SALVATAGGIO ---
 document.getElementById('btn-save-event').addEventListener('click', async () => {
     const titoloInput = document.getElementById('event-title');
     const checkboxes = document.querySelectorAll('.day-check:checked');
     const giorni = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
 
-    if (!titoloInput.value) return alert("Inserisci un titolo!");
+    if (!titoloInput.value) return alert("Inserisci un nome per questo weekend!");
+    if (giorni.length === 0) return alert("Seleziona almeno un giorno!");
 
     try {
+        // Salva la tua disponibilità
         await addDoc(collection(db, "eventi"), {
             titolo: titoloInput.value,
             giorni: giorni,
@@ -55,22 +57,59 @@ document.getElementById('btn-save-event').addEventListener('click', async () => 
             nomeCreatore: auth.currentUser.displayName,
             dataCreazione: new Date()
         });
+
+        // Cerca Match immediati con altri utenti
+        cercaMatch(giorni, titoloInput.value);
+
+        // Reset modulo
         titoloInput.value = "";
         document.querySelectorAll('.day-check').forEach(cb => cb.checked = false);
+        alert("Disponibilità inviata! Sto cercando match...");
+
     } catch (e) {
         console.error("Errore:", e);
     }
 });
 
-// --- 5. LETTURA EVENTI IN TEMPO REALE ---
+// --- 5. FUNZIONE CERCA MATCH ---
+function cercaMatch(mieiGiorni, mioTitolo) {
+    // Cerchiamo eventi creati da altri
+    const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
+    
+    onSnapshot(q, (snapshot) => {
+        snapshot.forEach((doc) => {
+            const altroEvento = doc.data();
+            // Controlla se ci sono giorni in comune
+            const match = mieiGiorni.filter(g => altroEvento.giorni.includes(g));
+            
+            if (match.length > 0) {
+                proponiWhatsApp(altroEvento.nomeCreatore, match[0]);
+            }
+        });
+    });
+}
+
+// --- 6. POPUP WHATSAPP ---
+function proponiWhatsApp(nomeAmico, giorno) {
+    const testo = `Ciao ${nomeAmico}, ho visto da Looply che siamo liberi ${giorno} sera, usciamo?`;
+    const url = `https://wa.me/?text=${encodeURIComponent(testo)}`;
+
+    // Un popup semplice ma efficace
+    const conferma = confirm(`🎉 MATCH! Anche ${nomeAmico} è libero ${giorno}.\n\nVuoi scrivergli su WhatsApp?`);
+    
+    if (conferma) {
+        window.open(url, '_blank');
+    }
+}
+
+// --- 7. VISUALIZZAZIONE LISTA ---
 function caricaEventi() {
     const q = query(collection(db, "eventi"), orderBy("dataCreazione", "desc"));
     
-    // Questa funzione "ascolta" il database: se aggiungi un weekend, appare subito!
     onSnapshot(q, (snapshot) => {
         eventsList.innerHTML = "";
         if (snapshot.empty) {
-            eventsList.innerHTML = "<p>Nessun weekend in programma. Creane uno!</p>";
+            eventsList.innerHTML = "<p style='color:#999;'>Nessuno ha ancora dato disponibilità.</p>";
             return;
         }
 
@@ -78,14 +117,15 @@ function caricaEventi() {
             const evento = doc.data();
             const div = document.createElement('div');
             div.className = "card";
-            div.style.border = "1px solid #ddd";
+            div.style.borderLeft = "5px solid #4285F4";
             div.style.marginBottom = "10px";
             div.style.textAlign = "left";
+            div.style.padding = "10px";
             
             div.innerHTML = `
-                <strong style="color: #4285F4;">${evento.titolo}</strong><br>
-                <small>Disponibilità: ${evento.giorni.join(", ")}</small><br>
-                <span style="font-size: 0.7rem; color: #999;">Creato da: ${evento.nomeCreatore}</span>
+                <strong style="color: #333;">${evento.nomeCreatore}</strong> è libero:<br>
+                <span style="color: #4285F4; font-weight: bold;">${evento.giorni.join(" • ")}</span><br>
+                <small style="color: #999;">${evento.titolo}</small>
             `;
             eventsList.appendChild(div);
         });
