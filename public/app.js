@@ -1,10 +1,8 @@
-// 1. IMPORTAZIONI (Tutte insieme in alto)
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-// Aggiungiamo Firestore qui
-import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// 2. CONFIGURAZIONE (Usa la tua config esistente)
+// --- 1. CONFIGURAZIONE (Metti i tuoi dati qui!) ---
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -14,72 +12,82 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// 3. INIZIALIZZAZIONE
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
-const db = getFirestore(app); // Inizializziamo il database
+const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// --- LOGICA DI AUTENTICAZIONE ---
-
+// --- 2. ELEMENTI HTML ---
 const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
+const eventsList = document.getElementById('events-list');
 
-// Gestione Login
-document.getElementById('btn-google-login').addEventListener('click', () => {
-    signInWithRedirect(auth, provider);
-});
+// --- 3. GESTIONE AUTENTICAZIONE ---
+document.getElementById('btn-google-login').addEventListener('click', () => signInWithRedirect(auth, provider));
+document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
-// Gestione Logout
-document.getElementById('btn-logout').addEventListener('click', () => {
-    signOut(auth);
-});
-
-// Controllo stato utente (chi è loggato?)
 onAuthStateChanged(auth, (user) => {
     if (user) {
         loginScreen.style.display = 'none';
         dashboardScreen.style.display = 'block';
         userDisplayName.textContent = user.displayName;
+        caricaEventi(); // Avvia la lettura dei dati quando l'utente entra
     } else {
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
     }
 });
 
-// --- NUOVA LOGICA: SALVATAGGIO DISPONIBILITÀ ---
-
+// --- 4. SALVATAGGIO NUOVO EVENTO ---
 document.getElementById('btn-save-event').addEventListener('click', async () => {
     const titoloInput = document.getElementById('event-title');
-    const titolo = titoloInput.value;
-    
-    // Recuperiamo i giorni selezionati
-    const checkboxEsito = document.querySelectorAll('.day-check:checked');
-    const giorniSelezionati = Array.from(checkboxEsito).map(cb => cb.value);
+    const checkboxes = document.querySelectorAll('.day-check:checked');
+    const giorni = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
 
-    if (!titolo) {
-        alert("Per favore, inserisci un nome per l'evento!");
-        return;
-    }
+    if (!titoloInput.value) return alert("Inserisci un titolo!");
 
     try {
-        const docRef = await addDoc(collection(db, "eventi"), {
-            titolo: titolo,
-            giorni: giorniSelezionati,
-            creatoDa: auth.currentUser.uid, // Salviamo chi ha creato l'evento
+        await addDoc(collection(db, "eventi"), {
+            titolo: titoloInput.value,
+            giorni: giorni,
+            creatoDa: auth.currentUser.uid,
             nomeCreatore: auth.currentUser.displayName,
-            timestamp: new Date()
+            dataCreazione: new Date()
         });
-        
-        alert("Grande! Evento '" + titolo + "' salvato.");
-        
-        // Puliamo il modulo dopo il salvataggio
         titoloInput.value = "";
         document.querySelectorAll('.day-check').forEach(cb => cb.checked = false);
-        
     } catch (e) {
-        console.error("Errore nel salvataggio: ", e);
-        alert("Ops! Qualcosa è andato storto nel salvataggio.");
+        console.error("Errore:", e);
     }
 });
+
+// --- 5. LETTURA EVENTI IN TEMPO REALE ---
+function caricaEventi() {
+    const q = query(collection(db, "eventi"), orderBy("dataCreazione", "desc"));
+    
+    // Questa funzione "ascolta" il database: se aggiungi un weekend, appare subito!
+    onSnapshot(q, (snapshot) => {
+        eventsList.innerHTML = "";
+        if (snapshot.empty) {
+            eventsList.innerHTML = "<p>Nessun weekend in programma. Creane uno!</p>";
+            return;
+        }
+
+        snapshot.forEach((doc) => {
+            const evento = doc.data();
+            const div = document.createElement('div');
+            div.className = "card";
+            div.style.border = "1px solid #ddd";
+            div.style.marginBottom = "10px";
+            div.style.textAlign = "left";
+            
+            div.innerHTML = `
+                <strong style="color: #4285F4;">${evento.titolo}</strong><br>
+                <small>Disponibilità: ${evento.giorni.join(", ")}</small><br>
+                <span style="font-size: 0.7rem; color: #999;">Creato da: ${evento.nomeCreatore}</span>
+            `;
+            eventsList.appendChild(div);
+        });
+    });
+}
