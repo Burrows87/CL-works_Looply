@@ -181,3 +181,27 @@ button.secondary {
     display: none;
     animation: fadeIn 0.5s ease-in-out; /* Effetto comparsa fluida */
 }
+
+/* --- SCHERMATA REGISTRAZIONE --- */
+#registration-screen {
+    display: none; /* Sarà il JS a metterlo 'block' */
+    padding: 1rem;
+    animation: fadeIn 0.5s ease-in-out;
+}
+
+/* Se vuoi che il box di registrazione risalti di più quando appare */
+#registration-screen h2 {
+    color: #34A853; /* Usa il verde accent che hai definito */
+    font-size: 1.5rem;
+    margin-bottom: 10px;
+}
+
+#registration-screen input {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 15px;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box; /* Fondamentale per non far uscire l'input dai bordi */
+}
+
