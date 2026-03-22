@@ -256,3 +256,26 @@ if (googleLoginBtn) {
         }
     };
 }
+
+// --- 10. LOGICA LOGOUT ---
+const logoutBtn = document.getElementById('btn-logout');
+
+if (logoutBtn) {
+    logoutBtn.addEventListener('click', async () => {
+        try {
+            console.log("Tentativo di logout...");
+            isLoggingOut = true; // Impedisce al listener onAuthStateChanged di fare controlli inutili
+            
+            await signOut(auth);
+            
+            console.log("Logout effettuato.");
+            // Ricarichiamo la pagina per resettare completamente l'interfaccia e tornare al login
+            window.location.reload(); 
+            
+        } catch (error) {
+            console.error("Errore durante il logout:", error);
+            alert("Errore nell'uscita: " + error.message);
+            isLoggingOut = false;
+        }
+    });
+}
