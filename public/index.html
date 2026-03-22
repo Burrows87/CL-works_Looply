@@ -14,7 +14,7 @@
             <h1>Looply</h1>
             <p>Organizza il tuo weekend con gli amici</p>
             <button id="btn-google-login">
-                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo">
+                <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="20">
                 Accedi con Google
             </button>
         </div>
@@ -26,26 +26,29 @@
             </header>
             
             <main>
-    <div id="create-event-section" class="card">
-        <h3>Organizza un nuovo Weekend</h3>
-        <input type="text" id="event-title" placeholder="Nome evento (es. Pizza e Birra)">
-        
-        <div class="days-selector">
-            <label><input type="checkbox" class="day-check" value="venerdi"> Venerdì</label>
-            <label><input type="checkbox" class="day-check" value="sabato"> Sabato</label>
-            <label><input type="checkbox" class="day-check" value="domenica"> Domenica</label>
-        </div>
+                <div id="create-event-section" class="card">
+                    <h3>Nuovo Weekend</h3>
+                    <input type="text" id="event-title" placeholder="Nome (es. Lago di Como)">
+                    
+                    <div class="days-selector">
+                        <input type="checkbox" id="ven" class="day-check" value="venerdi">
+                        <label for="ven">Ven</label>
 
-        <button id="btn-save-event" class="primary">Salva Evento</button>
-    </div>
+                        <input type="checkbox" id="sab" class="day-check" value="sabato">
+                        <label for="sab">Sab</label>
 
-    <div id="events-list">
-        </div>
-</main>
-                <div class="card">
+                        <input type="checkbox" id="dom" class="day-check" value="domenica">
+                        <label for="dom">Dom</label>
+                    </div>
+
+                    <button id="btn-save-event" class="primary">Salva Evento</button>
+                </div>
+
+                <div id="events-list-container" class="card" style="margin-top: 2rem;">
                     <h3>I tuoi Weekend</h3>
-                    <p>Non hai ancora organizzato nulla. Inizia ora!</p>
-                    <button class="primary">+ Crea nuovo evento</button>
+                    <div id="events-list">
+                        <p>Caricamento eventi...</p>
+                    </div>
                 </div>
             </main>
         </div>
