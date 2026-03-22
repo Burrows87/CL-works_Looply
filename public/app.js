@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy, getDoc, doc, setDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. CONFIGURAZIONE ---
 const firebaseConfig = {
@@ -28,7 +28,6 @@ document.addEventListener('click', (e) => {
         const btn = e.target;
         btn.classList.toggle('active');
         const dayId = btn.id.replace('btn-', '');
-        // Usiamo i nomi completi come venerdi, sabato, domenica per matchare l'HTML
         const slotsDiv = document.getElementById(`slots-${dayId}`);
         if (slotsDiv) {
             slotsDiv.style.display = btn.classList.contains('active') ? 'flex' : 'none';
@@ -42,30 +41,38 @@ document.addEventListener('click', (e) => {
 // --- 4. AUTENTICAZIONE ---
 let isLoggingOut = false;
 
-onAuthStateChanged(auth, (user) => {
+onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
-        loginScreen.style.setProperty('display', 'none', 'important');
-        dashboardScreen.style.setProperty('display', 'block', 'important');
-        userDisplayName.textContent = user.displayName;
+        const userDocRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userDocRef);
+
+        if (userDoc.exists()) {
+            const dati = userDoc.data();
+            loginScreen.style.setProperty('display', 'none', 'important');
+            if(document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none'; 
+            dashboardScreen.style.setProperty('display', 'block', 'important');
+            userDisplayName.textContent = dati.nome; 
+        } else {
+            loginScreen.style.setProperty('display', 'none', 'important');
+            dashboardScreen.style.setProperty('display', 'none', 'important');
+            document.getElementById('registration-screen').style.display = 'block';
+        }
     } else {
         loginScreen.style.setProperty('display', 'block', 'important');
         dashboardScreen.style.setProperty('display', 'none', 'important');
+        if(document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none';
         isLoggingOut = false;
     }
 });
 
 document.getElementById('btn-google-login').addEventListener('click', async () => {
-    // Controllo di sicurezza: procedi solo se le checkbox sono attive
     const terms = document.getElementById('check-terms').checked;
     const privacy = document.getElementById('check-privacy').checked;
-
     if (terms && privacy) {
         try {
             provider.setCustomParameters({ prompt: 'select_account' });
             await signInWithPopup(auth, provider);
-        } catch (error) {
-            console.error("Errore login:", error);
-        }
+        } catch (error) { console.error("Errore login:", error); }
     }
 });
 
@@ -74,35 +81,57 @@ document.getElementById('btn-logout').addEventListener('click', () => {
     signOut(auth);
 });
 
-// --- 5. SALVATAGGIO E MATCH ---
+// --- 5. SALVATAGGIO PROFILO ED EVENTI ---
+
+// Salvataggio Profilo
+document.getElementById('btn-save-profile').addEventListener('click', async () => {
+    const nomeScelto = document.getElementById('reg-name').value;
+    const telScelto = document.getElementById('reg-phone').value;
+    const user = auth.currentUser;
+
+    if (nomeScelto.length < 2 || telScelto.length < 9) return alert("Inserisci un nome e un numero validi!");
+
+    let telPulito = telScelto.replace(/\D/g, '');
+    if (!telPulito.startsWith('39')) telPulito = '39' + telPulito;
+
+    try {
+        await setDoc(doc(db, "users", user.uid), {
+            nome: nomeScelto,
+            telefono: telPulito,
+            email: user.email,
+            uid: user.uid,
+            dataCreazione: new Date()
+        });
+        alert("Profilo creato!");
+        location.reload();
+    } catch (e) { alert("Errore: " + e.message); }
+});
+
+// Salvataggio Evento
 document.getElementById('btn-save-event').onclick = async () => {
     const selectedSlots = [];
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
-        selectedSlots.push({ 
-            giorno: btn.dataset.day, 
-            fascia: btn.textContent.trim() 
-        });
+        selectedSlots.push({ giorno: btn.dataset.day, fascia: btn.textContent.trim() });
     });
 
     if (selectedSlots.length === 0) return alert("Seleziona almeno un orario!");
 
     try {
+        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const userData = userDoc.data();
+
         await addDoc(collection(db, "eventi"), {
-            nomeCreatore: auth.currentUser.displayName,
+            nomeCreatore: userData.nome,
+            telefonoCreatore: userData.telefono,
             creatoDa: auth.currentUser.uid,
             slot: selectedSlots,
             dataCreazione: new Date()
         });
         
-        // Cerca i match in tempo reale subito dopo il salvataggio
         cercaMatchInTempoReale(selectedSlots); 
-
-        alert("Disponibilità salvata! Se un amico coincide, riceverai un avviso.");
+        alert("Disponibilità salvata!");
         resetInterfaccia();
-    } catch (e) { 
-        console.error("Errore salvataggio:", e); 
-        alert("Errore: " + e.message);
-    }
+    } catch (e) { alert("Errore: " + e.message); }
 };
 
 // --- 6. LOGICA MATCH ---
@@ -114,7 +143,7 @@ function cercaMatchInTempoReale(mieiSlot) {
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
-                        proponiWhatsApp(altro.nomeCreatore, mioSlot.giorno, mioSlot.fascia);
+                        proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, mioSlot.giorno, mioSlot.fascia);
                     }
                 });
             });
@@ -122,9 +151,9 @@ function cercaMatchInTempoReale(mieiSlot) {
     });
 }
 
-function proponiWhatsApp(nomeAmico, giorno, fascia) {
+function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
     const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
-    const url = `https://wa.me/?text=${encodeURIComponent(testo)}`;
+    const url = `https://wa.me/${numeroAmico}?text=${encodeURIComponent(testo)}`;
     if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nVuoi scrivergli su WhatsApp?`)) {
         window.location.href = url;
     }
@@ -136,15 +165,10 @@ function resetInterfaccia() {
     document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
 }
 
-// --- 7. LOGICA PRIVACY CHECK ---
-const btnLogin = document.getElementById('btn-google-login');
+// --- 7. LOGICA PRIVACY ---
 const checkTerms = document.getElementById('check-terms');
 const checkPrivacy = document.getElementById('check-privacy');
-
-function validaCheck() {
-    btnLogin.disabled = !(checkTerms.checked && checkPrivacy.checked);
-}
-
+function validaCheck() { document.getElementById('btn-google-login').disabled = !(checkTerms.checked && checkPrivacy.checked); }
 if (checkTerms && checkPrivacy) {
     checkTerms.onchange = validaCheck;
     checkPrivacy.onchange = validaCheck;
