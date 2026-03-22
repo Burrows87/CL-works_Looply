@@ -23,15 +23,25 @@ const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
 const eventsList = document.getElementById('events-list');
 
-// --- 3. GESTIONE INTERFACCIA DINAMICA ---
-// Mostra le fasce orarie solo quando il giorno è selezionato
-document.addEventListener('change', (e) => {
-    if (e.target.classList.contains('day-check')) {
-        const slotsDiv = document.getElementById(`slots-${e.target.id}`);
+// --- 3. GESTIONE INTERFACCIA DINAMICA (LOGICA BOTTONI) ---
+
+// Gestione Click sui Giorni (Toggle)
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('day-toggle')) {
+        const btn = e.target;
+        btn.classList.toggle('active');
+        
+        // Estraiamo l'ID (es. "ven" da "btn-ven")
+        const dayId = btn.id.replace('btn-', '');
+        const slotsDiv = document.getElementById(`slots-${dayId}`);
+        
         if (slotsDiv) {
-            slotsDiv.style.display = e.target.checked ? 'flex' : 'none';
-            if (!e.target.checked) {
-                slotsDiv.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
+            if (btn.classList.contains('active')) {
+                slotsDiv.style.display = 'flex';
+            } else {
+                slotsDiv.style.display = 'none';
+                // Reset delle fasce orarie se chiudo il giorno
+                slotsDiv.querySelectorAll('.slot-btn').forEach(s => s.classList.remove('selected'));
             }
         }
     }
@@ -44,7 +54,7 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- 4. GESTIONE AUTENTICAZIONE (Risolto problema Loop) ---
+// --- 4. GESTIONE AUTENTICAZIONE ---
 document.getElementById('btn-google-login').addEventListener('click', async () => {
     try {
         await signInWithPopup(auth, provider);
@@ -71,6 +81,8 @@ onAuthStateChanged(auth, (user) => {
 // --- 5. SALVATAGGIO E LOGICA MATCH ---
 document.getElementById('btn-save-event').addEventListener('click', async () => {
     const selectedSlots = [];
+    
+    // Raccogliamo gli slot dai bottoni selezionati
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
         selectedSlots.push({
             giorno: btn.dataset.day,
@@ -90,7 +102,7 @@ document.getElementById('btn-save-event').addEventListener('click', async () => 
 
         cercaMatchInTempoReale(selectedSlots);
         resetInterfaccia();
-        alert("Disponibilità salvata con successo!");
+        alert("Disponibilità inviata con successo!");
 
     } catch (e) {
         console.error("Errore nel salvataggio:", e);
@@ -139,31 +151,4 @@ function caricaDisponibilita() {
             const disp = doc.data();
             const div = document.createElement('div');
             div.className = "card";
-            div.style.borderLeft = "5px solid #4285F4";
-            div.style.marginBottom = "10px";
-            div.style.textAlign = "left";
-            div.style.padding = "10px";
-            
-            const slotHtml = disp.slot.map(s => 
-                `<span style="background:#e8f0fe; color:#1967d2; padding:2px 8px; border-radius:10px; font-size:0.75rem; margin-right:5px; display:inline-block; margin-top:5px;">
-                    ${s.giorno} ${s.fascia}
-                </span>`
-            ).join("");
-
-            div.innerHTML = `
-                <strong style="color: #333;">${disp.nomeCreatore}</strong> è disponibile:<br>
-                <div style="margin-top:5px;">${slotHtml}</div>
-            `;
-            eventsList.appendChild(div);
-        });
-    });
-}
-
-function resetInterfaccia() {
-    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-    document.querySelectorAll('.day-check').forEach(c => {
-        c.checked = false;
-        const slotsDiv = document.getElementById(`slots-${c.id}`);
-        if(slotsDiv) slotsDiv.style.display = 'none';
-    });
-}
+            div.style.borderLeft = "5px solid #42
