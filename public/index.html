@@ -136,7 +136,30 @@
                 Accedi con Google
             </button>
         </div>
-            
+<div id="registration-screen" style="display:none; padding: 20px; text-align: center; font-family: sans-serif;">
+    <div style="max-width: 400px; margin: 0 auto; background: #fff; padding: 30px; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.1);">
+        <h2 style="color: #25D366;">Benvenuto su Looply! 🚀</h2>
+        <p style="color: #666; margin-bottom: 20px;">Abbiamo quasi finito. Inserisci il tuo nome e il tuo numero per permettere ai tuoi amici di contattarti in caso di match!</p>
+        
+        <label style="display: block; text-align: left; font-weight: bold; margin-bottom: 5px;">Come ti chiamano gli amici?</label>
+        <input type="text" id="reg-name" placeholder="Es: Cristian" 
+               style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+
+        <label style="display: block; text-align: left; font-weight: bold; margin-bottom: 5px;">Il tuo numero di cellulare</label>
+        <input type="tel" id="reg-phone" placeholder="Es: 3331234567" 
+               style="width: 100%; padding: 12px; margin-bottom: 20px; border: 1px solid #ddd; border-radius: 8px; box-sizing: border-box;">
+        
+        <p style="font-size: 12px; color: #999; margin-bottom: 20px;">
+            * Il numero serve esclusivamente per creare il link diretto a WhatsApp nei match.
+        </p>
+
+        <button id="btn-save-profile" 
+                style="width: 100%; padding: 15px; background-color: #25D366; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
+            Salva e Inizia ad Organizzare
+        </button>
+    </div>
+</div>
+        
         <div id="dashboard-screen" class="screen" style="display: none;">
             <header>
                 <h2>Ciao, <span id="user-display-name">...</span>!</h2>
