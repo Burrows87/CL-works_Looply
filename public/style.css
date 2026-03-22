@@ -25,9 +25,13 @@ body {
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     text-align: center;
     margin-bottom: 2rem;
+    position: relative; /* Essenziale per gestire i livelli degli schermi */
 }
 
-.screen { transition: opacity 0.3s ease; }
+/* Gestione schermi: evita che quello nascosto blocchi i click */
+.screen[style*="display: none"] {
+    pointer-events: none;
+}
 
 h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
 h2 { font-size: 1.2rem; margin: 0; }
@@ -57,6 +61,22 @@ button {
     justify-content: center;
     gap: 10px;
     transition: all 0.2s;
+    outline: none;
+}
+
+/* Specifica per pulsante Google Login */
+#btn-google-login {
+    margin-top: 1rem;
+    border: 1px solid #4285F4;
+    color: #4285F4;
+    font-weight: 600;
+    position: relative;
+    z-index: 100; /* Lo porta sopra tutto */
+}
+
+#btn-google-login:active {
+    background-color: #f1f3f4;
+    transform: scale(0.98);
 }
 
 button.primary {
@@ -88,7 +108,7 @@ button.secondary {
     background: #fdfdfd;
 }
 
-/* --- NUOVA LOGICA: BOTTONI TOGGLE GIORNO --- */
+/* --- TOGGLE GIORNO --- */
 .availability-container {
     display: flex;
     flex-direction: column;
@@ -123,7 +143,7 @@ button.secondary {
 
 /* --- FASCE ORARIE --- */
 .time-slots { 
-    display: none; /* Gestito via JS */
+    display: none; 
     gap: 8px; 
     padding: 10px 5px 15px 5px;
     flex-wrap: wrap;
@@ -135,7 +155,7 @@ button.secondary {
     border: 1px solid #ddd;
     background: #fff;
     border-radius: 20px;
-    width: auto !important; /* Sovrascrive il width 100% dei bottoni generici */
+    width: auto !important; 
     flex: 1 1 auto;
 }
 
