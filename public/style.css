@@ -171,3 +171,8 @@ button.secondary {
     text-align: left;
     padding: 12px;
 }
+
+/* Nascondi gli schermi di default, ci pensa il JavaScript a mostrarli */
+#login-screen, #dashboard-screen {
+    display: none;
+}
