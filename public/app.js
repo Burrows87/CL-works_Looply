@@ -23,7 +23,27 @@ const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
 const eventsList = document.getElementById('events-list');
 
-// --- 3. GESTIONE AUTENTICAZIONE ---
+// --- 3. GESTIONE INTERFACCIA DINAMICA (Fasce Orarie) ---
+// Mostra/Nasconde le fasce orarie quando si clicca sul giorno
+document.querySelectorAll('.day-check').forEach(check => {
+    check.addEventListener('change', (e) => {
+        const slotsDiv = document.getElementById(`slots-${e.target.id}`);
+        slotsDiv.style.display = e.target.checked ? 'flex' : 'none';
+        // Se deseleziono il giorno, resetto anche i bottoni delle fasce
+        if (!e.target.checked) {
+            slotsDiv.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
+        }
+    });
+});
+
+// Gestisce la selezione dei bottoni delle fasce orarie
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('slot-btn')) {
+        e.target.classList.toggle('selected');
+    }
+});
+
+// --- 4. GESTIONE AUTENTICAZIONE ---
 document.getElementById('btn-google-login').addEventListener('click', () => signInWithRedirect(auth, provider));
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
@@ -32,78 +52,78 @@ onAuthStateChanged(auth, (user) => {
         loginScreen.style.display = 'none';
         dashboardScreen.style.display = 'block';
         userDisplayName.textContent = user.displayName;
-        caricaEventi(); 
+        caricaDisponibilita(); 
     } else {
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
     }
 });
 
-// --- 4. LOGICA MATCH & SALVATAGGIO ---
+// --- 5. SALVATAGGIO E LOGICA MATCH ---
 document.getElementById('btn-save-event').addEventListener('click', async () => {
-    const titoloInput = document.getElementById('event-title');
-    const checkboxes = document.querySelectorAll('.day-check:checked');
-    const giorni = Array.from(checkboxes).map(cb => cb.nextElementSibling.textContent);
+    const selectedSlots = [];
+    
+    // Raccogliamo tutti i bottoni "selected"
+    document.querySelectorAll('.slot-btn.selected').forEach(btn => {
+        selectedSlots.push({
+            giorno: btn.dataset.day,
+            fascia: btn.textContent
+        });
+    });
 
-    if (!titoloInput.value) return alert("Inserisci un nome per questo weekend!");
-    if (giorni.length === 0) return alert("Seleziona almeno un giorno!");
+    if (selectedSlots.length === 0) return alert("Seleziona almeno un giorno e una fascia oraria!");
 
     try {
-        // Salva la tua disponibilità
+        // Salviamo la disponibilità su Firestore
         await addDoc(collection(db, "eventi"), {
-            titolo: titoloInput.value,
-            giorni: giorni,
-            creatoDa: auth.currentUser.uid,
             nomeCreatore: auth.currentUser.displayName,
+            creatoDa: auth.currentUser.uid,
+            slot: selectedSlots,
             dataCreazione: new Date()
         });
 
-        // Cerca Match immediati con altri utenti
-        cercaMatch(giorni, titoloInput.value);
+        // Avviamo la ricerca del match
+        cercaMatchInTempoReale(selectedSlots);
 
-        // Reset modulo
-        titoloInput.value = "";
-        document.querySelectorAll('.day-check').forEach(cb => cb.checked = false);
-        alert("Disponibilità inviata! Sto cercando match...");
+        // Reset Interfaccia
+        resetInterfaccia();
+        alert("Disponibilità salvata! Verifico se qualcuno è libero come te...");
 
     } catch (e) {
-        console.error("Errore:", e);
+        console.error("Errore nel salvataggio:", e);
     }
 });
 
-// --- 5. FUNZIONE CERCA MATCH ---
-function cercaMatch(mieiGiorni, mioTitolo) {
-    // Cerchiamo eventi creati da altri
+// --- 6. FUNZIONE CERCA MATCH ---
+function cercaMatchInTempoReale(mieiSlot) {
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
     
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((doc) => {
-            const altroEvento = doc.data();
-            // Controlla se ci sono giorni in comune
-            const match = mieiGiorni.filter(g => altroEvento.giorni.includes(g));
-            
-            if (match.length > 0) {
-                proponiWhatsApp(altroEvento.nomeCreatore, match[0]);
-            }
+            const altro = doc.data();
+            // Confrontiamo ogni mio slot con ogni slot dell'altro utente
+            altro.slot.forEach(slotAltro => {
+                mieiSlot.forEach(mioSlot => {
+                    if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
+                        proponiWhatsApp(altro.nomeCreatore, mioSlot.giorno, mioSlot.fascia);
+                    }
+                });
+            });
         });
     });
 }
 
-// --- 6. POPUP WHATSAPP ---
-function proponiWhatsApp(nomeAmico, giorno) {
-    const testo = `Ciao ${nomeAmico}, ho visto da Looply che siamo liberi ${giorno} sera, usciamo?`;
+function proponiWhatsApp(nomeAmico, giorno, fascia) {
+    const testo = `Ciao ${nomeAmico}, ho visto da Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
     const url = `https://wa.me/?text=${encodeURIComponent(testo)}`;
 
-    // Un popup semplice ma efficace
-    const conferma = confirm(`🎉 MATCH! Anche ${nomeAmico} è libero ${giorno}.\n\nVuoi scrivergli su WhatsApp?`);
-    
-    if (conferma) {
+    if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nSiete entrambi liberi ${giorno} ${fascia}.\n\nVuoi scrivergli su WhatsApp?`)) {
         window.open(url, '_blank');
     }
 }
 
 // --- 7. VISUALIZZAZIONE LISTA ---
-function caricaEventi() {
+function caricaDisponibilita() {
     const q = query(collection(db, "eventi"), orderBy("dataCreazione", "desc"));
     
     onSnapshot(q, (snapshot) => {
@@ -114,7 +134,7 @@ function caricaEventi() {
         }
 
         snapshot.forEach((doc) => {
-            const evento = doc.data();
+            const disp = doc.data();
             const div = document.createElement('div');
             div.className = "card";
             div.style.borderLeft = "5px solid #4285F4";
@@ -122,12 +142,26 @@ function caricaEventi() {
             div.style.textAlign = "left";
             div.style.padding = "10px";
             
+            // Creiamo i tag per le fasce orarie
+            const slotHtml = disp.slot.map(s => 
+                `<span style="background:#e8f0fe; color:#1967d2; padding:2px 8px; border-radius:10px; font-size:0.75rem; margin-right:5px;">
+                    ${s.giorno} ${s.fascia}
+                </span>`
+            ).join("");
+
             div.innerHTML = `
-                <strong style="color: #333;">${evento.nomeCreatore}</strong> è libero:<br>
-                <span style="color: #4285F4; font-weight: bold;">${evento.giorni.join(" • ")}</span><br>
-                <small style="color: #999;">${evento.titolo}</small>
+                <strong style="color: #333;">${disp.nomeCreatore}</strong> è disponibile:<br>
+                <div style="margin-top:8px;">${slotHtml}</div>
             `;
             eventsList.appendChild(div);
         });
+    });
+}
+
+function resetInterfaccia() {
+    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+    document.querySelectorAll('.day-check').forEach(c => {
+        c.checked = false;
+        document.getElementById(`slots-${c.id}`).style.display = 'none';
     });
 }
