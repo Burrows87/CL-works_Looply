@@ -120,6 +120,7 @@ document.getElementById('btn-save-profile').addEventListener('click', async () =
     }
 });
 
+
 document.getElementById('btn-save-event').onclick = async () => {
     const selectedSlots = [];
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
@@ -129,21 +130,27 @@ document.getElementById('btn-save-event').onclick = async () => {
     if (selectedSlots.length === 0) return alert("Seleziona almeno un orario!");
 
     try {
+        // Recuperiamo i dati aggiornati dell'utente dal suo documento
         const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+        if (!userDoc.exists()) return alert("Errore: Profilo utente non trovato!");
+        
         const userData = userDoc.data();
 
         await addDoc(collection(db, "eventi"), {
-            nomeCreatore: userData.nome,
-            telefonoCreatore: userData.telefono,
+            nomeCreatore: userData.nome || "Utente",
+            telefonoCreatore: userData.telefono || "", // Assicuriamoci che non sia undefined
             creatoDa: auth.currentUser.uid,
             slot: selectedSlots,
             dataCreazione: new Date()
         });
         
-        cercaMatchInTempoReale(selectedSlots); 
         alert("Disponibilità salvata!");
         resetInterfaccia();
-    } catch (e) { alert("Errore: " + e.message); }
+        // Nota: cercaMatchInTempoReale si attiverà da solo grazie a onSnapshot
+    } catch (e) { 
+        console.error("Errore salvataggio evento:", e);
+        alert("Errore: " + e.message); 
+    }
 };
 
 // --- 6. LOGICA MATCH ---
