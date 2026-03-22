@@ -100,6 +100,19 @@ button.secondary {
     color: #ff4444;
 }
 
+#btn-save-profile {
+    background-color: var(--accent-color); /* Usa il tuo verde #34A853 */
+    color: white;
+    border: none;
+    font-weight: bold;
+    margin-top: 10px;
+}
+
+#btn-save-profile:hover {
+    filter: brightness(1.1);
+    transform: translateY(-1px);
+}
+
 .card {
     border: 1px solid #eee;
     padding: 1.5rem;
@@ -183,10 +196,10 @@ button.secondary {
 }
 
 /* --- SCHERMATA REGISTRAZIONE --- */
-#registration-screen {
-    display: none; /* Sarà il JS a metterlo 'block' */
-    padding: 1rem;
-    animation: fadeIn 0.5s ease-in-out;
+/* Nascondi tutti gli schermi all'avvio: il JS deciderà quale mostrare */
+#login-screen, #dashboard-screen, #registration-screen {
+    display: none;
+    animation: fadeIn 0.4s ease-in-out;
 }
 
 /* Se vuoi che il box di registrazione risalti di più quando appare */
@@ -194,6 +207,12 @@ button.secondary {
     color: #34A853; /* Usa il verde accent che hai definito */
     font-size: 1.5rem;
     margin-bottom: 10px;
+}
+
+#registration-screen input:focus {
+    border-color: var(--primary-color);
+    outline: none;
+    box-shadow: 0 0 5px rgba(66, 133, 244, 0.2);
 }
 
 #registration-screen input {
