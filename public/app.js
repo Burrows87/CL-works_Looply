@@ -21,7 +21,6 @@ const provider = new GoogleAuthProvider();
 const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
-const eventsList = document.getElementById('events-list');
 
 // --- 3. GESTIONE INTERFACCIA ---
 document.addEventListener('click', (e) => {
@@ -29,6 +28,7 @@ document.addEventListener('click', (e) => {
         const btn = e.target;
         btn.classList.toggle('active');
         const dayId = btn.id.replace('btn-', '');
+        // Usiamo i nomi completi come venerdi, sabato, domenica per matchare l'HTML
         const slotsDiv = document.getElementById(`slots-${dayId}`);
         if (slotsDiv) {
             slotsDiv.style.display = btn.classList.contains('active') ? 'flex' : 'none';
@@ -55,11 +55,17 @@ onAuthStateChanged(auth, (user) => {
 });
 
 document.getElementById('btn-google-login').addEventListener('click', async () => {
-    try {
-        provider.setCustomParameters({ prompt: 'select_account' });
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        console.error("Errore login:", error);
+    // Controllo di sicurezza: procedi solo se le checkbox sono attive
+    const terms = document.getElementById('check-terms').checked;
+    const privacy = document.getElementById('check-privacy').checked;
+
+    if (terms && privacy) {
+        try {
+            provider.setCustomParameters({ prompt: 'select_account' });
+            await signInWithPopup(auth, provider);
+        } catch (error) {
+            console.error("Errore login:", error);
+        }
     }
 });
 
@@ -68,9 +74,8 @@ document.getElementById('btn-logout').addEventListener('click', () => {
     signOut(auth);
 });
 
-// --- 5. SALVATAGGIO ---
+// --- 5. SALVATAGGIO E MATCH ---
 document.getElementById('btn-save-event').onclick = async () => {
-    console.log("Pulsante cliccato!"); 
     const selectedSlots = [];
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
         selectedSlots.push({ 
@@ -89,11 +94,10 @@ document.getElementById('btn-save-event').onclick = async () => {
             dataCreazione: new Date()
         });
         
-        // --- AGGIUNGI QUESTA RIGA QUI SOTTO ---
+        // Cerca i match in tempo reale subito dopo il salvataggio
         cercaMatchInTempoReale(selectedSlots); 
-        // --------------------------------------
 
-        alert("Disponibilità inviata con successo!");
+        alert("Disponibilità salvata! Se un amico coincide, riceverai un avviso.");
         resetInterfaccia();
     } catch (e) { 
         console.error("Errore salvataggio:", e); 
@@ -101,7 +105,7 @@ document.getElementById('btn-save-event').onclick = async () => {
     }
 };
 
-// --- 6. MATCH E LISTA ---
+// --- 6. LOGICA MATCH ---
 function cercaMatchInTempoReale(mieiSlot) {
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
     onSnapshot(q, (snapshot) => {
@@ -126,28 +130,22 @@ function proponiWhatsApp(nomeAmico, giorno, fascia) {
     }
 }
 
-function caricaDisponibilita() {
-    const q = query(collection(db, "eventi"), orderBy("dataCreazione", "desc"));
-    onSnapshot(q, (snapshot) => {
-        eventsList.innerHTML = "";
-        if (snapshot.empty) {
-            eventsList.innerHTML = "<p>Nessuna disponibilità.</p>";
-            return;
-        }
-        snapshot.forEach((doc) => {
-            const disp = doc.data();
-            const div = document.createElement('div');
-            div.className = "card";
-            div.style.textAlign = "left";
-            div.innerHTML = `<strong>${disp.nomeCreatore}</strong>: ` + 
-                disp.slot.map(s => `${s.giorno} ${s.fascia}`).join(", ");
-            eventsList.appendChild(div);
-        });
-    });
-}
-
 function resetInterfaccia() {
     document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
     document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
+}
+
+// --- 7. LOGICA PRIVACY CHECK ---
+const btnLogin = document.getElementById('btn-google-login');
+const checkTerms = document.getElementById('check-terms');
+const checkPrivacy = document.getElementById('check-privacy');
+
+function validaCheck() {
+    btnLogin.disabled = !(checkTerms.checked && checkPrivacy.checked);
+}
+
+if (checkTerms && checkPrivacy) {
+    checkTerms.onchange = validaCheck;
+    checkPrivacy.onchange = validaCheck;
 }
