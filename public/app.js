@@ -173,3 +173,51 @@ if (checkTerms && checkPrivacy) {
     checkTerms.onchange = validaCheck;
     checkPrivacy.onchange = validaCheck;
 }
+// --- GESTIONE IMPOSTAZIONI E TEMI COLORATI ---
+
+// 1. Funzione per cambiare il colore nell'interfaccia (CSS Variables)
+const applyThemeColor = (color) => {
+    if (!color) return;
+    document.documentElement.style.setProperty('--primary-color', color);
+    
+    // Opzionale: cambia anche il colore della barra di stato mobile
+    const metaTheme = document.querySelector('meta[name="theme-color"]');
+    if (metaTheme) metaTheme.setAttribute('content', color);
+};
+
+// 2. Apri/Chiudi il pannello impostazioni
+document.getElementById('btn-open-settings').addEventListener('click', () => {
+    const panel = document.getElementById('settings-panel');
+    const isHidden = panel.style.display === 'none';
+    panel.style.display = isHidden ? 'block' : 'none';
+    
+    // Rotazione animata dell'ingranaggio (tocco di classe)
+    const icon = document.querySelector('#btn-open-settings svg');
+    icon.style.transition = 'transform 0.3s ease';
+    icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+});
+
+// 3. Gestione click sui pallini colorati
+document.querySelectorAll('.color-dot').forEach(dot => {
+    dot.addEventListener('click', async (e) => {
+        const selectedColor = e.target.getAttribute('data-color');
+        
+        // Applica subito il colore per un feedback istantaneo
+        applyThemeColor(selectedColor);
+        
+        // Salva la preferenza nel database Firebase
+        const user = auth.currentUser;
+        if (user) {
+            try {
+                // Importante: assicurati che 'db', 'doc' e 'updateDoc' siano importati da firestore
+                const userRef = doc(db, "users", user.uid);
+                await updateDoc(userRef, {
+                    themeColor: selectedColor
+                });
+                console.log("Tema salvato con successo!");
+            } catch (error) {
+                console.error("Errore durante il salvataggio del tema:", error);
+            }
+        }
+    });
+});
