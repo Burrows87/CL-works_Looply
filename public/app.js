@@ -70,7 +70,9 @@ document.getElementById('btn-logout').addEventListener('click', () => {
 });
 
 // --- 5. SALVATAGGIO ---
-document.getElementById('btn-save-event').addEventListener('click', async () => {
+// --- 5. SALVATAGGIO ---
+document.getElementById('btn-save-event').onclick = async () => {
+    console.log("Pulsante cliccato!"); 
     const selectedSlots = [];
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
         selectedSlots.push({ 
@@ -88,13 +90,18 @@ document.getElementById('btn-save-event').addEventListener('click', async () => 
             slot: selectedSlots,
             dataCreazione: new Date()
         });
+        
+        // --- AGGIUNGI QUESTA RIGA QUI SOTTO ---
+        cercaMatchInTempoReale(selectedSlots); 
+        // --------------------------------------
+
         alert("Disponibilità inviata con successo!");
-        cercaMatchInTempoReale(selectedSlots);
         resetInterfaccia();
     } catch (e) { 
         console.error("Errore salvataggio:", e); 
+        alert("Errore: " + e.message);
     }
-});
+};
 
 // --- 6. MATCH E LISTA ---
 function cercaMatchInTempoReale(mieiSlot) {
