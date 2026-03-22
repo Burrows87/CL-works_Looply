@@ -176,3 +176,8 @@ button.secondary {
 #login-screen, #dashboard-screen {
     display: none;
 }
+
+#login-screen, #dashboard-screen {
+    display: none;
+    animation: fadeIn 0.5s ease-in-out; /* Effetto comparsa fluida */
+}
