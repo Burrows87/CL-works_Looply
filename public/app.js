@@ -51,36 +51,34 @@ let isLoggingOut = false;
 
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
-        // Cerchiamo il profilo su Firestore con la sintassi v10
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
-        if (userDoc.exists()) {
-            // UTENTE GIÀ REGISTRATO: Vai alla Dashboard
+        // Controlliamo non solo se il documento esiste, ma se ha il campo 'nome'
+        if (userDoc.exists() && userDoc.data().nome) {
+            // UTENTE REGISTRATO DAVVERO
             const dati = userDoc.data();
-            loginScreen.style.setProperty('display', 'none', 'important');
+            loginScreen.style.display = 'none';
             document.getElementById('registration-screen').style.display = 'none';
-            dashboardScreen.style.setProperty('display', 'block', 'important');
+            dashboardScreen.style.display = 'block';
             
             userDisplayName.textContent = dati.nome;
             if (dati.themeColor) applyThemeColor(dati.themeColor);
-            
-            console.log("Accesso eseguito come:", dati.nome);
         } else {
-            // UTENTE NUOVO: Mostra il form "Come ti chiami?"
-            loginScreen.style.setProperty('display', 'none', 'important');
-            dashboardScreen.style.setProperty('display', 'none', 'important');
+            // UTENTE NUOVO (o documento incompleto)
+            loginScreen.style.display = 'none';
+            dashboardScreen.style.display = 'none';
             document.getElementById('registration-screen').style.display = 'block';
-            console.log("Profilo non trovato. Richiesta registrazione...");
+            console.log("Dati profilo mancanti. Mostro registrazione...");
         }
     } else {
         // Nessun utente loggato
-        loginScreen.style.setProperty('display', 'block', 'important');
-        dashboardScreen.style.setProperty('display', 'none', 'important');
+        loginScreen.style.display = 'block';
+        dashboardScreen.style.display = 'none';
         document.getElementById('registration-screen').style.display = 'none';
-        isLoggingOut = false;
     }
 });
+
 
 // --- 5. SALVATAGGIO PROFILO (ANTI-BUG WHATSAPP) ---
 
