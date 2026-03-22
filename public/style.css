@@ -2,7 +2,7 @@
     --primary-color: #4285F4;
     --bg-color: #f0f2f5;
     --card-bg: #ffffff;
-    --accent-color: #34A853; /* Un bel verde per le conferme */
+    --accent-color: #34A853; 
 }
 
 body {
@@ -11,7 +11,7 @@ body {
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: flex-start; /* Cambiato da center a flex-start per permettere lo scroll */
+    align-items: flex-start; 
     min-height: 100vh;
     padding-top: 2rem;
 }
@@ -30,21 +30,20 @@ body {
 .screen { transition: opacity 0.3s ease; }
 
 h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
+h2 { font-size: 1.2rem; margin: 0; }
 h3 { margin-top: 0; color: #333; }
 p { color: #666; margin-bottom: 1.5rem; }
 
-/* Input di testo per il titolo evento */
-input[type="text"] {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 1rem;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box;
-    font-size: 1rem;
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
 }
 
-/* Pulsanti */
+/* Pulsanti Generali */
 button {
     width: 100%;
     padding: 12px;
@@ -60,8 +59,6 @@ button {
     transition: all 0.2s;
 }
 
-button:hover { background: #f8f9fa; }
-
 button.primary {
     background-color: var(--primary-color);
     color: white;
@@ -69,7 +66,11 @@ button.primary {
     font-weight: bold;
 }
 
-button.primary:hover { background-color: #357ae8; }
+button.primary:hover { 
+    background-color: #357ae8; 
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
+}
 
 button.secondary {
     padding: 5px 10px;
@@ -79,7 +80,6 @@ button.secondary {
     color: #ff4444;
 }
 
-/* Sezione card e creazione evento */
 .card {
     border: 1px solid #eee;
     padding: 1.5rem;
@@ -88,47 +88,66 @@ button.secondary {
     background: #fdfdfd;
 }
 
-/* --- NUOVA SEZIONE: SELETTORE GIORNI --- */
-
-.days-selector {
+/* --- NUOVA LOGICA: BOTTONI TOGGLE GIORNO --- */
+.availability-container {
     display: flex;
-    gap: 8px;
-    margin: 1rem 0;
+    flex-direction: column;
+    gap: 12px;
+    margin: 1.5rem 0;
 }
 
-/* Nascondiamo il quadratino del checkbox */
-.days-selector input[type="checkbox"] {
-    display: none;
+.day-group {
+    background: #fff;
+    border-radius: 12px;
+    text-align: left;
 }
 
-/* Trasformiamo la label in un pulsante cliccabile */
-.days-selector label {
-    flex: 1;
-    padding: 10px 5px;
-    background: #eee;
-    border-radius: 8px;
-    cursor: pointer;
-    font-size: 0.85rem;
-    font-weight: 500;
-    transition: all 0.2s;
+.day-toggle {
+    width: 100%;
+    padding: 14px;
+    background: #f8f9fa;
+    border: 2px solid #eee;
+    border-radius: 12px;
+    font-weight: 700;
     color: #555;
-    border: 2px solid transparent;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* Stile quando il giorno è selezionato */
-.days-selector input[type="checkbox"]:checked + label {
-    background-color: #e8f0fe;
+.day-toggle.active {
+    background: #e8f0fe;
     border-color: var(--primary-color);
     color: var(--primary-color);
 }
 
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
+/* --- FASCE ORARIE --- */
+.time-slots { 
+    display: none; /* Gestito via JS */
+    gap: 8px; 
+    padding: 10px 5px 15px 5px;
+    flex-wrap: wrap;
 }
 
-header h2 { font-size: 1.2rem; margin: 0; }
+.slot-btn {
+    padding: 8px 14px !important;
+    font-size: 0.85rem !important;
+    border: 1px solid #ddd;
+    background: #fff;
+    border-radius: 20px;
+    width: auto !important; /* Sovrascrive il width 100% dei bottoni generici */
+    flex: 1 1 auto;
+}
+
+.slot-btn.selected {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color);
+}
+
+/* Lista Eventi */
+#events-list .card {
+    border-left: 5px solid var(--primary-color);
+    text-align: left;
+    padding: 12px;
+}
