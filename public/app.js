@@ -51,20 +51,29 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// --- 4. GESTIONE AUTENTICAZIONE (LOGIN/LOGOUT) ---
+// --- 4. GESTIONE AUTENTICAZIONE (Versione Anti-Loop) ---
 
-// Login con Google
-document.getElementById('btn-google-login').addEventListener('click', async () => {
-    console.log("Avvio procedura login...");
-    try {
-        // Parametro per forzare la scelta dell'account se ci sono problemi di cache
-        provider.setCustomParameters({ prompt: 'select_account' });
-        await signInWithPopup(auth, provider);
-    } catch (error) {
-        console.error("Errore Login dettagliato:", error.code, error.message);
-        alert("Errore nel login. Controlla la console per i dettagli.");
+let isAppReady = false; // Flag per evitare loop durante il caricamento
+
+onAuthStateChanged(auth, (user) => {
+    if (user) {
+        console.log("Accesso confermato per:", user.displayName);
+        
+        // Cambiamo schermata solo se non siamo già in dashboard
+        if (dashboardScreen.style.display !== 'block') {
+            loginScreen.style.display = 'none';
+            dashboardScreen.style.display = 'block';
+            userDisplayName.textContent = user.displayName;
+            caricaDisponibilita();
+        }
+    } else {
+        console.log("Nessun utente rilevato, mostro login.");
+        loginScreen.style.display = 'block';
+        dashboardScreen.style.display = 'none';
     }
+    isAppReady = true;
 });
+
 
 // Logout
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
