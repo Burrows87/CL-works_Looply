@@ -24,7 +24,24 @@
                 <h2>Ciao, <span id="user-display-name">...</span>!</h2>
                 <button id="btn-logout" class="secondary">Esci</button>
             </header>
+            
             <main>
+    <div id="create-event-section" class="card">
+        <h3>Organizza un nuovo Weekend</h3>
+        <input type="text" id="event-title" placeholder="Nome evento (es. Pizza e Birra)">
+        
+        <div class="days-selector">
+            <label><input type="checkbox" class="day-check" value="venerdi"> Venerdì</label>
+            <label><input type="checkbox" class="day-check" value="sabato"> Sabato</label>
+            <label><input type="checkbox" class="day-check" value="domenica"> Domenica</label>
+        </div>
+
+        <button id="btn-save-event" class="primary">Salva Evento</button>
+    </div>
+
+    <div id="events-list">
+        </div>
+</main>
                 <div class="card">
                     <h3>I tuoi Weekend</h3>
                     <p>Non hai ancora organizzato nulla. Inizia ora!</p>
