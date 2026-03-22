@@ -20,18 +20,15 @@
             overflow: hidden;
         }
 
-        /* CORREZIONE: Assicuriamoci che lo schermo nascosto non blocchi i click */
         .screen { 
             transition: opacity 0.3s ease; 
         }
         
-        /* Quando display è none, forziamo la rimozione di ogni interazione */
         .screen[style*="display: none"] {
             pointer-events: none;
             user-select: none;
         }
 
-        /* Bottone Giorno principale */
         .day-toggle {
             width: 100%;
             padding: 15px;
@@ -67,7 +64,6 @@
             color: #4285F4;
         }
 
-        /* Contenitore Fasce Orarie */
         .time-slots { 
             display: none; 
             gap: 10px; 
@@ -81,7 +77,6 @@
             to { opacity: 1; transform: translateY(0); }
         }
 
-        /* Bottoni Fascia Oraria */
         .slot-btn {
             padding: 10px 18px !important;
             font-size: 0.85rem !important;
@@ -93,7 +88,7 @@
             flex-grow: 1;
             text-align: center;
             font-weight: 500;
-            width: auto; /* Evita che prendano il 100% dal CSS generale */
+            width: auto;
         }
 
         .slot-btn.selected {
@@ -103,7 +98,17 @@
             box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);
         }
 
-        /* Titoli e Testi */
+        .check-label {
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            text-align: left;
+            font-size: 0.85rem;
+            color: #666;
+        }
+
         h3 { margin-bottom: 5px; }
         .subtitle { font-size: 0.9rem; color: #666; margin-bottom: 20px; }
     </style>
@@ -115,7 +120,7 @@
             <h1>Looply <span style="font-weight: normal;">🤙🏻</span></h1>
             <p>Organizza il tuo weekend con gli amici</p>
             
-        <div id="privacy-container">
+            <div id="privacy-container" style="margin: 20px 0;">
                 <label class="check-label">
                     <input type="checkbox" id="check-terms">
                     <span>Accetto i <a href="#">Termini di Servizio</a></span>
@@ -126,7 +131,7 @@
                 </label>
             </div>
 
-        <button id="btn-google-login" type="button" disabled>
+            <button id="btn-google-login" type="button" disabled>
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="20">
                 Accedi con Google
             </button>
@@ -146,7 +151,7 @@
                     <div class="availability-container">
                         <div class="day-group">
                             <button type="button" class="day-toggle" id="btn-venerdi">Venerdì</button>  
-                            <div class="time-slots" id="slots-venerdì">
+                            <div class="time-slots" id="slots-venerdi">
                                 <button type="button" class="slot-btn" data-day="Venerdì">Mattina</button>
                                 <button type="button" class="slot-btn" data-day="Venerdì">Pomeriggio</button>
                                 <button type="button" class="slot-btn" data-day="Venerdì">Sera</button>
@@ -154,7 +159,7 @@
                         </div>
 
                         <div class="day-group">
-                            <button type="button" class="day-toggle" id="sabato">Sabato</button>
+                            <button type="button" class="day-toggle" id="btn-sabato">Sabato</button>
                             <div class="time-slots" id="slots-sabato">
                                 <button type="button" class="slot-btn" data-day="Sabato">Mattina</button>
                                 <button type="button" class="slot-btn" data-day="Sabato">Pomeriggio</button>
@@ -176,7 +181,6 @@
                         Invia Disponibilità
                     </button>
                 </div>
-
             </main>
 
             <footer>
