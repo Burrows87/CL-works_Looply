@@ -1,218 +1,69 @@
-/* 1. VARIABILI E RESET */
 :root {
-    --primary-color: #2563eb; 
-    --bg-color: #f3f4f6;
+    --primary-color: #4285F4;
+    --bg-color: #f0f2f5;
     --card-bg: #ffffff;
-    --text-main: #1f2937;
-    --border-color: #e5e7eb;
-}
-
-* {
-    box-sizing: border-box;
-    margin: 0;
-    padding: 0;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-    -webkit-tap-highlight-color: transparent;
 }
 
 body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
     background-color: var(--bg-color);
-    color: var(--text-main);
+    margin: 0;
     display: flex;
     justify-content: center;
-    padding: 15px;
-    min-height: 100vh;
-}
-
-.container {
-    width: 100%;
-    max-width: 420px;
-}
-
-/* 2. HEADER E TITOLI */
-.header h1 {
-    font-size: 26px;
-    font-weight: 800;
-    letter-spacing: -1px;
-    display: flex;
     align-items: center;
-    gap: 8px;
+    height: 100vh;
 }
 
-.day-label {
-    margin-bottom: 10px;
-    font-weight: 800;
-    font-size: 14px;
-    color: var(--primary-color);
-    text-transform: uppercase;
-    letter-spacing: 0.5px;
-}
-
-/* 3. CARD */
-.card {
+#app-container {
+    width: 90%;
+    max-width: 400px;
     background: var(--card-bg);
-    padding: 22px;
-    border-radius: 24px;
-    box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.05);
-    border: 1px solid var(--border-color);
-    margin-bottom: 20px;
+    padding: 2rem;
+    border-radius: 20px;
+    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+    text-align: center;
 }
 
-/* 4. GIORNI E SLOT */
-.days-row {
-    display: flex;
-    justify-content: space-between;
-    gap: 10px;
-    margin-bottom: 20px;
-}
+.screen { transition: opacity 0.3s ease; }
 
-.day-item { flex: 1; }
+h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
+p { color: #666; margin-bottom: 2rem; }
 
-.day-btn {
+button {
     width: 100%;
-    padding: 16px 5px;
-    border-radius: 16px;
-    border: 2px solid var(--border-color);
+    padding: 12px;
+    border-radius: 8px;
+    border: 1px solid #ddd;
     background: white;
-    font-weight: 700;
-    font-size: 15px;
-    transition: all 0.2s ease;
-}
-
-.day-btn.active {
-    background-color: var(--primary-color) !important;
-    border-color: var(--primary-color) !important;
-    color: white !important;
-    box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-}
-
-.slots {
-    background: #f9fafb;
-    padding: 18px;
-    border-radius: 18px;
-    margin-bottom: 12px;
-    border: 1px solid var(--border-color);
-    display: none;
-}
-
-.slots:not(.disabled) {
-    display: block;
-    animation: slideDown 0.3s ease-out;
-}
-
-.slots-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 12px;
-}
-
-.slots label {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    font-size: 14px;
-    font-weight: 600;
     cursor: pointer;
-}
-
-/* 5. INPUT E SELECT (BENVENUTO) */
-input[type="text"], select {
-    -webkit-appearance: none;
-    appearance: none;
-    outline: none;
-    transition: border-color 0.2s;
-}
-
-input[type="text"]:focus, select:focus {
-    border-color: var(--primary-color) !important;
-}
-
-/* 6. PULSANTI */
-.btn-primary {
-    background-color: var(--primary-color) !important;
-    color: white;
-    width: 100%;
-    padding: 18px;
-    border: none;
-    border-radius: 16px;
-    font-weight: 700;
-    font-size: 16px;
-    cursor: pointer;
+    font-size: 1rem;
     display: flex;
     align-items: center;
     justify-content: center;
     gap: 10px;
-    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+    transition: background 0.2s;
 }
 
-.btn-google {
-    width: 100%;
-    padding: 16px;
-    border: 1px solid var(--border-color);
-    background: white;
-    border-radius: 16px;
-    font-weight: 600;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-}
+button:hover { background: #f8f9fa; }
 
-.btn-whatsapp {
-    background-color: #25d366 !important;
+button.primary {
+    background-color: var(--primary-color);
     color: white;
-    width: 100%;
-    padding: 18px;
     border: none;
-    border-radius: 18px;
-    font-weight: 800;
-    font-size: 17px;
-    box-shadow: 0 8px 20px rgba(37, 211, 102, 0.25);
+    margin-top: 1rem;
 }
 
-.btn-logout {
-    background: #fee2e2;
-    color: #ef4444;
-    width: 100%;
-    border: none;
-    padding: 14px;
-    border-radius: 12px;
-    font-weight: 700;
-    margin-top: 20px;
+button.secondary {
+    padding: 5px 10px;
+    font-size: 0.8rem;
+    width: auto;
+    border-color: #ff4444;
+    color: #ff4444;
 }
 
-/* 7. COLORI IMPOSTAZIONI */
-.colors-container {
-    display: flex;
-    justify-content: center;
-    gap: 15px;
-    padding: 20px 0;
+.card {
+    border: 1px dashed #ccc;
+    padding: 1rem;
+    border-radius: 10px;
+    margin-top: 1rem;
 }
-
-.color-dot {
-    width: 40px;
-    height: 40px;
-    border-radius: 50%;
-    border: 3px solid white;
-    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    cursor: pointer;
-}
-
-/* 8. ANIMAZIONI E MODAL */
-@keyframes slideDown {
-    from { opacity: 0; transform: translateY(-8px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
-@keyframes popIn {
-    from { transform: scale(0.9); opacity: 0; }
-    to { transform: scale(1); opacity: 1; }
-}
-
-#onboardingModal, #matchModal {
-    backdrop-filter: blur(8px);
-    -webkit-backdrop-filter: blur(8px);
-}
-
-.fa-spin { animation: spin 1s linear infinite; }
-@keyframes spin { 100% { transform: rotate(360deg); } }
