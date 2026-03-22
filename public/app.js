@@ -1,8 +1,10 @@
+// 1. IMPORTAZIONI (Tutte insieme in alto)
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+// Aggiungiamo Firestore qui
+import { getFirestore, collection, addDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
-import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-auth.js";
-
-// Configurazione del tuo progetto Firebase
+// 2. CONFIGURAZIONE (Usa la tua config esistente)
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -12,46 +14,72 @@ const firebaseConfig = {
     appId: "1:484354825970:web:79bc652c6b39fb57d27a6b"
 };
 
-// Inizializza Firebase
+// 3. INIZIALIZZAZIONE
 const app = initializeApp(firebaseConfig);
 const auth = getAuth(app);
+const db = getFirestore(app); // Inizializziamo il database
 const provider = new GoogleAuthProvider();
 
-// Elementi del DOM
+// --- LOGICA DI AUTENTICAZIONE ---
+
 const loginScreen = document.getElementById('login-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
-const btnLogin = document.getElementById('btn-google-login');
-const btnLogout = document.getElementById('btn-logout');
 
-// Funzione Login
-btnLogin.onclick = async () => {
-    try {
-        await signInWithPopup(auth, provider);
-        console.log("Login effettuato con successo!");
-    } catch (error) {
-        console.error("Errore durante il login:", error.message);
-        alert("Errore: " + error.message);
-    }
-};
+// Gestione Login
+document.getElementById('btn-google-login').addEventListener('click', () => {
+    signInWithRedirect(auth, provider);
+});
 
-// Funzione Logout
-btnLogout.onclick = () => {
-    signOut(auth).then(() => {
-        console.log("Logout effettuato.");
-    });
-};
+// Gestione Logout
+document.getElementById('btn-logout').addEventListener('click', () => {
+    signOut(auth);
+});
 
-// Osservatore dello stato (Switch automatico delle schermate)
+// Controllo stato utente (chi è loggato?)
 onAuthStateChanged(auth, (user) => {
     if (user) {
-        // Utente loggato
         loginScreen.style.display = 'none';
         dashboardScreen.style.display = 'block';
-        userDisplayName.innerText = user.displayName || "Utente";
+        userDisplayName.textContent = user.displayName;
     } else {
-        // Utente non loggato
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
+    }
+});
+
+// --- NUOVA LOGICA: SALVATAGGIO DISPONIBILITÀ ---
+
+document.getElementById('btn-save-event').addEventListener('click', async () => {
+    const titoloInput = document.getElementById('event-title');
+    const titolo = titoloInput.value;
+    
+    // Recuperiamo i giorni selezionati
+    const checkboxEsito = document.querySelectorAll('.day-check:checked');
+    const giorniSelezionati = Array.from(checkboxEsito).map(cb => cb.value);
+
+    if (!titolo) {
+        alert("Per favore, inserisci un nome per l'evento!");
+        return;
+    }
+
+    try {
+        const docRef = await addDoc(collection(db, "eventi"), {
+            titolo: titolo,
+            giorni: giorniSelezionati,
+            creatoDa: auth.currentUser.uid, // Salviamo chi ha creato l'evento
+            nomeCreatore: auth.currentUser.displayName,
+            timestamp: new Date()
+        });
+        
+        alert("Grande! Evento '" + titolo + "' salvato.");
+        
+        // Puliamo il modulo dopo il salvataggio
+        titoloInput.value = "";
+        document.querySelectorAll('.day-check').forEach(cb => cb.checked = false);
+        
+    } catch (e) {
+        console.error("Errore nel salvataggio: ", e);
+        alert("Ops! Qualcosa è andato storto nel salvataggio.");
     }
 });
