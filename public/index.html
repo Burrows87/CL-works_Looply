@@ -20,6 +20,17 @@
             overflow: hidden;
         }
 
+        /* CORREZIONE: Assicuriamoci che lo schermo nascosto non blocchi i click */
+        .screen { 
+            transition: opacity 0.3s ease; 
+        }
+        
+        /* Quando display è none, forziamo la rimozione di ogni interazione */
+        .screen[style*="display: none"] {
+            pointer-events: none;
+            user-select: none;
+        }
+
         /* Bottone Giorno principale */
         .day-toggle {
             width: 100%;
@@ -58,7 +69,7 @@
 
         /* Contenitore Fasce Orarie */
         .time-slots { 
-            display: none; /* Nascosto di default */
+            display: none; 
             gap: 10px; 
             padding: 5px 10px 15px 10px;
             flex-wrap: wrap;
@@ -82,6 +93,7 @@
             flex-grow: 1;
             text-align: center;
             font-weight: 500;
+            width: auto; /* Evita che prendano il 100% dal CSS generale */
         }
 
         .slot-btn.selected {
@@ -102,7 +114,7 @@
         <div id="login-screen" class="screen">
             <h1>Looply</h1>
             <p>Organizza il tuo weekend con gli amici</p>
-            <button id="btn-google-login">
+            <button id="btn-google-login" type="button" style="z-index: 999; position: relative;">
                 <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" alt="Google Logo" width="20">
                 Accedi con Google
             </button>
@@ -111,7 +123,7 @@
         <div id="dashboard-screen" class="screen" style="display: none;">
             <header>
                 <h2>Ciao, <span id="user-display-name">...</span>!</h2>
-                <button id="btn-logout" class="secondary">Esci</button>
+                <button id="btn-logout" class="secondary" type="button">Esci</button>
             </header>
             
             <main>
@@ -147,7 +159,7 @@
                         </div>
                     </div>
 
-                    <button id="btn-save-event" class="primary" style="margin-top: 20px; width: 100%;">
+                    <button id="btn-save-event" class="primary" style="margin-top: 20px; width: 100%;" type="button">
                         Invia Disponibilità
                     </button>
                 </div>
