@@ -1,5 +1,5 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
-import { getAuth, signInWithRedirect, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, onSnapshot, orderBy } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. CONFIGURAZIONE ---
@@ -23,28 +23,37 @@ const dashboardScreen = document.getElementById('dashboard-screen');
 const userDisplayName = document.getElementById('user-display-name');
 const eventsList = document.getElementById('events-list');
 
-// --- 3. GESTIONE INTERFACCIA DINAMICA (Fasce Orarie) ---
-// Mostra/Nasconde le fasce orarie quando si clicca sul giorno
-document.querySelectorAll('.day-check').forEach(check => {
-    check.addEventListener('change', (e) => {
+// --- 3. GESTIONE INTERFACCIA DINAMICA ---
+// Mostra le fasce orarie solo quando il giorno è selezionato
+document.addEventListener('change', (e) => {
+    if (e.target.classList.contains('day-check')) {
         const slotsDiv = document.getElementById(`slots-${e.target.id}`);
-        slotsDiv.style.display = e.target.checked ? 'flex' : 'none';
-        // Se deseleziono il giorno, resetto anche i bottoni delle fasce
-        if (!e.target.checked) {
-            slotsDiv.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
+        if (slotsDiv) {
+            slotsDiv.style.display = e.target.checked ? 'flex' : 'none';
+            if (!e.target.checked) {
+                slotsDiv.querySelectorAll('.slot-btn').forEach(btn => btn.classList.remove('selected'));
+            }
         }
-    });
+    }
 });
 
-// Gestisce la selezione dei bottoni delle fasce orarie
+// Gestione selezione bottoni fasce orarie
 document.addEventListener('click', (e) => {
     if (e.target.classList.contains('slot-btn')) {
         e.target.classList.toggle('selected');
     }
 });
 
-// --- 4. GESTIONE AUTENTICAZIONE ---
-document.getElementById('btn-google-login').addEventListener('click', () => signInWithRedirect(auth, provider));
+// --- 4. GESTIONE AUTENTICAZIONE (Risolto problema Loop) ---
+document.getElementById('btn-google-login').addEventListener('click', async () => {
+    try {
+        await signInWithPopup(auth, provider);
+    } catch (error) {
+        console.error("Errore durante il login:", error);
+        alert("Errore nel login: assicurati di aver autorizzato il dominio su Firebase.");
+    }
+});
+
 document.getElementById('btn-logout').addEventListener('click', () => signOut(auth));
 
 onAuthStateChanged(auth, (user) => {
@@ -62,8 +71,6 @@ onAuthStateChanged(auth, (user) => {
 // --- 5. SALVATAGGIO E LOGICA MATCH ---
 document.getElementById('btn-save-event').addEventListener('click', async () => {
     const selectedSlots = [];
-    
-    // Raccogliamo tutti i bottoni "selected"
     document.querySelectorAll('.slot-btn.selected').forEach(btn => {
         selectedSlots.push({
             giorno: btn.dataset.day,
@@ -74,7 +81,6 @@ document.getElementById('btn-save-event').addEventListener('click', async () => 
     if (selectedSlots.length === 0) return alert("Seleziona almeno un giorno e una fascia oraria!");
 
     try {
-        // Salviamo la disponibilità su Firestore
         await addDoc(collection(db, "eventi"), {
             nomeCreatore: auth.currentUser.displayName,
             creatoDa: auth.currentUser.uid,
@@ -82,12 +88,9 @@ document.getElementById('btn-save-event').addEventListener('click', async () => 
             dataCreazione: new Date()
         });
 
-        // Avviamo la ricerca del match
         cercaMatchInTempoReale(selectedSlots);
-
-        // Reset Interfaccia
         resetInterfaccia();
-        alert("Disponibilità salvata! Verifico se qualcuno è libero come te...");
+        alert("Disponibilità salvata con successo!");
 
     } catch (e) {
         console.error("Errore nel salvataggio:", e);
@@ -101,7 +104,6 @@ function cercaMatchInTempoReale(mieiSlot) {
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((doc) => {
             const altro = doc.data();
-            // Confrontiamo ogni mio slot con ogni slot dell'altro utente
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
@@ -142,16 +144,15 @@ function caricaDisponibilita() {
             div.style.textAlign = "left";
             div.style.padding = "10px";
             
-            // Creiamo i tag per le fasce orarie
             const slotHtml = disp.slot.map(s => 
-                `<span style="background:#e8f0fe; color:#1967d2; padding:2px 8px; border-radius:10px; font-size:0.75rem; margin-right:5px;">
+                `<span style="background:#e8f0fe; color:#1967d2; padding:2px 8px; border-radius:10px; font-size:0.75rem; margin-right:5px; display:inline-block; margin-top:5px;">
                     ${s.giorno} ${s.fascia}
                 </span>`
             ).join("");
 
             div.innerHTML = `
                 <strong style="color: #333;">${disp.nomeCreatore}</strong> è disponibile:<br>
-                <div style="margin-top:8px;">${slotHtml}</div>
+                <div style="margin-top:5px;">${slotHtml}</div>
             `;
             eventsList.appendChild(div);
         });
@@ -162,6 +163,7 @@ function resetInterfaccia() {
     document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
     document.querySelectorAll('.day-check').forEach(c => {
         c.checked = false;
-        document.getElementById(`slots-${c.id}`).style.display = 'none';
+        const slotsDiv = document.getElementById(`slots-${c.id}`);
+        if(slotsDiv) slotsDiv.style.display = 'none';
     });
 }
