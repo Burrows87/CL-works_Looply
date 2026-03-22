@@ -2,6 +2,7 @@
     --primary-color: #4285F4;
     --bg-color: #f0f2f5;
     --card-bg: #ffffff;
+    --accent-color: #34A853; /* Un bel verde per le conferme */
 }
 
 body {
@@ -10,8 +11,9 @@ body {
     margin: 0;
     display: flex;
     justify-content: center;
-    align-items: center;
-    height: 100vh;
+    align-items: flex-start; /* Cambiato da center a flex-start per permettere lo scroll */
+    min-height: 100vh;
+    padding-top: 2rem;
 }
 
 #app-container {
@@ -22,13 +24,27 @@ body {
     border-radius: 20px;
     box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     text-align: center;
+    margin-bottom: 2rem;
 }
 
 .screen { transition: opacity 0.3s ease; }
 
 h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
-p { color: #666; margin-bottom: 2rem; }
+h3 { margin-top: 0; color: #333; }
+p { color: #666; margin-bottom: 1.5rem; }
 
+/* Input di testo per il titolo evento */
+input[type="text"] {
+    width: 100%;
+    padding: 12px;
+    margin-bottom: 1rem;
+    border: 1px solid #ddd;
+    border-radius: 8px;
+    box-sizing: border-box;
+    font-size: 1rem;
+}
+
+/* Pulsanti */
 button {
     width: 100%;
     padding: 12px;
@@ -41,7 +57,7 @@ button {
     align-items: center;
     justify-content: center;
     gap: 10px;
-    transition: background 0.2s;
+    transition: all 0.2s;
 }
 
 button:hover { background: #f8f9fa; }
@@ -50,8 +66,10 @@ button.primary {
     background-color: var(--primary-color);
     color: white;
     border: none;
-    margin-top: 1rem;
+    font-weight: bold;
 }
+
+button.primary:hover { background-color: #357ae8; }
 
 button.secondary {
     padding: 5px 10px;
@@ -61,9 +79,56 @@ button.secondary {
     color: #ff4444;
 }
 
+/* Sezione card e creazione evento */
 .card {
-    border: 1px dashed #ccc;
-    padding: 1rem;
-    border-radius: 10px;
+    border: 1px solid #eee;
+    padding: 1.5rem;
+    border-radius: 15px;
     margin-top: 1rem;
+    background: #fdfdfd;
 }
+
+/* --- NUOVA SEZIONE: SELETTORE GIORNI --- */
+
+.days-selector {
+    display: flex;
+    gap: 8px;
+    margin: 1rem 0;
+}
+
+/* Nascondiamo il quadratino del checkbox */
+.days-selector input[type="checkbox"] {
+    display: none;
+}
+
+/* Trasformiamo la label in un pulsante cliccabile */
+.days-selector label {
+    flex: 1;
+    padding: 10px 5px;
+    background: #eee;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 0.85rem;
+    font-weight: 500;
+    transition: all 0.2s;
+    color: #555;
+    border: 2px solid transparent;
+}
+
+/* Stile quando il giorno è selezionato */
+.days-selector input[type="checkbox"]:checked + label {
+    background-color: #e8f0fe;
+    border-color: var(--primary-color);
+    color: var(--primary-color);
+}
+
+header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 2rem;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 1rem;
+}
+
+header h2 { font-size: 1.2rem; margin: 0; }
