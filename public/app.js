@@ -38,7 +38,6 @@ document.addEventListener('click', (e) => {
     }
 });
 
-// Funzione per applicare il colore
 const applyThemeColor = (color) => {
     if (!color) return;
     document.documentElement.style.setProperty('--primary-color', color);
@@ -46,7 +45,7 @@ const applyThemeColor = (color) => {
     if (metaTheme) metaTheme.setAttribute('content', color);
 };
 
-// --- 4. AUTENTICAZIONE E REGISTRAZIONE (OTTIMIZZATA) ---
+// --- 4. AUTENTICAZIONE E REGISTRAZIONE ---
 let isLoggingOut = false;
 let matchGiaMostrati = new Set(); 
 
@@ -56,147 +55,86 @@ onAuthStateChanged(auth, async (user) => {
         const userDoc = await getDoc(userDocRef);
 
         if (userDoc.exists() && userDoc.data().nome) {
-            // 1. MOSTRA DASHBOARD
             const dati = userDoc.data();
-            loginScreen.style.display = 'none';
-            document.getElementById('registration-screen').style.display = 'none';
-            dashboardScreen.style.display = 'block';
+            if (loginScreen) loginScreen.style.display = 'none';
+            if (document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none';
+            if (dashboardScreen) dashboardScreen.style.display = 'block';
             
-            userDisplayName.textContent = dati.nome;
+            if (userDisplayName) userDisplayName.textContent = dati.nome;
             if (dati.themeColor) applyThemeColor(dati.themeColor);
 
-            // 2. AVVIA IL RADAR DEI MATCH
-            console.log("Radar avviato per:", dati.nome);
-            
             const qMiei = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
-            
             onSnapshot(qMiei, (snapshot) => {
                 let mieiSlotAttuali = [];
                 snapshot.forEach(doc => {
                     mieiSlotAttuali = mieiSlotAttuali.concat(doc.data().slot);
                 });
-
-                // Se ho degli slot, cerco i match. 
-                // Se non ne ho, il radar resta "caldo" in attesa che io ne salvi uno.
                 if (mieiSlotAttuali.length > 0) {
                     cercaMatchInTempoReale(mieiSlotAttuali);
                 }
             });
-
         } else {
-            // UTENTE NUOVO
-            loginScreen.style.display = 'none';
-            dashboardScreen.style.display = 'none';
-            document.getElementById('registration-screen').style.display = 'block';
+            if (loginScreen) loginScreen.style.display = 'none';
+            if (dashboardScreen) dashboardScreen.style.display = 'none';
+            if (document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'block';
         }
     } else {
-        // LOGOUT
-        loginScreen.style.display = 'block';
-        dashboardScreen.style.display = 'none';
-        document.getElementById('registration-screen').style.display = 'none';
+        if (loginScreen) loginScreen.style.display = 'block';
+        if (dashboardScreen) dashboardScreen.style.display = 'none';
+        if (document.getElementById('registration-screen')) document.getElementById('registration-screen').style.display = 'none';
     }
 });
 
-
-
-
-// --- 5. SALVATAGGIO PROFILO (ANTI-BUG WHATSAPP) ---
-
-document.getElementById('btn-save-profile').addEventListener('click', async () => {
-    const nomeScelto = document.getElementById('reg-name').value;
-    const telScelto = document.getElementById('reg-phone').value;
-    const user = auth.currentUser;
-
-    if (!user) return;
-
-    // PULIZIA NUMERO: Rimuove tutto ciò che non è un numero
-    let telPulito = telScelto.replace(/\D/g, '');
-
-    // Se il numero ha 10 cifre, aggiungiamo il 39 davanti
-    if (telPulito.length === 10 && !telPulito.startsWith('39')) {
-        telPulito = '39' + telPulito;
-    }
-
-    if (nomeScelto.trim().length < 2 || telPulito.length < 10) {
-        return alert("Per favore, inserisci un nome valido e un numero completo.");
-    }
-
-    try {
-        // Salvataggio su Firestore (Sintassi v10)
-        await setDoc(doc(db, "users", user.uid), {
-            nome: nomeScelto.trim(),
-            telefono: telPulito,
-            email: user.email,
-            uid: user.uid,
-            dataCreazione: new Date()
-        });
-
-        alert("Profilo creato correttamente!");
-        location.reload(); // Ricarica per entrare nella Dashboard
-
-    } catch (e) { 
-        console.error("Errore:", e);
-        alert("Errore nel salvataggio: " + e.message); 
-    }
-});
-
-
-document.getElementById('btn-save-event').onclick = async () => {
-    const selectedSlots = [];
-    document.querySelectorAll('.slot-btn.selected').forEach(btn => {
-        selectedSlots.push({ giorno: btn.dataset.day, fascia: btn.textContent.trim() });
+// --- 5. SALVATAGGIO PROFILO ED EVENTI ---
+const btnSaveProfile = document.getElementById('btn-save-profile');
+if (btnSaveProfile) {
+    btnSaveProfile.addEventListener('click', async () => {
+        const nomeScelto = document.getElementById('reg-name').value;
+        const telScelto = document.getElementById('reg-phone').value;
+        const user = auth.currentUser;
+        if (!user) return;
+        let telPulito = telScelto.replace(/\D/g, '');
+        if (telPulito.length === 10 && !telPulito.startsWith('39')) telPulito = '39' + telPulito;
+        if (nomeScelto.trim().length < 2 || telPulito.length < 10) return alert("Dati non validi.");
+        try {
+            await setDoc(doc(db, "users", user.uid), {
+                nome: nomeScelto.trim(), telefono: telPulito, email: user.email, uid: user.uid, dataCreazione: new Date()
+            });
+            location.reload();
+        } catch (e) { console.error(e); }
     });
+}
 
-    if (selectedSlots.length === 0) return alert("Seleziona almeno un orario!");
-
-    try {
-        // Recuperiamo i dati aggiornati dell'utente dal suo documento
-        const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-        if (!userDoc.exists()) return alert("Errore: Profilo utente non trovato!");
-        
-        const userData = userDoc.data();
-
-        await addDoc(collection(db, "eventi"), {
-            nomeCreatore: userData.nome || "Utente",
-            telefonoCreatore: userData.telefono || "", // Assicuriamoci che non sia undefined
-            creatoDa: auth.currentUser.uid,
-            slot: selectedSlots,
-            dataCreazione: new Date()
+const btnSaveEvent = document.getElementById('btn-save-event');
+if (btnSaveEvent) {
+    btnSaveEvent.onclick = async () => {
+        const selectedSlots = [];
+        document.querySelectorAll('.slot-btn.selected').forEach(btn => {
+            selectedSlots.push({ giorno: btn.dataset.day, fascia: btn.textContent.trim() });
         });
-        
-        alert("Disponibilità salvata!");
-        resetInterfaccia();
-        // Nota: cercaMatchInTempoReale si attiverà da solo grazie a onSnapshot
-    } catch (e) { 
-        console.error("Errore salvataggio evento:", e);
-        alert("Errore: " + e.message); 
-    }
-};
+        if (selectedSlots.length === 0) return alert("Seleziona almeno un orario!");
+        try {
+            const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+            const userData = userDoc.data();
+            await addDoc(collection(db, "eventi"), {
+                nomeCreatore: userData.nome, telefonoCreatore: userData.telefono, creatoDa: auth.currentUser.uid, slot: selectedSlots, dataCreazione: new Date()
+            });
+            alert("Salvato!");
+            resetInterfaccia();
+        } catch (e) { alert("Errore: " + e.message); }
+    };
+}
 
-// --- 6. LOGICA MATCH (VERSIONE RADAR ANTI-DUPLICATI) ---
-let matchGiaMostrati = new Set(); 
-
+// --- 6. LOGICA MATCH ---
 function cercaMatchInTempoReale(mieiSlot) {
-    if (!mieiSlot || mieiSlot.length === 0) return;
-
-    // Cerchiamo tutti gli eventi che NON sono stati creati da me
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
-    
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((doc) => {
             const altro = doc.data();
-            const altroId = doc.id; // ID unico dell'evento dell'amico
-
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
-                    // Controllo coincidenza Giorno + Fascia
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
-                        
-                        // Creiamo una chiave univoca per questo specifico match
-                        // Esempio: "ID_EVENTO_Lunedì_Mattina"
-                        const matchKey = `${altroId}_${mioSlot.giorno}_${mioSlot.fascia}`;
-                        
-                        // Se non abbiamo ancora mostrato questo specifico match, mostriamolo!
+                        const matchKey = `${doc.id}_${mioSlot.giorno}_${mioSlot.fascia}`;
                         if (!matchGiaMostrati.has(matchKey)) {
                             matchGiaMostrati.add(matchKey);
                             proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, mioSlot.giorno, mioSlot.fascia);
@@ -208,141 +146,69 @@ function cercaMatchInTempoReale(mieiSlot) {
     });
 }
 
-function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
-    if (!numeroAmico || numeroAmico === "") {
-        console.error("Match trovato ma manca il numero di:", nomeAmico);
-        return; 
-    }
-
-    // Pulizia finale del numero (rimuove spazi o caratteri strani)
-    const numeroPulito = String(numeroAmico).replace(/\D/g, '');
-    
-    // Messaggio personalizzato automatico
-    const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
-    const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
-    
-    // Suoni e Vibrazione (se supportati dal browser)
-    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
-
-    // Popup di sistema
-    if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\n\nEntrambi siete liberi ${giorno} (${fascia}).\n\nVuoi scrivergli su WhatsApp?`)) {
-        window.open(url, '_blank');
-    }
+function proponiWhatsApp(n, tel, g, f) {
+    const url = `https://wa.me/${tel}?text=${encodeURIComponent("Ciao " + n + ", ho visto su Looply che siamo entrambi liberi " + g + " (" + f.toLowerCase() + "), usciamo?")}`;
+    if (confirm("🎉 MATCH CON " + n.toUpperCase() + "!\nVuoi scrivergli?")) window.open(url, '_blank');
 }
 
 function resetInterfaccia() {
-    // Pulisce i bottoni degli slot
     document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-    // Pulisce i toggle dei giorni
     document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
-    // Nasconde tutte le sezioni orari
     document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
 }
-
-// --- FINE SEZIONE 6 ---
-
 
 // --- 7. LOGICA PRIVACY ---
 const checkTerms = document.getElementById('check-terms');
 const checkPrivacy = document.getElementById('check-privacy');
+const googleLoginBtn = document.getElementById('btn-google-login');
 
 function validaCheck() { 
-    const btn = document.getElementById('btn-google-login');
-    if(btn) btn.disabled = !(checkTerms.checked && checkPrivacy.checked); 
+    if(googleLoginBtn && checkTerms && checkPrivacy) {
+        googleLoginBtn.disabled = !(checkTerms.checked && checkPrivacy.checked);
+    }
 }
-
 if (checkTerms && checkPrivacy) {
     checkTerms.onchange = validaCheck;
     checkPrivacy.onchange = validaCheck;
-    // Eseguiamo il controllo al caricamento in caso i browser ricordino le spunte
-    validaCheck(); 
+    validaCheck();
 }
-
-
 
 // --- 8. IMPOSTAZIONI TEMA ---
-document.getElementById('btn-open-settings').addEventListener('click', () => {
-    const panel = document.getElementById('settings-panel');
-    const isHidden = panel.style.display === 'none';
-    panel.style.display = isHidden ? 'block' : 'none';
-    
-    const icon = document.querySelector('#btn-open-settings svg');
-    if(icon) {
-        icon.style.transition = 'transform 0.3s ease';
-        icon.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
-    }
-});
-
+const btnSettings = document.getElementById('btn-open-settings');
+const panel = document.getElementById('settings-panel');
+if (btnSettings && panel) {
+    btnSettings.addEventListener('click', () => {
+        const isHidden = panel.style.display === 'none' || panel.style.display === '';
+        panel.style.display = isHidden ? 'block' : 'none';
+        btnSettings.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+    });
+}
 document.querySelectorAll('.color-dot').forEach(dot => {
     dot.addEventListener('click', async (e) => {
-        const selectedColor = e.target.getAttribute('data-color');
-        applyThemeColor(selectedColor);
-        
-        const user = auth.currentUser;
-        if (user) {
-            try {
-                await updateDoc(doc(db, "users", user.uid), {
-                    themeColor: selectedColor
-                });
-            } catch (error) { console.error("Errore salvataggio tema:", error); }
-        }
+        const color = e.target.getAttribute('data-color');
+        applyThemeColor(color);
+        if (auth.currentUser) await updateDoc(doc(db, "users", auth.currentUser.uid), { themeColor: color });
     });
 });
-if ('serviceWorker' in navigator) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker.register('/sw.js')
-      .then(reg => console.log('Service Worker registrato!', reg))
-      .catch(err => console.error('Errore registrazione SW:', err));
-  });
-}
 
-
-// --- 9. LOGICA DI LOGIN EFFETTIVA ---
-const googleLoginBtn = document.getElementById('btn-google-login');
-
+// --- 9. LOGIN ---
 if (googleLoginBtn) {
-    // Rimuoviamo eventuali altri listener per sicurezza e aggiungiamo questo
-    googleLoginBtn.onclick = async (e) => {
-        e.preventDefault(); // Impedisce comportamenti strani del form
-        
-        console.log("Pulsante cliccato: avvio procedura...");
-        
+    googleLoginBtn.onclick = async () => {
         try {
-            // Proviamo con il Popup
             await signInWithPopup(auth, provider);
-            console.log("Login riuscito con successo");
         } catch (error) {
-            console.error("Errore durante il login:", error);
-            
-            // Se il popup viene bloccato, l'errore solitamente è 'auth/popup-blocked'
-            if (error.code === 'auth/popup-blocked') {
-                alert("Il popup di Google è stato bloccato dal browser. Abilitalo per continuare.");
-            } else {
-                alert("Errore nel login: " + error.message);
-            }
+            console.error(error);
+            alert("Errore login: " + error.message);
         }
     };
 }
 
-// --- 10. LOGICA LOGOUT ---
+// --- 10. LOGOUT ---
 const logoutBtn = document.getElementById('btn-logout');
-
 if (logoutBtn) {
     logoutBtn.addEventListener('click', async () => {
-        try {
-            console.log("Tentativo di logout...");
-            isLoggingOut = true; // Impedisce al listener onAuthStateChanged di fare controlli inutili
-            
-            await signOut(auth);
-            
-            console.log("Logout effettuato.");
-            // Ricarichiamo la pagina per resettare completamente l'interfaccia e tornare al login
-            window.location.reload(); 
-            
-        } catch (error) {
-            console.error("Errore durante il logout:", error);
-            alert("Errore nell'uscita: " + error.message);
-            isLoggingOut = false;
-        }
+        isLoggingOut = true;
+        await signOut(auth);
+        location.reload();
     });
 }
