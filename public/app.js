@@ -93,6 +93,21 @@ onAuthStateChanged(auth, async (user) => {
 
 // --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
+    // --- AGGIUNGI QUESTO DENTRO IL WINDOW LISTENER DEL PUNTO 4 ---
+
+// Gestione click sul tasto "COLLEGA I TUOI 5 AMICI"
+if (e.target.id === 'btn-collega-amici' || e.target.closest('#btn-collega-amici')) {
+    const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const u = userSnap.data();
+    
+    // Generiamo il link che contiene il tuo numero
+    const linkApp = `${window.location.origin}/?ref=${u.telefono}`;
+    const msg = `Ciao! Entra su Looply da questo link così l'app ci collega. Se saremo liberi negli stessi orari, scatterà il Match! 🔥\n\n${linkApp}`;
+    
+    // Apre WhatsApp per permetterti di scegliere i 5 amici
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+}
+    
     
     // CAMBIO COLORE
     if (e.target.classList.contains('color-dot')) {
