@@ -162,7 +162,29 @@
         <p style="font-size: 12px; color: #999; margin-bottom: 20px;">
             * Il numero serve esclusivamente per creare il link diretto a WhatsApp nei match.
         </p>
+<div id="registration-screen" style="display:none; text-align: center; padding: 20px;">
+    <h2>Benvenuto su Looply!</h2>
+    <input type="text" id="reg-name" placeholder="Il tuo nome" style="width: 100%; padding: 12px; margin-bottom: 10px; border-radius: 10px; border: 1px solid #ddd;">
+    <input type="tel" id="reg-phone" placeholder="Il tuo numero (es. 333...)" style="width: 100%; padding: 12px; margin-bottom: 20px; border-radius: 10px; border: 1px solid #ddd;">
 
+    <p style="margin-bottom: 15px; color: #666; font-size: 0.9rem;">Scegli i tuoi 3 giorni preferiti della settimana:</p>
+    <div id="reg-days-selection" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 25px;">
+        <button type="button" class="reg-day-btn" data-day="Lunedì">Lun</button>
+        <button type="button" class="reg-day-btn" data-day="Martedì">Mar</button>
+        <button type="button" class="reg-day-btn" data-day="Mercoledì">Mer</button>
+        <button type="button" class="reg-day-btn" data-day="Giovedì">Gio</button>
+        <button type="button" class="reg-day-btn" data-day="Venerdì">Ven</button>
+        <button type="button" class="reg-day-btn" data-day="Sabato">Sab</button>
+        <button type="button" class="reg-day-btn" data-day="Domenica">Dom</button>
+    </div>
+    <div style="margin-bottom: 20px; text-align: left; font-size: 0.8rem;">
+        <label><input type="checkbox" id="check-terms"> Accetto i Termini</label><br>
+        <label><input type="checkbox" id="check-privacy"> Accetto la Privacy</label>
+    </div>
+    
+    <button id="btn-save-profile" style="width: 100%; padding: 15px; background: var(--primary-color); color: white; border: none; border-radius: 12px; font-weight: bold;">ENTRA IN LOOPLY</button>
+</div>
+        
         <button id="btn-save-profile" 
                 style="width: 100%; padding: 15px; background-color: #25D366; color: white; border: none; border-radius: 8px; font-weight: bold; cursor: pointer; font-size: 16px;">
             Salva e Inizia ad Organizzare
