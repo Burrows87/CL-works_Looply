@@ -129,27 +129,79 @@ window.addEventListener('click', async (e) => {
     }
 });
 
-// --- 5. SALVATAGGIO ---
+// --- 5. SALVATAGGIO E INVIO WHATSAPP ---
+
+// Registrazione Profilo
 document.getElementById('btn-save-profile').onclick = async () => {
     const nome = document.getElementById('reg-name').value;
     const tel = document.getElementById('reg-phone').value;
     if (!nome || !tel || regSelectedDays.length === 0) return alert("Dati incompleti!");
+    
     await setDoc(doc(db, "users", auth.currentUser.uid), {
-        nome, telefono: tel.replace(/\D/g, ''), giorniPreferiti: regSelectedDays, uid: auth.currentUser.uid
+        nome, 
+        telefono: tel.replace(/\D/g, ''), 
+        giorniPreferiti: regSelectedDays, 
+        uid: auth.currentUser.uid
     });
     location.reload();
 };
 
+// Salvataggio Evento e Invio WhatsApp
 document.getElementById('btn-save-event').onclick = async () => {
     const sel = [];
+    const groupedSlots = {};
+
+    // Raccogliamo gli slot selezionati
     document.querySelectorAll('.slot-btn.selected').forEach(b => {
-        sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
+        const giorno = b.dataset.day;
+        const fascia = b.textContent.trim();
+        
+        sel.push({ giorno, fascia });
+
+        // Raggruppiamo per il messaggio WhatsApp
+        if (!groupedSlots[giorno]) {
+            groupedSlots[giorno] = [];
+        }
+        groupedSlots[giorno].push(fascia);
     });
-    if (sel.length === 0) return alert("Seleziona un orario!");
-    const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
-    await addDoc(collection(db, "eventi"), {
-        nomeCreatore: u.nome, telefonoCreatore: u.telefono, creatoDa: auth.currentUser.uid, slot: sel, dataCreazione: new Date()
-    });
-    alert("Salvato!");
-    location.reload();
+
+    if (sel.length === 0) return alert("Seleziona almeno un orario!");
+
+    try {
+        // 1. Recupero dati utente da Firestore
+        const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+        const u = userSnap.data();
+
+        // 2. Salvataggio su Firebase (Opzionale, ma utile per storico)
+        await addDoc(collection(db, "eventi"), {
+            nomeCreatore: u.nome,
+            telefonoCreatore: u.telefono,
+            creatoDa: auth.currentUser.uid,
+            slot: sel,
+            dataCreazione: new Date()
+        });
+
+        // 3. Costruzione messaggio WhatsApp
+        let messaggio = `Ciao! Sono *${u.nome}*, ecco le mie disponibilità per il weekend:\n\n`;
+        
+        for (const giorno in groupedSlots) {
+            messaggio += `📅 *${giorno}*: ${groupedSlots[giorno].join(", ")}\n`;
+        }
+        
+        messaggio += `\nOrganizziamo qualcosa? 🚀`;
+
+        // 4. Apertura WhatsApp
+        const waUrl = `https://wa.me/?text=${encodeURIComponent(messaggio)}`;
+        window.open(waUrl, '_blank');
+
+        // 5. Reset e feedback
+        alert("Disponibilità salvata e inviata!");
+        location.reload();
+
+    } catch (error) {
+        console.error("Errore nel salvataggio:", error);
+        alert("Ops! Qualcosa è andato storto durante l'invio.");
+    }
 };
+
+
