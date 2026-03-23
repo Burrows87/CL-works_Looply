@@ -171,16 +171,29 @@ window.addEventListener('click', async (e) => {
 
 // --- 5. SALVATAGGIO ---
 
-// Salva Profilo
+// Salva Profilo con gestione Ref
 document.getElementById('btn-save-profile').onclick = async () => {
     const nome = document.getElementById('reg-name').value;
-    const tel = document.getElementById('reg-phone').value;
+    const tel = document.getElementById('reg-phone').value.replace(/\D/g, '');
+    
+    // Recuperiamo il ref dall'URL se presente
+    const urlParams = new URLSearchParams(window.location.search);
+    const refInvitante = urlParams.get('ref');
+    let listaAmici = refInvitante ? [refInvitante] : [];
+
     if (!nome || !tel || regSelectedDays.length === 0) return alert("Dati incompleti!");
+
     await setDoc(doc(db, "users", auth.currentUser.uid), {
-        nome, telefono: tel.replace(/\D/g, ''), giorniPreferiti: regSelectedDays, uid: auth.currentUser.uid, temaColore: "#4285F4"
+        nome: nome,
+        telefono: tel.startsWith('39') ? tel : '39' + tel, // Standardizziamo col 39
+        giorniPreferiti: regSelectedDays,
+        uid: auth.currentUser.uid,
+        temaColore: "#4285F4",
+        mieiAmici: listaAmici // Salviamo subito il primo amico se presente
     });
     location.reload();
 };
+
 
 // Salva Evento e WhatsApp
 document.getElementById('btn-save-event').onclick = async () => {
