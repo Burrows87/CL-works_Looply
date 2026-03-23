@@ -125,16 +125,28 @@ if (btnSaveEvent) {
     };
 }
 
-// --- 6. LOGICA MATCH ---
+// --- 6. LOGICA MATCH (VERSIONE CON NOTIFICA PERSONALIZZATA) ---
+let matchGiaMostrati = new Set(); 
+
 function cercaMatchInTempoReale(mieiSlot) {
+    if (!mieiSlot || mieiSlot.length === 0) return;
+
+    // Cerchiamo tutti gli eventi che NON sono stati creati da me
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
+    
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((doc) => {
             const altro = doc.data();
+            const altroId = doc.id; // ID unico dell'evento dell'amico
+
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
+                    // Controllo coincidenza Giorno + Fascia
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
-                        const matchKey = `${doc.id}_${mioSlot.giorno}_${mioSlot.fascia}`;
+                        
+                        // Chiave univoca per non ripetere lo stesso match finché non si ricarica
+                        const matchKey = `${altroId}_${mioSlot.giorno}_${mioSlot.fascia}`;
+                        
                         if (!matchGiaMostrati.has(matchKey)) {
                             matchGiaMostrati.add(matchKey);
                             proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, mioSlot.giorno, mioSlot.fascia);
@@ -146,16 +158,71 @@ function cercaMatchInTempoReale(mieiSlot) {
     });
 }
 
-function proponiWhatsApp(n, tel, g, f) {
-    const url = `https://wa.me/${tel}?text=${encodeURIComponent("Ciao " + n + ", ho visto su Looply che siamo entrambi liberi " + g + " (" + f.toLowerCase() + "), usciamo?")}`;
-    if (confirm("🎉 MATCH CON " + n.toUpperCase() + "!\nVuoi scrivergli?")) window.open(url, '_blank');
+function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
+    const numeroPulito = String(numeroAmico).replace(/\D/g, '');
+    const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
+    const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
+
+    // Rimuoviamo eventuali toast precedenti per non sovrapporli
+    const vecchioToast = document.getElementById('match-toast');
+    if (vecchioToast) vecchioToast.remove();
+
+    // Creiamo il contenitore del Toast (Notifica in-app)
+    const toast = document.createElement('div');
+    toast.id = 'match-toast';
+    toast.style = `
+        position: fixed; bottom: 30px; left: 50%; transform: translateX(-50%);
+        background: white; color: #333; padding: 20px; border-radius: 15px;
+        z-index: 10000; width: 92%; max-width: 350px;
+        box-shadow: 0 10px 30px rgba(0,0,0,0.3); text-align: center;
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; 
+        border: 1px solid #eee;
+        animation: slideUp 0.4s ease-out;
+    `;
+
+    toast.innerHTML = `
+        <div style="font-size: 1.2rem; margin-bottom: 10px;">🎉 <strong>Match con ${nomeAmico}!</strong></div>
+        <div style="font-size: 0.9rem; color: #666; margin-bottom: 20px;">
+            Siete entrambi liberi <strong>${giorno}</strong> (${fascia.toLowerCase()}).
+        </div>
+        <div style="display: flex; gap: 10px; justify-content: center;">
+            <button id="btn-wa-ok" style="background: #25D366; color: white; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; font-weight: bold; flex: 1; font-size: 0.9rem;">
+                SCRIVI
+            </button>
+            <button id="btn-wa-no" style="background: #f0f0f0; color: #666; border: none; padding: 12px 20px; border-radius: 10px; cursor: pointer; flex: 1; font-size: 0.9rem;">
+                DOPO
+            </button>
+        </div>
+    `;
+
+    document.body.appendChild(toast);
+
+    // Gestione Pulsante SCRIVI (Apre WhatsApp)
+    document.getElementById('btn-wa-ok').onclick = () => {
+        window.open(url, '_blank');
+        toast.remove();
+    };
+
+    // Gestione Pulsante DOPO (Chiude solo il toast)
+    document.getElementById('btn-wa-no').onclick = () => {
+        toast.remove();
+    };
+
+    // Vibrazione tattile se supportata
+    if (navigator.vibrate) navigator.vibrate([100, 50, 100]);
 }
 
 function resetInterfaccia() {
+    // Pulisce i bottoni degli slot
     document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+    // Pulisce i toggle dei giorni
     document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
+    // Nasconde tutte le sezioni orari
     document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
 }
+
+// --- FINE SEZIONE 6 ---
+
 
 // --- 7. LOGICA PRIVACY ---
 const checkTerms = document.getElementById('check-terms');
