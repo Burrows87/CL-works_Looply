@@ -6,7 +6,6 @@
     <title>Looply - Organizza il tuo weekend</title>
 
     <link rel="icon" type="image/png" href="icon.png">
-    <link rel="stylesheet" href="style.css">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4285F4">
     
@@ -21,8 +20,8 @@
         .screen { max-width: 500px; margin: 0 auto; min-height: 100vh; box-sizing: border-box; }
 
         /* DASHBOARD */
-        .availability-container { display: flex; flex-direction: column; gap: 12px; padding: 10px; padding-bottom: 100px; }
-        .day-group { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); }
+        .availability-container { display: flex; flex-direction: column; gap: 12px; padding: 10px; padding-bottom: 120px; }
+        .day-group { background: #fff; border-radius: 15px; overflow: hidden; box-shadow: 0 2px 8px rgba(0,0,0,0.05); display: none; }
         .day-toggle {
             width: 100%; padding: 18px; background: #fff; border: none; font-size: 1.1rem;
             font-weight: 700; color: #444; text-align: left; cursor: pointer;
@@ -39,16 +38,26 @@
         }
         .slot-btn.selected { background-color: var(--primary-color) !important; color: white !important; }
 
+        /* AREA AZIONE INVIA (RETTANGOLARE FISSO) */
+        .save-action-area {
+            position: fixed; bottom: 0; left: 0; right: 0; width: 100%;
+            background: linear-gradient(to top, #f4f7f9 80%, transparent);
+            padding: 20px; display: flex; justify-content: center; z-index: 999;
+            box-sizing: border-box;
+        }
+
+        #btn-save-event {
+            width: 100%; max-width: 460px; padding: 18px; 
+            background: var(--primary-color); color: white; border: none; 
+            border-radius: 15px; font-size: 1.1rem; font-weight: bold;
+            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4); cursor: pointer;
+        }
+
         /* REGISTRAZIONE */
         .reg-day-btn, .set-day-btn { padding: 10px; border: 1px solid #eee; border-radius: 10px; background: #fff; cursor: pointer; font-weight: bold; flex: 1; min-width: 65px; }
         .reg-day-btn.selected, .set-day-btn.selected { background: var(--primary-color); color: white; }
 
-        #btn-save-event {
-            position: fixed; bottom: 30px; right: 20px; width: 65px; height: 65px; border-radius: 50%;
-            background: var(--primary-color); color: white; border: none; font-size: 1.8rem;
-            box-shadow: 0 8px 20px rgba(66, 133, 244, 0.4); cursor: pointer; z-index: 99;
-        }
-        input { width: 100%; max-width: 320px; padding: 14px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #ddd; }
+        input { width: 100%; max-width: 320px; padding: 14px; margin-bottom: 15px; border-radius: 12px; border: 1px solid #ddd; box-sizing: border-box; }
     </style>
 </head>
 <body>
@@ -104,7 +113,7 @@
             <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold;">Esci</button>
         </div>
 
-        <div class="availability-container">
+        <div class="availability-container" id="availability-list">
             <div class="day-group"><button class="day-toggle" id="btn-Lunedì">Lunedì</button><div class="time-slots" id="slots-Lunedì"><button class="slot-btn" data-day="Lunedì">Mattina</button><button class="slot-btn" data-day="Lunedì">Pomeriggio</button><button class="slot-btn" data-day="Lunedì">Sera</button></div></div>
             <div class="day-group"><button class="day-toggle" id="btn-Martedì">Martedì</button><div class="time-slots" id="slots-Martedì"><button class="slot-btn" data-day="Martedì">Mattina</button><button class="slot-btn" data-day="Martedì">Pomeriggio</button><button class="slot-btn" data-day="Martedì">Sera</button></div></div>
             <div class="day-group"><button class="day-toggle" id="btn-Mercoledì">Mercoledì</button><div class="time-slots" id="slots-Mercoledì"><button class="slot-btn" data-day="Mercoledì">Mattina</button><button class="slot-btn" data-day="Mercoledì">Pomeriggio</button><button class="slot-btn" data-day="Mercoledì">Sera</button></div></div>
@@ -114,14 +123,9 @@
             <div class="day-group"><button class="day-toggle" id="btn-Domenica">Domenica</button><div class="time-slots" id="slots-Domenica"><button class="slot-btn" data-day="Domenica">Mattina</button><button class="slot-btn" data-day="Domenica">Pomeriggio</button><button class="slot-btn" data-day="Domenica">Sera</button></div></div>
         </div>
 
-        
-
-    <div class="save-action-area">
-    <button id="btn-save-event">Invia disponibilità</button>
-</div>
-
-</div>
-
+        <div class="save-action-area">
+            <button id="btn-save-event">Invia disponibilità</button>
+        </div>
     </div>
 
     <script type="module" src="app.js"></script>
