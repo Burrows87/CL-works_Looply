@@ -195,20 +195,19 @@ document.getElementById('btn-save-profile').onclick = async () => {
 };
 
 
-// Salva Evento e Cerca Match
 document.getElementById('btn-save-event').onclick = async () => {
     const sel = [];
     document.querySelectorAll('.slot-btn.selected').forEach(b => {
         sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
     });
 
-    if (sel.length === 0) return alert("Seleziona un orario!");
+    if (sel.length === 0) return alert("Seleziona i tuoi orari!");
     
     const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
     const u = userSnap.data();
     const rubricaLooply = u.mieiAmici || [];
 
-    // 1. Salva la tua disponibilità
+    // 1. Salva la tua disponibilità (senza avvisare nessuno)
     await addDoc(collection(db, "eventi"), {
         nomeCreatore: u.nome,
         telefonoCreatore: u.telefono,
@@ -217,7 +216,7 @@ document.getElementById('btn-save-event').onclick = async () => {
         dataCreazione: new Date()
     });
 
-    // 2. CERCA MATCH SOLO TRA I TUOI AMICI COLLEGATI
+    // 2. CERCA IL MATCH (Logica Tinder)
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
     const querySnapshot = await getDocs(q);
     
@@ -225,7 +224,7 @@ document.getElementById('btn-save-event').onclick = async () => {
 
     querySnapshot.forEach((doc) => {
         const altro = doc.data();
-        // Filtro: l'altro utente deve essere nella mia lista amici
+        // Controlla se l'utente è tra i tuoi "collegati"
         if (rubricaLooply.includes(altro.telefonoCreatore)) {
             sel.forEach(mio => {
                 altro.slot.forEach(suo => {
@@ -237,22 +236,21 @@ document.getElementById('btn-save-event').onclick = async () => {
         }
     });
 
-    // 3. AZIONE: Match o Invito
+    // 3. IL MOMENTO DEL MATCH
     if (matchTrovato) {
-        alert(`🔥 MATCH! Tu e ${matchTrovato.nome} siete liberi il ${matchTrovato.g} (${matchTrovato.f})!`);
-        const msgMatch = `Ehi ${matchTrovato.nome}! Match su Looply! Siamo entrambi liberi ${matchTrovato.g} (${matchTrovato.f}). Organizziamo? 🚀`;
-        window.open(`https://wa.me/${matchTrovato.tel}?text=${encodeURIComponent(msgMatch)}`, '_blank');
-    } else {
-        // Nessun match? Allora invita/aggiorna i 5 amici scelti dalla rubrica
-        const linkApp = `${window.location.origin}/?ref=${u.telefono}`;
-        const msgInvito = `Ciao! Sono ${u.nome}. Ho segnato i miei orari su Looply. Clicca qui per vedere se i nostri orari coincidono: ${linkApp}`;
+        // EFFETTO TINDER: Popup solo se c'è match
+        alert(`🔥 IT'S A MATCH!\nTu e ${matchTrovato.nome} siete liberi il ${matchTrovato.g} (${matchTrovato.f})!`);
         
-        if(confirm("Nessun match con i contatti collegati. Vuoi inviare i tuoi orari ai tuoi 5 amici su WhatsApp?")) {
-            window.open(`https://wa.me/?text=${encodeURIComponent(msgInvito)}`, '_blank');
-        }
+        const msgMatch = `Ehi ${matchTrovato.nome}! Match su Looply! Siamo entrambi liberi ${matchTrovato.g} (${matchTrovato.f}). Ci vediamo? 🚀`;
+        
+        // Apre la chat singola dell'amico
+        window.open(`https://wa.me/${matchTrovato.tel}?text=${encodeURIComponent(msgMatch)}`, '_blank');
+        location.reload();
+    } else {
+        // Se non c'è match, l'app torna alla home in silenzio
+        alert("Disponibilità salvata! Ti avviserò appena un tuo amico combacia.");
+        location.reload();
     }
-    location.reload();
 };
-
 
 
