@@ -33,31 +33,41 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists() && userDoc.data().nome) {
                 const dati = userDoc.data();
-                if(loginSc) loginSc.style.display = 'none';
-                if(regSc) regSc.style.display = 'none';
-                if(dashSc) dashSc.style.display = 'block';
-                if(userDisp) userDisp.textContent = dati.nome;
                 
-                // Carica preferenze (apre i 3 giorni scelti)
+                // 1. Mostra la dashboard
+                loginSc.style.display = 'none';
+                regSc.style.display = 'none';
+                dashSc.style.display = 'block';
+                userDisp.textContent = dati.nome;
+                
+                // 2. LOGICA FILTRO GIORNI:
+                // Prima nascondiamo TUTTI i giorni (nel caso il CSS non bastasse)
+                document.querySelectorAll('.day-group').forEach(group => {
+                    group.style.display = 'none';
+                });
+
+                // Ora mostriamo SOLO quelli salvati nel profilo
                 if (dati.giorniPreferiti) {
-                    dati.giorniPreferiti.forEach(g => {
-                        const b = document.getElementById(`btn-${g}`);
-                        const s = document.getElementById(`slots-${g}`);
-                        if (b && s) { b.classList.add('active'); s.style.display = 'flex'; }
+                    dati.giorniPreferiti.forEach(giorno => {
+                        const giornoBox = document.getElementById(`btn-${giorno}`)?.closest('.day-group');
+                        if (giornoBox) {
+                            giornoBox.style.display = 'block'; // Mostra il box
+                        }
                     });
                 }
             } else {
-                if(loginSc) loginSc.style.display = 'none';
-                if(dashSc) dashSc.style.display = 'none';
-                if(regSc) regSc.style.display = 'block';
+                loginSc.style.display = 'none';
+                dashSc.style.display = 'none';
+                regSc.style.display = 'block';
             }
         } catch(e) { console.error("Errore Auth:", e); }
     } else {
-        if(loginSc) loginSc.style.display = 'flex';
-        if(dashSc) dashSc.style.display = 'none';
-        if(regSc) regSc.style.display = 'none';
+        loginSc.style.display = 'flex';
+        dashSc.style.display = 'none';
+        regSc.style.display = 'none';
     }
 });
+
 
 // --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
