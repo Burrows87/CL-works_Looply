@@ -46,9 +46,9 @@ const applyThemeColor = (color) => {
     if (metaTheme) metaTheme.setAttribute('content', color);
 };
 
-// --- 4. AUTENTICAZIONE E REGISTRAZIONE (VERSIONE RADAR ATTIVO) ---
+// --- 4. AUTENTICAZIONE E REGISTRAZIONE (OTTIMIZZATA) ---
 let isLoggingOut = false;
-let matchGiaMostrati = new Set(); // Per evitare popup infiniti dello stesso match
+let matchGiaMostrati = new Set(); 
 
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
@@ -66,20 +66,19 @@ onAuthStateChanged(auth, async (user) => {
             if (dati.themeColor) applyThemeColor(dati.themeColor);
 
             // 2. AVVIA IL RADAR DEI MATCH
-            console.log("Ricerca match avviata per:", dati.nome);
+            console.log("Radar avviato per:", dati.nome);
             
-            // Query per trovare i MIEI eventi salvati
             const qMiei = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
             
-            // Ogni volta che i MIEI slot cambiano o vengono caricati, aggiorna il radar
             onSnapshot(qMiei, (snapshot) => {
                 let mieiSlotAttuali = [];
                 snapshot.forEach(doc => {
                     mieiSlotAttuali = mieiSlotAttuali.concat(doc.data().slot);
                 });
 
+                // Se ho degli slot, cerco i match. 
+                // Se non ne ho, il radar resta "caldo" in attesa che io ne salvi uno.
                 if (mieiSlotAttuali.length > 0) {
-                    console.log("Slot trovati, attivo il monitoraggio degli altri utenti...");
                     cercaMatchInTempoReale(mieiSlotAttuali);
                 }
             });
@@ -97,6 +96,7 @@ onAuthStateChanged(auth, async (user) => {
         document.getElementById('registration-screen').style.display = 'none';
     }
 });
+
 
 
 
@@ -207,6 +207,57 @@ function cercaMatchInTempoReale(mieiSlot) {
         });
     });
 }
+
+function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
+    if (!numeroAmico || numeroAmico === "") {
+        console.error("Match trovato ma manca il numero di:", nomeAmico);
+        return; 
+    }
+
+    // Pulizia finale del numero (rimuove spazi o caratteri strani)
+    const numeroPulito = String(numeroAmico).replace(/\D/g, '');
+    
+    // Messaggio personalizzato automatico
+    const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
+    const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
+    
+    // Suoni e Vibrazione (se supportati dal browser)
+    if (navigator.vibrate) navigator.vibrate([200, 100, 200]);
+
+    // Popup di sistema
+    if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\n\nEntrambi siete liberi ${giorno} (${fascia}).\n\nVuoi scrivergli su WhatsApp?`)) {
+        window.open(url, '_blank');
+    }
+}
+
+function resetInterfaccia() {
+    // Pulisce i bottoni degli slot
+    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
+    // Pulisce i toggle dei giorni
+    document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
+    // Nasconde tutte le sezioni orari
+    document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
+}
+
+// --- FINE SEZIONE 6 ---
+
+
+// --- 7. LOGICA PRIVACY ---
+const checkTerms = document.getElementById('check-terms');
+const checkPrivacy = document.getElementById('check-privacy');
+
+function validaCheck() { 
+    const btn = document.getElementById('btn-google-login');
+    if(btn) btn.disabled = !(checkTerms.checked && checkPrivacy.checked); 
+}
+
+if (checkTerms && checkPrivacy) {
+    checkTerms.onchange = validaCheck;
+    checkPrivacy.onchange = validaCheck;
+    // Eseguiamo il controllo al caricamento in caso i browser ricordino le spunte
+    validaCheck(); 
+}
+
 
 
 // --- 8. IMPOSTAZIONI TEMA ---
