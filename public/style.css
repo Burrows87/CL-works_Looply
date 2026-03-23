@@ -202,3 +202,21 @@ input[type="text"], input[type="tel"] {
     cursor: pointer;
     flex-shrink: 0; /* Impedisce al quadratino di rimpicciolirsi */
 }
+
+/* --- 9. COLOR PICKER SETTINGS --- */
+.color-dot {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    cursor: pointer;
+    transition: transform 0.2s;
+    border: 2px solid transparent;
+}
+
+.color-dot:hover {
+    transform: scale(1.2);
+}
+
+.color-dot.selected {
+    border-color: #333; /* Mostra un cerchietto scuro intorno al colore scelto */
+}
