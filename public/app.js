@@ -33,26 +33,19 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists() && userDoc.data().nome) {
                 const dati = userDoc.data();
-                
-                // 1. Mostra la dashboard
                 loginSc.style.display = 'none';
                 regSc.style.display = 'none';
                 dashSc.style.display = 'block';
                 userDisp.textContent = dati.nome;
                 
-                // 2. LOGICA FILTRO GIORNI:
-                // Prima nascondiamo TUTTI i giorni (nel caso il CSS non bastasse)
-                document.querySelectorAll('.day-group').forEach(group => {
-                    group.style.display = 'none';
-                });
-
-                // Ora mostriamo SOLO quelli salvati nel profilo
+                // Filtro Giorni: Nascondi tutto e mostra solo preferiti
+                document.querySelectorAll('.day-group').forEach(group => group.style.display = 'none');
                 if (dati.giorniPreferiti) {
                     dati.giorniPreferiti.forEach(giorno => {
                         const giornoBox = document.getElementById(`btn-${giorno}`)?.closest('.day-group');
-                        if (giornoBox) {
-                            giornoBox.style.display = 'block'; // Mostra il box
-                        }
+                        if (giornoBox) giornoBox.style.display = 'block';
+                        // Colora anche i bottoni nel pannello impostazioni
+                        document.querySelector(`.set-day-btn[data-day="${giorno}"]`)?.classList.add('selected');
                     });
                 }
             } else {
@@ -60,7 +53,7 @@ onAuthStateChanged(auth, async (user) => {
                 dashSc.style.display = 'none';
                 regSc.style.display = 'block';
             }
-        } catch(e) { console.error("Errore Auth:", e); }
+        } catch(e) { console.error(e); }
     } else {
         loginSc.style.display = 'flex';
         dashSc.style.display = 'none';
@@ -68,24 +61,15 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-
 // --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
     
-    // LOGIN GOOGLE
-    const loginBtn = e.target.closest('#btn-google-login');
-    if (loginBtn) {
-        const cTerms = document.getElementById('check-terms');
-        const cPrivacy = document.getElementById('check-privacy');
-        if (cTerms && cPrivacy && (!cTerms.checked || !cPrivacy.checked)) {
-            alert("Accetta Termini e Privacy per continuare!");
-            return;
+    // LOGIN
+    if (e.target.closest('#btn-google-login')) {
+        if (!document.getElementById('check-terms').checked || !document.getElementById('check-privacy').checked) {
+            return alert("Accetta Termini e Privacy!");
         }
-        try {
-            await signInWithPopup(auth, provider);
-        } catch (error) {
-            alert("Errore Google: " + error.message);
-        }
+        await signInWithPopup(auth, provider);
     }
 
     // LOGOUT
@@ -95,7 +79,7 @@ window.addEventListener('click', async (e) => {
         location.reload();
     }
 
-    // TOGGLE GIORNI DASHBOARD
+    // TOGGLE DASHBOARD
     if (e.target.classList.contains('day-toggle')) {
         e.target.classList.toggle('active');
         const dayId = e.target.id.replace('btn-', '');
@@ -103,18 +87,36 @@ window.addEventListener('click', async (e) => {
         if (sDiv) sDiv.style.display = e.target.classList.contains('active') ? 'flex' : 'none';
     }
 
-    // SELEZIONE SLOT ORARI
+    // SLOT
     if (e.target.classList.contains('slot-btn')) {
         e.target.classList.toggle('selected');
     }
 
-    // APERTURA SETTINGS (Ingranaggio)
+    // IMPOSTAZIONI (⚙️)
     if (e.target.id === 'btn-open-settings' || e.target.closest('#btn-open-settings')) {
         const panel = document.getElementById('settings-panel');
-        if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
     }
 
-    // SELEZIONE GIORNI REGISTRAZIONE
+    // CAMBIO GIORNI NELLE IMPOSTAZIONI
+    if (e.target.classList.contains('set-day-btn')) {
+        const day = e.target.dataset.day;
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        const userSnap = await getDoc(userRef);
+        let giorni = userSnap.data().giorniPreferiti || [];
+
+        if (giorni.includes(day)) {
+            giorni = giorni.filter(d => d !== day);
+        } else if (giorni.length < 3) {
+            giorni.push(day);
+        } else {
+            return alert("Massimo 3 giorni!");
+        }
+        await updateDoc(userRef, { giorniPreferiti: giorni });
+        location.reload(); 
+    }
+
+    // REGISTRAZIONE GIORNI
     if (e.target.classList.contains('reg-day-btn')) {
         const day = e.target.dataset.day;
         if (regSelectedDays.includes(day)) {
@@ -127,50 +129,27 @@ window.addEventListener('click', async (e) => {
     }
 });
 
-// --- 5. SALVATAGGIO PROFILO ---
-const saveProf = document.getElementById('btn-save-profile');
-if (saveProf) {
-    saveProf.onclick = async () => {
-        const nome = document.getElementById('reg-name')?.value;
-        const tel = document.getElementById('reg-phone')?.value;
-        if (!nome || !tel || regSelectedDays.length === 0) return alert("Mancano dati!");
-        
-        try {
-            await setDoc(doc(db, "users", auth.currentUser.uid), {
-                nome: nome,
-                telefono: tel.replace(/\D/g, ''),
-                giorniPreferiti: regSelectedDays,
-                uid: auth.currentUser.uid
-            });
-            location.reload();
-        } catch(e) { alert("Errore salvataggio: " + e.message); }
-    };
-}
+// --- 5. SALVATAGGIO ---
+document.getElementById('btn-save-profile').onclick = async () => {
+    const nome = document.getElementById('reg-name').value;
+    const tel = document.getElementById('reg-phone').value;
+    if (!nome || !tel || regSelectedDays.length === 0) return alert("Dati incompleti!");
+    await setDoc(doc(db, "users", auth.currentUser.uid), {
+        nome, telefono: tel.replace(/\D/g, ''), giorniPreferiti: regSelectedDays, uid: auth.currentUser.uid
+    });
+    location.reload();
+};
 
-// --- 6. SALVA DISPONIBILITÀ (Pulsante +) ---
-const btnSaveEvent = document.getElementById('btn-save-event');
-if (btnSaveEvent) {
-    btnSaveEvent.onclick = async () => {
-        const sel = [];
-        document.querySelectorAll('.slot-btn.selected').forEach(b => {
-            sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
-        });
-        
-        if (sel.length === 0) return alert("Seleziona almeno un orario!");
-        
-        try {
-            const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-            const u = userSnap.data();
-            
-            await addDoc(collection(db, "eventi"), {
-                nomeCreatore: u.nome,
-                telefonoCreatore: u.telefono,
-                creatoDa: auth.currentUser.uid,
-                slot: sel,
-                dataCreazione: new Date()
-            });
-            alert("Disponibilità salvata! Verrai avvisato in caso di match.");
-            location.reload();
-        } catch(e) { alert("Errore: " + e.message); }
-    };
-}
+document.getElementById('btn-save-event').onclick = async () => {
+    const sel = [];
+    document.querySelectorAll('.slot-btn.selected').forEach(b => {
+        sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
+    });
+    if (sel.length === 0) return alert("Seleziona un orario!");
+    const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
+    await addDoc(collection(db, "eventi"), {
+        nomeCreatore: u.nome, telefonoCreatore: u.telefono, creatoDa: auth.currentUser.uid, slot: sel, dataCreazione: new Date()
+    });
+    alert("Salvato!");
+    location.reload();
+};
