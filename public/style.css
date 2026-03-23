@@ -24,9 +24,19 @@ body {
     position: relative;
 }
 
-/* --- 3. REGISTRAZIONE E SETTINGS --- */
+
+/* --- 3. REGISTRAZIONE E SETTINGS (MODIFICATO PER 4+3) --- */
+.days-grid-container {
+    display: grid;
+    grid-template-columns: repeat(12, 1fr); /* Griglia a 12 per dividere sia per 4 che per 3 */
+    gap: 8px;
+    margin: 20px auto;
+    width: 100%;
+    max-width: 400px;
+}
+
 .reg-day-btn, .set-day-btn {
-    padding: 10px 5px;
+    padding: 12px 2px; /* Ridotto padding laterale per farli stare comodi */
     border: 1px solid #eee;
     border-radius: 12px;
     background: #fff;
@@ -34,9 +44,19 @@ body {
     cursor: pointer;
     font-size: 0.85rem;
     transition: all 0.2s ease;
-    flex: 1;
-    min-width: 65px;
     font-weight: 700;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+/* Primi 4 giorni (Lun-Gio): occupano 3 colonne ciascuno (4x3=12) */
+.days-grid-container button:nth-child(-n+4) {
+    grid-column: span 3;
+}
+
+/* Ultimi 3 giorni (Ven-Dom): occupano 4 colonne ciascuno (3x4=12) */
+.days-grid-container button:nth-child(n+5) {
+    grid-column: span 4;
 }
 
 .reg-day-btn.selected, .set-day-btn.selected {
@@ -45,6 +65,8 @@ body {
     border-color: var(--primary-color);
     box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);
 }
+
+
 
 /* --- 4. DASHBOARD: GRUPPI GIORNI --- */
 .availability-container {
