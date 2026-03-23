@@ -173,16 +173,34 @@ document.getElementById('btn-save-event').onclick = async () => {
     }
 };
 
-// --- 6. LOGICA MATCH ---
+// --- 6. LOGICA MATCH (VERSIONE RADAR ANTI-DUPLICATI) ---
+let matchGiaMostrati = new Set(); 
+
 function cercaMatchInTempoReale(mieiSlot) {
+    if (!mieiSlot || mieiSlot.length === 0) return;
+
+    // Cerchiamo tutti gli eventi che NON sono stati creati da me
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
+    
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((doc) => {
             const altro = doc.data();
+            const altroId = doc.id; // ID unico dell'evento dell'amico
+
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
+                    // Controllo coincidenza Giorno + Fascia
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
-                        proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, mioSlot.giorno, mioSlot.fascia);
+                        
+                        // Creiamo una chiave univoca per questo specifico match
+                        // Esempio: "ID_EVENTO_Lunedì_Mattina"
+                        const matchKey = `${altroId}_${mioSlot.giorno}_${mioSlot.fascia}`;
+                        
+                        // Se non abbiamo ancora mostrato questo specifico match, mostriamolo!
+                        if (!matchGiaMostrati.has(matchKey)) {
+                            matchGiaMostrati.add(matchKey);
+                            proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, mioSlot.giorno, mioSlot.fascia);
+                        }
                     }
                 });
             });
@@ -190,41 +208,6 @@ function cercaMatchInTempoReale(mieiSlot) {
     });
 }
 
-function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
-    if (!numeroAmico || numeroAmico === "") {
-        console.error("Match trovato ma manca il numero di:", nomeAmico);
-        return; 
-    }
-
-    // Trasforma in stringa e pulisce
-    const numeroPulito = String(numeroAmico).replace(/\D/g, '');
-    const testo = `Ciao ${nomeAmico}, ho visto su Looply che siamo entrambi liberi ${giorno} (${fascia.toLowerCase()}), usciamo?`;
-    const url = `https://wa.me/${numeroPulito}?text=${encodeURIComponent(testo)}`;
-    
-    if (confirm(`🎉 MATCH CON ${nomeAmico.toUpperCase()}!\nVuoi scrivergli su WhatsApp?`)) {
-        window.open(url, '_blank');
-    }
-}
-
-
-
-function resetInterfaccia() {
-    document.querySelectorAll('.slot-btn').forEach(b => b.classList.remove('selected'));
-    document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
-}
-
-// --- 7. LOGICA PRIVACY ---
-const checkTerms = document.getElementById('check-terms');
-const checkPrivacy = document.getElementById('check-privacy');
-function validaCheck() { 
-    const btn = document.getElementById('btn-google-login');
-    if(btn) btn.disabled = !(checkTerms.checked && checkPrivacy.checked); 
-}
-if (checkTerms && checkPrivacy) {
-    checkTerms.onchange = validaCheck;
-    checkPrivacy.onchange = validaCheck;
-}
 
 // --- 8. IMPOSTAZIONI TEMA ---
 document.getElementById('btn-open-settings').addEventListener('click', () => {
