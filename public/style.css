@@ -132,3 +132,9 @@ body {
 #btn-save-event:active {
     transform: scale(0.9);
 }
+
+/* --- LOGICA VISUALIZZAZIONE DINAMICA --- */
+/* Nasconde tutti i gruppi dei giorni all'avvio per mostrare solo i 3 preferiti tramite JS */
+.day-group {
+    display: none;
+}
