@@ -157,3 +157,48 @@ input[type="text"], input[type="tel"] {
     border: 1px solid #ddd;
     box-sizing: border-box;
 }
+/* --- 8. LOGIN LEGAL AREA --- */
+.login-legal-box {
+    background: white;
+    padding: 20px 25px;
+    border-radius: 18px;
+    width: 100%;
+    max-width: 320px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.05);
+    margin-bottom: 30px;
+    box-sizing: border-box;
+    
+    /* Allinea il contenuto a sinistra */
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start; 
+    gap: 15px; 
+}
+
+.legal-label {
+    display: flex;
+    align-items: center; /* Allinea verticalmente checkbox e testo */
+    cursor: pointer;
+    font-size: 0.95rem;
+    color: var(--text-main);
+    width: 100%;
+    text-align: left;
+}
+
+/* Rendi i link azzurri e cliccabili */
+.legal-link {
+    color: var(--primary-color);
+    text-decoration: none;
+    font-weight: 700;
+    margin-left: 4px;
+}
+
+/* Stile specifico per il quadratino del checkbox */
+.legal-label input[type="checkbox"] {
+    width: 20px !important;
+    height: 20px !important;
+    margin: 0 !important;
+    margin-right: 12px !important; /* Spazio tra quadratino e testo */
+    cursor: pointer;
+    flex-shrink: 0; /* Impedisce al quadratino di rimpicciolirsi */
+}
