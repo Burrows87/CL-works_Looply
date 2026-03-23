@@ -2,7 +2,7 @@ import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebas
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
 import { getFirestore, collection, addDoc, query, where, onSnapshot, getDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
-// --- 1. CONFIGURAZIONE FIREBASE ---
+// --- 1. CONFIGURAZIONE ---
 const firebaseConfig = {
     apiKey: "AIzaSyAGuCVHMwTmApzsgSJ7hS8UX6LiiSNJFjU",
     authDomain: "looply-app-21eb9.firebaseapp.com",
@@ -17,7 +17,7 @@ const auth = getAuth(app);
 const db = getFirestore(app);
 const provider = new GoogleAuthProvider();
 
-// --- 2. ELEMENTI HTML ---
+// --- 2. ELEMENTI DOM ---
 const loginScreen = document.getElementById('login-screen');
 const registrationScreen = document.getElementById('registration-screen');
 const dashboardScreen = document.getElementById('dashboard-screen');
@@ -25,65 +25,37 @@ const userDisplayName = document.getElementById('user-display-name');
 const googleLoginBtn = document.getElementById('btn-google-login');
 const checkTerms = document.getElementById('check-terms');
 const checkPrivacy = document.getElementById('check-privacy');
-const btnSaveProfile = document.getElementById('btn-save-profile');
-const btnSaveEvent = document.getElementById('btn-save-event');
-const btnSettings = document.getElementById('btn-open-settings');
-const settingsPanel = document.getElementById('settings-panel');
-const logoutBtn = document.getElementById('btn-logout');
 
-// --- 3. VARIABILI DI STATO ---
+// --- 3. STATO APPLICAZIONE ---
 let isLoggingOut = false;
-let matchGiaMostrati = new Set(); 
+let matchGiaMostrati = new Set();
 let regSelectedDays = [];
 
-// --- 4. LOGICA ACCESSO (SBLOCCO PULSANTE) ---
-function validaCheck() { 
-    if (googleLoginBtn && checkTerms && checkPrivacy) {
-        const accettato = checkTerms.checked && checkPrivacy.checked;
-        googleLoginBtn.disabled = !accettato;
-        googleLoginBtn.style.opacity = accettato ? "1" : "0.5";
-        googleLoginBtn.style.cursor = accettato ? "pointer" : "not-allowed";
-    }
-}
-
-if (checkTerms && checkPrivacy) {
-    checkTerms.addEventListener('change', validaCheck);
-    checkPrivacy.addEventListener('change', validaCheck);
-    validaCheck(); // Controllo immediato al caricamento
-}
-
-// --- 5. GESTIONE AUTENTICAZIONE ---
+// --- 4. GESTIONE AUTENTICAZIONE ---
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
         const userDoc = await getDoc(doc(db, "users", user.uid));
-
         if (userDoc.exists() && userDoc.data().nome) {
             const dati = userDoc.data();
             loginScreen.style.display = 'none';
             registrationScreen.style.display = 'none';
             dashboardScreen.style.display = 'block';
-            
             userDisplayName.textContent = dati.nome;
+            
             if (dati.themeColor) applyThemeColor(dati.themeColor);
-
-            // Apertura automatica giorni preferiti
             if (dati.giorniPreferiti) {
-                dati.giorniPreferiti.forEach(giorno => {
-                    const btn = document.getElementById(`btn-${giorno}`);
-                    const slots = document.getElementById(`slots-${giorno}`);
-                    if (btn && slots) {
-                        btn.classList.add('active');
-                        slots.style.display = 'flex';
-                    }
+                dati.giorniPreferiti.forEach(g => {
+                    const b = document.getElementById(`btn-${g}`);
+                    const s = document.getElementById(`slots-${g}`);
+                    if (b && s) { b.classList.add('active'); s.style.display = 'flex'; }
                 });
             }
-
-            // Ascolto match in tempo reale
-            const qMiei = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
-            onSnapshot(qMiei, (snapshot) => {
+            // Ascolto match
+            const q = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
+            onSnapshot(q, (snap) => {
                 let mieiSlot = [];
-                snapshot.forEach(docSnap => mieiSlot = mieiSlot.concat(docSnap.data().slot));
-                if (mieiSlot.length > 0) cercaMatchInTempoReale(mieiSlot);
+                snap.forEach(d => mieiSlot = mieiSlot.concat(d.data().slot));
+                if (mieiSlot.length > 0) cercaMatch(mieiSlot);
             });
         } else {
             loginScreen.style.display = 'none';
@@ -97,7 +69,25 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// --- 6. REGISTRAZIONE PROFILO ---
+// --- 5. LOGIN GOOGLE (LOGICA SICURA) ---
+if (googleLoginBtn) {
+    // Rimuoviamo il "disabled" forzato per evitare blocchi JS
+    googleLoginBtn.disabled = false; 
+
+    googleLoginBtn.onclick = async () => {
+        if (!checkTerms.checked || !checkPrivacy.checked) {
+            alert("Per favore, accetta i Termini e la Privacy per continuare.");
+            return;
+        }
+        try {
+            await signInWithPopup(auth, provider);
+        } catch (e) {
+            alert("Errore durante il login: " + e.message);
+        }
+    };
+}
+
+// --- 6. REGISTRAZIONE ---
 document.querySelectorAll('.reg-day-btn').forEach(btn => {
     btn.onclick = () => {
         const day = btn.dataset.day;
@@ -108,17 +98,19 @@ document.querySelectorAll('.reg-day-btn').forEach(btn => {
             regSelectedDays.push(day);
             btn.classList.add('selected');
         } else {
-            alert("Puoi scegliere massimo 3 giorni!");
+            alert("Scegli massimo 3 giorni!");
         }
     };
 });
 
+const btnSaveProfile = document.getElementById('btn-save-profile');
 if (btnSaveProfile) {
     btnSaveProfile.onclick = async () => {
         const nome = document.getElementById('reg-name').value;
         const tel = document.getElementById('reg-phone').value;
-        if (!nome || tel.length < 10 || regSelectedDays.length === 0) return alert("Inserisci tutti i dati e i 3 giorni!");
-
+        if (!nome || tel.length < 10 || regSelectedDays.length === 0) {
+            return alert("Completa tutti i campi e scegli 3 giorni!");
+        }
         try {
             await setDoc(doc(db, "users", auth.currentUser.uid), {
                 nome: nome.trim(),
@@ -128,12 +120,21 @@ if (btnSaveProfile) {
                 dataCreazione: new Date()
             });
             location.reload();
-        } catch (e) { alert("Errore: " + e.message); }
+        } catch (e) { alert(e.message); }
     };
 }
 
-// --- 7. LOGICA MATCH E WHATSAPP ---
-function cercaMatchInTempoReale(mieiSlot) {
+// --- 7. DASHBOARD E MATCH ---
+document.addEventListener('click', (e) => {
+    if (e.target.classList.contains('day-toggle')) {
+        e.target.classList.toggle('active');
+        const s = document.getElementById(`slots-${e.target.id.replace('btn-', '')}`);
+        if (s) s.style.display = e.target.classList.contains('active') ? 'flex' : 'none';
+    }
+    if (e.target.classList.contains('slot-btn')) e.target.classList.toggle('selected');
+});
+
+function cercaMatch(mieiSlot) {
     const oraSoglia = new Date();
     const diff = (oraSoglia.getDay() + 6) % 7;
     oraSoglia.setDate(oraSoglia.getDate() - diff);
@@ -143,9 +144,8 @@ function cercaMatchInTempoReale(mieiSlot) {
         where("creatoDa", "!=", auth.currentUser.uid),
         where("dataCreazione", ">=", oraSoglia)
     );
-    
-    onSnapshot(q, (snapshot) => {
-        snapshot.forEach((docSnap) => {
+    onSnapshot(q, (snap) => {
+        snap.forEach(docSnap => {
             const altro = docSnap.data();
             altro.slot.forEach(sA => {
                 mieiSlot.forEach(sM => {
@@ -153,7 +153,9 @@ function cercaMatchInTempoReale(mieiSlot) {
                         const key = `${docSnap.id}_${sA.giorno}_${sA.fascia}`;
                         if (!matchGiaMostrati.has(key)) {
                             matchGiaMostrati.add(key);
-                            proponiWhatsApp(altro.nomeCreatore, altro.telefonoCreatore, sA.giorno, sA.fascia);
+                            if(confirm(`Match con ${altro.nomeCreatore} per ${sA.giorno}! Scrivigli?`)) {
+                                window.open(`https://wa.me/${altro.telefonoCreatore}?text=Ciao, ho visto su Looply che siamo liberi ${sA.giorno}!`, '_blank');
+                            }
                         }
                     }
                 });
@@ -162,91 +164,48 @@ function cercaMatchInTempoReale(mieiSlot) {
     });
 }
 
-function proponiWhatsApp(n, t, g, f) {
-    const msg = `Ciao ${n}, ho visto su Looply che siamo liberi ${g} (${f.toLowerCase()}), usciamo?`;
-    if(confirm(`Match con ${n} per ${g}! Vuoi scrivergli?`)) {
-        window.open(`https://wa.me/${t}?text=${encodeURIComponent(msg)}`, '_blank');
-    }
-}
-
-// --- 8. INTERFACCIA DASHBOARD ---
-document.addEventListener('click', (e) => {
-    if (e.target.classList.contains('day-toggle')) {
-        e.target.classList.toggle('active');
-        const slots = document.getElementById(`slots-${e.target.id.replace('btn-', '')}`);
-        if (slots) slots.style.display = e.target.classList.contains('active') ? 'flex' : 'none';
-    }
-    if (e.target.classList.contains('slot-btn')) {
-        e.target.classList.toggle('selected');
-    }
-});
-
+const btnSaveEvent = document.getElementById('btn-save-event');
 if (btnSaveEvent) {
     btnSaveEvent.onclick = async () => {
         const sel = [];
         document.querySelectorAll('.slot-btn.selected').forEach(b => {
             sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
         });
-        if (sel.length === 0) return alert("Seleziona almeno un orario!");
-        try {
-            const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
-            await addDoc(collection(db, "eventi"), {
-                nomeCreatore: u.nome, telefonoCreatore: u.telefono, creatoDa: auth.currentUser.uid, slot: sel, dataCreazione: new Date()
-            });
-            alert("Disponibilità salvata!");
-            location.reload();
-        } catch (e) { alert(e.message); }
-    };
-}
-
-// --- 9. IMPOSTAZIONI ---
-if (btnSettings && settingsPanel) {
-    btnSettings.onclick = async () => {
-        const isHidden = settingsPanel.style.display === 'none' || settingsPanel.style.display === '';
-        settingsPanel.style.display = isHidden ? 'block' : 'none';
-        if (isHidden) {
-            const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
-            const pref = userDoc.data().giorniPreferiti || [];
-            document.querySelectorAll('.set-day-btn').forEach(b => {
-                b.classList.toggle('selected', pref.includes(b.dataset.day));
-            });
-        }
-    };
-}
-
-document.querySelectorAll('.set-day-btn').forEach(btn => {
-    btn.onclick = async () => {
-        const userRef = doc(db, "users", auth.currentUser.uid);
-        const userDoc = await getDoc(userRef);
-        let giorni = userDoc.data().giorniPreferiti || [];
-        const day = btn.dataset.day;
-
-        if (giorni.includes(day)) {
-            giorni = giorni.filter(d => d !== day);
-        } else if (giorni.length < 3) {
-            giorni.push(day);
-        } else {
-            return alert("Massimo 3 giorni!");
-        }
-        await updateDoc(userRef, { giorniPreferiti: giorni });
-        btn.classList.toggle('selected');
-    };
-});
-
-// --- 10. AZIONI FINALI (LOGIN/LOGOUT) ---
-if (googleLoginBtn) {
-    googleLoginBtn.onclick = async () => {
-        try { await signInWithPopup(auth, provider); } catch (e) { alert("Errore: " + e.message); }
-    };
-}
-
-if (logoutBtn) {
-    logoutBtn.onclick = async () => {
-        isLoggingOut = true;
-        await signOut(auth);
+        if (sel.length === 0) return alert("Seleziona orari!");
+        const u = (await getDoc(doc(db, "users", auth.currentUser.uid))).data();
+        await addDoc(collection(db, "eventi"), {
+            nomeCreatore: u.nome, telefonoCreatore: u.telefono, creatoDa: auth.currentUser.uid, slot: sel, dataCreazione: new Date()
+        });
+        alert("Salvato!");
         location.reload();
     };
 }
 
-const applyThemeColor = (c) => { document.documentElement.style.setProperty('--primary-color', c); };
-        
+// --- 8. IMPOSTAZIONI E LOGOUT ---
+const btnSettings = document.getElementById('btn-open-settings');
+const panel = document.getElementById('settings-panel');
+if (btnSettings) {
+    btnSettings.onclick = () => panel.style.display = (panel.style.display === 'block' ? 'none' : 'block');
+}
+
+document.querySelectorAll('.set-day-btn').forEach(btn => {
+    btn.onclick = async () => {
+        const ref = doc(db, "users", auth.currentUser.uid);
+        const docSnap = await getDoc(ref);
+        let giorni = docSnap.data().giorniPreferiti || [];
+        const d = btn.dataset.day;
+        if (giorni.includes(d)) giorni = giorni.filter(x => x !== d);
+        else if (giorni.length < 3) giorni.push(d);
+        else return alert("Max 3!");
+        await updateDoc(ref, { giorniPreferiti: giorni });
+        btn.classList.toggle('selected');
+    };
+});
+
+document.getElementById('btn-logout').onclick = async () => {
+    isLoggingOut = true;
+    await signOut(auth);
+    location.reload();
+};
+
+const applyThemeColor = (c) => document.documentElement.style.setProperty('--primary-color', c);
