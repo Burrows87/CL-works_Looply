@@ -62,20 +62,16 @@
         </header>
 
         <div id="settings-panel" style="display:none; position:fixed; top:85px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.15); z-index:999; width: 260px;">
-            <p style="font-weight:bold;">I tuoi 3 giorni</p>
-            <div id="settings-days-selection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px;">
-                <button class="set-day-btn" data-day="Lunedì">Lun</button>
-                <button class="set-day-btn" data-day="Martedì">Mar</button>
-                <button class="set-day-btn" data-day="Mercoledì">Mer</button>
-                <button class="set-day-btn" data-day="Giovedì">Gio</button>
-                <button class="set-day-btn" data-day="Venerdì">Ven</button>
-                <button class="set-day-btn" data-day="Sabato">Sab</button>
-                <button class="set-day-btn" data-day="Domenica">Dom</button>
-            </div>
-            <div id="settings-panel" style="display:none; position:fixed; top:85px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.15); z-index:1001; width: 260px;">
     <p style="font-weight:bold; margin-top:0;">I tuoi 3 giorni</p>
     <div id="settings-days-selection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px;">
-        </div>
+        <button class="set-day-btn" data-day="Lunedì">Lun</button>
+        <button class="set-day-btn" data-day="Martedì">Mar</button>
+        <button class="set-day-btn" data-day="Mercoledì">Mer</button>
+        <button class="set-day-btn" data-day="Giovedì">Gio</button>
+        <button class="set-day-btn" data-day="Venerdì">Ven</button>
+        <button class="set-day-btn" data-day="Sabato">Sab</button>
+        <button class="set-day-btn" data-day="Domenica">Dom</button>
+    </div>
 
     <p style="font-weight:bold;">Colore Tema</p>
     <div style="display: flex; gap: 10px; margin-bottom: 20px;">
@@ -85,12 +81,14 @@
         <div class="color-dot" data-color="#34A853" style="background: #34A853;"></div>
         <div class="color-dot" data-color="#8E44AD" style="background: #8E44AD;"></div>
     </div>
-    <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold; padding-top:10px; border-top:1px solid #eee;">Esci</button>
-            </div>
-            
-            <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold;">Esci</button>
-        </div>
 
+    <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold; padding-top:10px; border-top:1px solid #eee;">Esci</button>
+</div>
+            
+
+
+
+    
         <div class="availability-container" id="availability-list">
             <div class="day-group"><button class="day-toggle" id="btn-Lunedì">Lunedì</button><div class="time-slots" id="slots-Lunedì"><button class="slot-btn" data-day="Lunedì">Mattina</button><button class="slot-btn" data-day="Lunedì">Pomeriggio</button><button class="slot-btn" data-day="Lunedì">Sera</button></div></div>
             <div class="day-group"><button class="day-toggle" id="btn-Martedì">Martedì</button><div class="time-slots" id="slots-Martedì"><button class="slot-btn" data-day="Martedì">Mattina</button><button class="slot-btn" data-day="Martedì">Pomeriggio</button><button class="slot-btn" data-day="Martedì">Sera</button></div></div>
