@@ -28,9 +28,30 @@ onAuthStateChanged(auth, async (user) => {
     const dashSc = document.getElementById('dashboard-screen');
     const userDisp = document.getElementById('user-display-name');
 
+    // Leggiamo l'eventuale invito dall'URL
+    const urlParams = new URLSearchParams(window.location.search);
+    const refInvitante = urlParams.get('ref');
+
     if (user && !isLoggingOut) {
         try {
-            const userDoc = await getDoc(doc(db, "users", user.uid));
+            const userRef = doc(db, "users", user.uid);
+            const userDoc = await getDoc(userRef);
+
+            // --- NUOVO: SE C'È UN INVITO, COLLEGA L'AMICO AL PROFILO ---
+            if (refInvitante) {
+                if (userDoc.exists()) {
+                    let amici = userDoc.data().mieiAmici || [];
+                    if (!amici.includes(refInvitante)) {
+                        amici.push(refInvitante);
+                        await updateDoc(userRef, { mieiAmici: amici });
+                        console.log("Amico collegato correttamente!");
+                    }
+                }
+                // Se l'utente non esiste ancora (si sta registrando ora), 
+                // il 'ref' verrà gestito durante il salvataggio del profilo (punto 6).
+            }
+            // ---------------------------------------------------------
+
             if (userDoc.exists() && userDoc.data().nome) {
                 const dati = userDoc.data();
                 
@@ -67,6 +88,7 @@ onAuthStateChanged(auth, async (user) => {
         regSc.style.display = 'none';
     }
 });
+
 
 // --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
