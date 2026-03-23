@@ -1,175 +1,115 @@
+/* --- VARIABILI E BASE --- */
 :root {
     --primary-color: #4285F4;
-    --bg-color: #f0f2f5;
+    --bg-color: #f4f7f9;
     --card-bg: #ffffff;
-    --accent-color: #34A853; 
+    --text-main: #333333;
+    --text-muted: #666666;
 }
 
 body {
-    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-    background-color: var(--bg-color);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     margin: 0;
-    display: flex;
-    justify-content: center;
-    align-items: flex-start; 
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al tocco su mobile */
+}
+
+/* --- SCHERMATE --- */
+.screen {
+    max-width: 500px;
+    margin: 0 auto;
     min-height: 100vh;
-    padding-top: 2rem;
+    box-sizing: border-box;
 }
 
-#app-container {
-    width: 90%;
-    max-width: 400px;
-    background: var(--card-bg);
-    padding: 2rem;
-    border-radius: 20px;
-    box-shadow: 0 10px 25px rgba(0,0,0,0.1);
-    text-align: center;
-    margin-bottom: 2rem;
-    position: relative; /* Essenziale per gestire i livelli degli schermi */
-}
-
-/* Gestione schermi: evita che quello nascosto blocchi i click */
-.screen[style*="display: none"] {
-    pointer-events: none;
-}
-
-h1 { color: var(--primary-color); font-size: 2.5rem; margin-bottom: 0.5rem; }
-h2 { font-size: 1.2rem; margin: 0; }
-h3 { margin-top: 0; color: #333; }
-p { color: #666; margin-bottom: 1.5rem; }
-
-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 2rem;
-    border-bottom: 1px solid #eee;
-    padding-bottom: 1rem;
-}
-
-/* Pulsanti Generali */
-button {
-    width: 100%;
-    padding: 12px;
-    border-radius: 8px;
-    border: 1px solid #ddd;
-    background: white;
-    cursor: pointer;
-    font-size: 1rem;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    transition: all 0.2s;
-    outline: none;
-}
-
-/* Specifica per pulsante Google Login */
-#btn-google-login {
-    margin-top: 1rem;
-    border: 1px solid #4285F4;
-    color: #4285F4;
-    font-weight: 600;
-    position: relative;
-    z-index: 100; /* Lo porta sopra tutto */
-}
-
-#btn-google-login:active {
-    background-color: #f1f3f4;
-    transform: scale(0.98);
-}
-
-button.primary {
-    background-color: var(--primary-color);
-    color: white;
-    border: none;
-    font-weight: bold;
-}
-
-button.primary:hover { 
-    background-color: #357ae8; 
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(66, 133, 244, 0.2);
-}
-
-button.secondary {
-    padding: 5px 10px;
-    font-size: 0.8rem;
-    width: auto;
-    border-color: #ff4444;
-    color: #ff4444;
-}
-
-#btn-save-profile {
-    background-color: var(--accent-color); /* Usa il tuo verde #34A853 */
-    color: white;
-    border: none;
-    font-weight: bold;
-    margin-top: 10px;
-}
-
-#btn-save-profile:hover {
-    filter: brightness(1.1);
-    transform: translateY(-1px);
-}
-
-.card {
+/* --- NUOVI BOTTONI SCELTA GIORNI (REGISTRAZIONE E SETTINGS) --- */
+.reg-day-btn, .set-day-btn {
+    padding: 10px 5px;
     border: 1px solid #eee;
-    padding: 1.5rem;
-    border-radius: 15px;
-    margin-top: 1rem;
-    background: #fdfdfd;
-}
-
-/* --- TOGGLE GIORNO --- */
-.availability-container {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-    margin: 1.5rem 0;
-}
-
-.day-group {
-    background: #fff;
     border-radius: 12px;
-    text-align: left;
+    background: #ffffff;
+    color: #555;
+    cursor: pointer;
+    font-size: 0.85rem;
+    transition: all 0.2s ease;
+    flex: 1;
+    min-width: 65px;
+    font-weight: 700;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.03);
+}
+
+/* Stato selezionato per i giorni */
+.reg-day-btn.selected, .set-day-btn.selected {
+    background: var(--primary-color) !important;
+    color: white !important;
+    border-color: var(--primary-color);
+    box-shadow: 0 4px 10px rgba(66, 133, 244, 0.3);
+    transform: translateY(-1px);
+}
+
+/* --- DASHBOARD: GRUPPI GIORNI --- */
+.day-group {
+    background: var(--card-bg);
+    border-radius: 18px;
+    margin-bottom: 12px;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.05);
+    border: 1px solid rgba(0,0,0,0.03);
 }
 
 .day-toggle {
     width: 100%;
-    padding: 14px;
-    background: #f8f9fa;
-    border: 2px solid #eee;
-    border-radius: 12px;
+    padding: 20px;
+    background: none;
+    border: none;
+    font-size: 1.1rem;
     font-weight: 700;
-    color: #555;
+    color: #444;
+    text-align: left;
+    cursor: pointer;
     display: flex;
     justify-content: space-between;
     align-items: center;
 }
 
+.day-toggle::after {
+    content: '＋';
+    color: #ccc;
+    font-size: 1.2rem;
+    transition: 0.3s;
+}
+
 .day-toggle.active {
-    background: #e8f0fe;
-    border-color: var(--primary-color);
     color: var(--primary-color);
 }
 
-/* --- FASCE ORARIE --- */
-.time-slots { 
-    display: none; 
-    gap: 8px; 
-    padding: 10px 5px 15px 5px;
+.day-toggle.active::after {
+    content: '−';
+    transform: rotate(180deg);
+    color: var(--primary-color);
+}
+
+/* --- SLOT ORARI (MATTINA, POMERIGGIO, SERA) --- */
+.time-slots {
+    display: none;
+    gap: 10px;
+    padding: 0 15px 20px 15px;
     flex-wrap: wrap;
 }
 
 .slot-btn {
-    padding: 8px 14px !important;
-    font-size: 0.85rem !important;
-    border: 1px solid #ddd;
-    background: #fff;
-    border-radius: 20px;
-    width: auto !important; 
-    flex: 1 1 auto;
+    padding: 12px 15px;
+    font-size: 0.9rem;
+    border: 1px solid #f0f0f0;
+    background: #f9f9f9;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: 0.2s;
+    flex: 1;
+    min-width: 90px;
+    text-align: center;
+    font-weight: 600;
+    color: #666;
 }
 
 .slot-btn.selected {
@@ -178,79 +118,17 @@ button.secondary {
     border-color: var(--primary-color);
 }
 
-/* Lista Eventi */
-#events-list .card {
-    border-left: 5px solid var(--primary-color);
-    text-align: left;
-    padding: 12px;
-}
-
-/* Nascondi gli schermi di default, ci pensa il JavaScript a mostrarli */
-#login-screen, #dashboard-screen {
-    display: none;
-}
-
-#login-screen, #dashboard-screen {
-    display: none;
-    animation: fadeIn 0.5s ease-in-out; /* Effetto comparsa fluida */
-}
-
-/* --- SCHERMATA REGISTRAZIONE --- */
-/* Nascondi tutti gli schermi all'avvio: il JS deciderà quale mostrare */
-#login-screen, #dashboard-screen, #registration-screen {
-    display: none;
-    animation: fadeIn 0.4s ease-in-out;
-}
-
-/* Se vuoi che il box di registrazione risalti di più quando appare */
-#registration-screen h2 {
-    color: #34A853; /* Usa il verde accent che hai definito */
-    font-size: 1.5rem;
-    margin-bottom: 10px;
-}
-
-#registration-screen input:focus {
-    border-color: var(--primary-color);
-    outline: none;
-    box-shadow: 0 0 5px rgba(66, 133, 244, 0.2);
-}
-
-#registration-screen input {
-    width: 100%;
-    padding: 12px;
-    margin-bottom: 15px;
-    border: 1px solid #ddd;
-    border-radius: 8px;
-    box-sizing: border-box; /* Fondamentale per non far uscire l'input dai bordi */
-}
-
-/* --- ANIMAZIONE PER IL POPUP MATCH --- */
+/* --- ANIMAZIONI --- */
 @keyframes slideUp {
-    from { 
-        transform: translateX(-50%) translateY(100%); 
-        opacity: 0; 
-    }
-    to { 
-        transform: translateX(-50%) translateY(0); 
-        opacity: 1; 
-    }
+    from { opacity: 0; transform: translate(-50%, 20px); }
+    to { opacity: 1; transform: translate(-50%, 0); }
 }
 
-/* --- STILE EXTRA PER I BOTTONI DEL MATCH (Per sicurezza) --- */
-#match-toast button {
-    width: auto; /* Sovrascrive il width 100% dei bottoni generici */
-    display: inline-flex;
-    transition: transform 0.2s, filter 0.2s;
+/* --- UTILITY --- */
+#btn-save-event {
+    transition: transform 0.2s active;
 }
 
-#match-toast button:active {
-    transform: scale(0.95);
-    filter: brightness(0.9);
+#btn-save-event:active {
+    transform: scale(0.9);
 }
-
-/* Effetto comparsa generico per gli schermi */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
-}
-
