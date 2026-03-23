@@ -46,17 +46,17 @@ const applyThemeColor = (color) => {
     if (metaTheme) metaTheme.setAttribute('content', color);
 };
 
-// --- 4. AUTENTICAZIONE E REGISTRAZIONE ---
+// --- 4. AUTENTICAZIONE E REGISTRAZIONE (VERSIONE RADAR ATTIVO) ---
 let isLoggingOut = false;
+let matchGiaMostrati = new Set(); // Per evitare popup infiniti dello stesso match
 
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
         const userDocRef = doc(db, "users", user.uid);
         const userDoc = await getDoc(userDocRef);
 
-        // Controlliamo non solo se il documento esiste, ma se ha il campo 'nome'
         if (userDoc.exists() && userDoc.data().nome) {
-            // UTENTE REGISTRATO DAVVERO
+            // 1. MOSTRA DASHBOARD
             const dati = userDoc.data();
             loginScreen.style.display = 'none';
             document.getElementById('registration-screen').style.display = 'none';
@@ -64,20 +64,40 @@ onAuthStateChanged(auth, async (user) => {
             
             userDisplayName.textContent = dati.nome;
             if (dati.themeColor) applyThemeColor(dati.themeColor);
+
+            // 2. AVVIA IL RADAR DEI MATCH
+            console.log("Ricerca match avviata per:", dati.nome);
+            
+            // Query per trovare i MIEI eventi salvati
+            const qMiei = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
+            
+            // Ogni volta che i MIEI slot cambiano o vengono caricati, aggiorna il radar
+            onSnapshot(qMiei, (snapshot) => {
+                let mieiSlotAttuali = [];
+                snapshot.forEach(doc => {
+                    mieiSlotAttuali = mieiSlotAttuali.concat(doc.data().slot);
+                });
+
+                if (mieiSlotAttuali.length > 0) {
+                    console.log("Slot trovati, attivo il monitoraggio degli altri utenti...");
+                    cercaMatchInTempoReale(mieiSlotAttuali);
+                }
+            });
+
         } else {
-            // UTENTE NUOVO (o documento incompleto)
+            // UTENTE NUOVO
             loginScreen.style.display = 'none';
             dashboardScreen.style.display = 'none';
             document.getElementById('registration-screen').style.display = 'block';
-            console.log("Dati profilo mancanti. Mostro registrazione...");
         }
     } else {
-        // Nessun utente loggato
+        // LOGOUT
         loginScreen.style.display = 'block';
         dashboardScreen.style.display = 'none';
         document.getElementById('registration-screen').style.display = 'none';
     }
 });
+
 
 
 // --- 5. SALVATAGGIO PROFILO (ANTI-BUG WHATSAPP) ---
