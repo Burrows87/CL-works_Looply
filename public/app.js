@@ -124,13 +124,11 @@ if (btnSaveEvent) {
     };
 }
 
-// --- 6. LOGICA MATCH (VERSIONE VELOCE CON TASTI INVERTITI) ---
-let matchGiaMostrati = new Set(); 
+// --- 6. LOGICA MATCH (VERSIONE VELOCE - TASTI INVERTITI) ---
 
 function cercaMatchInTempoReale(mieiSlot) {
     if (!mieiSlot || mieiSlot.length === 0) return;
 
-    // Cerchiamo tutti gli eventi che NON sono stati creati da me
     const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
     
     onSnapshot(q, (snapshot) => {
@@ -140,10 +138,7 @@ function cercaMatchInTempoReale(mieiSlot) {
 
             altro.slot.forEach(slotAltro => {
                 mieiSlot.forEach(mioSlot => {
-                    // Controllo coincidenza Giorno + Fascia
                     if (slotAltro.giorno === mioSlot.giorno && slotAltro.fascia === mioSlot.fascia) {
-                        
-                        // Chiave univoca per non ripetere lo stesso match
                         const matchKey = `${altroId}_${mioSlot.giorno}_${mioSlot.fascia}`;
                         
                         if (!matchGiaMostrati.has(matchKey)) {
@@ -173,7 +168,7 @@ function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
         <div style="font-size:1.2rem; margin-bottom:10px;">🎉 <strong>Match con ${nomeAmico}!</strong></div>
         <div style="font-size:0.9rem; color:#666; margin-bottom:20px;">Siete liberi <strong>${giorno}</strong> (${fascia.toLowerCase()}).</div>
         <div style="display:flex; gap:10px; justify-content:center; flex-direction: row-reverse;">
-            <button id="btn-wa-ok" style="background:#25D366; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold; flex:1; display:flex; align-items:center; justify-content:center; gap:8px;">
+            <button id="btn-wa-ok" style="background:#25D366; color:white; border:none; padding:12px; border-radius:10px; cursor:pointer; font-weight:bold; flex:1.5; display:flex; align-items:center; justify-content:center; gap:8px;">
                 <svg width="18" height="18" fill="currentColor" viewBox="0 0 16 16"><path d="M13.601 2.326A7.854 7.854 0 0 0 7.994 0C3.627 0 .068 3.558.064 7.926c0 1.399.366 2.76 1.06 3.96l-1.125 4.11 4.205-1.103a7.859 7.859 0 0 0 3.79.972h.003c4.366 0 7.925-3.558 7.929-7.926a7.86 7.86 0 0 0-2.33-5.593l.002-.002zm-1.082 10.156a6.518 6.518 0 0 1-4.519 1.932h-.003a6.518 6.518 0 0 1-3.326-.906l-.238-.141-2.478.65.662-2.42-.155-.247a6.522 6.522 0 0 1-.988-3.32c0-3.596 2.926-6.521 6.529-6.521a6.52 6.52 0 0 1 4.619 1.919 6.52 6.52 0 0 1 1.916 4.621 6.524 6.524 0 0 1-1.812 4.634zm-3.393-4.735c-.196-.098-1.162-.574-1.341-.639-.179-.065-.308-.098-.438.098-.13.196-.503.639-.617.771-.114.13-.227.147-.423.049-.196-.098-.826-.304-1.574-.971-.582-.519-.974-1.16-.108-1.357.196-.098.392-.147.588-.245.049-.098.074-.183.037-.282-.037-.098-.308-.743-.423-1.02-.11-.266-.222-.23-.308-.235h-.262c-.13 0-.341.049-.519.245-.179.196-.683.667-.683 1.629 0 .962.7 1.891.798 2.022.098.13 1.378 2.103 3.337 2.949.467.202.83.323 1.114.413.468.148.894.127 1.231.077.376-.056 1.162-.474 1.325-.931.163-.457.163-.849.114-.931-.049-.082-.179-.13-.375-.228z"/></svg>
                 SCRIVI
             </button>
@@ -195,7 +190,6 @@ function resetInterfaccia() {
     document.querySelectorAll('.day-toggle').forEach(b => b.classList.remove('active'));
     document.querySelectorAll('.time-slots').forEach(d => d.style.display = 'none');
 }
-
 // --- FINE SEZIONE 6 ---
 
 
