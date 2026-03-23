@@ -38,6 +38,41 @@ onAuthStateChanged(auth, async (user) => {
             const userRef = doc(db, "users", user.uid);
             const userDoc = await getDoc(userRef);
 
+            // --- LOGICA BIG REFRESH AUTOMATICO (Lunedì ore 02:00) ---
+const eseguiBigRefresh = async (uid) => {
+    const oraAttuale = new Date();
+    const giornoSettimana = oraAttuale.getDay(); // 1 è Lunedì
+    const ore = oraAttuale.getHours();
+
+    // Se è lunedì e sono passate le 02:00, o se è un qualsiasi giorno successivo al lunedì
+    // controlliamo se ci sono eventi "vecchi" da pulire.
+    const qScaduti = query(collection(db, "eventi"), where("creatoDa", "==", uid));
+    const snapScaduti = await getDocs(qScaduti);
+
+    snapScaduti.forEach(async (docScaduto) => {
+        const dataCreazione = docScaduto.data().dataCreazione.toDate();
+        
+        // Calcoliamo l'inizio della settimana corrente (Lunedì alle 02:00)
+        let inizioSettimanaCorrente = new Date(oraAttuale);
+        let dist = (giornoSettimana + 6) % 7; // Distanza dall'ultimo lunedì
+        inizioSettimanaCorrente.setDate(oraAttuale.getDate() - dist);
+        inizioSettimanaCorrente.setHours(2, 0, 0, 0);
+
+        // Se l'evento è stato creato PRIMA di lunedì alle 02:00, lo cancelliamo
+        if (dataCreazione < inizioSettimanaCorrente) {
+            await deleteDoc(doc(db, "eventi", docScaduto.id));
+            console.log("Big Refresh: Eliminata disponibilità obsoleta.");
+        }
+    });
+};
+
+// Richiamala subito nel caricamento
+if (userDoc.exists()) {
+    await eseguiBigRefresh(user.uid);
+    // ... resto del tuo codice caricamento dati
+}
+            
+
             // --- NUOVO: SE C'È UN INVITO, COLLEGA L'AMICO AL PROFILO ---
 
             // --- LOGICA DI COLLEGAMENTO POTENZIATA ---
