@@ -124,12 +124,26 @@ if (btnSaveEvent) {
     };
 }
 
-// --- 6. LOGICA MATCH (VERSIONE VELOCE - TASTI INVERTITI) ---
+
+// --- 6. LOGICA MATCH (CON AZZERAMENTO SETTIMANALE) ---
 
 function cercaMatchInTempoReale(mieiSlot) {
     if (!mieiSlot || mieiSlot.length === 0) return;
 
-    const q = query(collection(db, "eventi"), where("creatoDa", "!=", auth.currentUser.uid));
+    // Calcoliamo la data dell'ultimo lunedì alle 01:00
+    const oraSoglia = new Date();
+    const giornoSettimana = oraSoglia.getDay(); // 0 è Domenica, 1 è Lunedì
+    const differenza = (giornoSettimana + 6) % 7; // Quanti giorni sono passati dall'ultimo lunedì
+    
+    oraSoglia.setDate(oraSoglia.getDate() - differenza);
+    oraSoglia.setHours(1, 0, 0, 0); // Impostiamo alle 01:00:00
+
+    // Cerchiamo solo eventi creati DOPO l'ultimo lunedì alle 01:00
+    const q = query(
+        collection(db, "eventi"), 
+        where("creatoDa", "!=", auth.currentUser.uid),
+        where("dataCreazione", ">=", oraSoglia) // FILTRO TEMPORALE
+    );
     
     onSnapshot(q, (snapshot) => {
         snapshot.forEach((docSnap) => {
@@ -151,6 +165,10 @@ function cercaMatchInTempoReale(mieiSlot) {
         });
     });
 }
+
+
+
+
 
 function proponiWhatsApp(nomeAmico, numeroAmico, giorno, fascia) {
     const numeroPulito = String(numeroAmico).replace(/\D/g, '');
