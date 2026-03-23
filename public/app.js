@@ -339,7 +339,7 @@ document.getElementById('btn-save-event').onclick = async () => {
         alert("Disponibilità salvata! Ti avviserò appena un tuo amico combacia.");
         location.reload();
     }
-};
+}; // Chiusura btn-save-event.onclick
 
 
 
