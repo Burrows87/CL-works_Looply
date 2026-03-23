@@ -1,6 +1,6 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
 import { getAuth, signInWithPopup, GoogleAuthProvider, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
-import { getFirestore, collection, addDoc, query, where, onSnapshot, getDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDoc, doc, setDoc, updateDoc } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
 
 // --- 1. CONFIGURAZIONE ---
 const firebaseConfig = {
@@ -21,7 +21,7 @@ const provider = new GoogleAuthProvider();
 let isLoggingOut = false;
 let regSelectedDays = [];
 
-// --- 3. AUTENTICAZIONE ---
+// --- 3. AUTENTICAZIONE E CARICAMENTO ---
 onAuthStateChanged(auth, async (user) => {
     const loginSc = document.getElementById('login-screen');
     const regSc = document.getElementById('registration-screen');
@@ -33,18 +33,25 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(doc(db, "users", user.uid));
             if (userDoc.exists() && userDoc.data().nome) {
                 const dati = userDoc.data();
+                
+                // UI Switch
                 loginSc.style.display = 'none';
                 regSc.style.display = 'none';
                 dashSc.style.display = 'block';
                 userDisp.textContent = dati.nome;
-                
-                // Filtro Giorni: Nascondi tutto e mostra solo preferiti
+
+                // 1. Applica Colore Tema
+                if (dati.temaColore) {
+                    document.documentElement.style.setProperty('--primary-color', dati.temaColore);
+                    document.querySelector(`.color-dot[data-color="${dati.temaColore}"]`)?.classList.add('selected');
+                }
+
+                // 2. Filtro Giorni Preferiti
                 document.querySelectorAll('.day-group').forEach(group => group.style.display = 'none');
                 if (dati.giorniPreferiti) {
                     dati.giorniPreferiti.forEach(giorno => {
                         const giornoBox = document.getElementById(`btn-${giorno}`)?.closest('.day-group');
                         if (giornoBox) giornoBox.style.display = 'block';
-                        // Colora anche i bottoni nel pannello impostazioni
                         document.querySelector(`.set-day-btn[data-day="${giorno}"]`)?.classList.add('selected');
                     });
                 }
@@ -53,7 +60,7 @@ onAuthStateChanged(auth, async (user) => {
                 dashSc.style.display = 'none';
                 regSc.style.display = 'block';
             }
-        } catch(e) { console.error(e); }
+        } catch(e) { console.error("Errore caricamento user:", e); }
     } else {
         loginSc.style.display = 'flex';
         dashSc.style.display = 'none';
@@ -64,6 +71,16 @@ onAuthStateChanged(auth, async (user) => {
 // --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
     
+    // CAMBIO COLORE
+    if (e.target.classList.contains('color-dot')) {
+        const newColor = e.target.dataset.color;
+        document.documentElement.style.setProperty('--primary-color', newColor);
+        document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('selected'));
+        e.target.classList.add('selected');
+        const userRef = doc(db, "users", auth.currentUser.uid);
+        await updateDoc(userRef, { temaColore: newColor });
+    }
+
     // LOGIN
     if (e.target.closest('#btn-google-login')) {
         if (!document.getElementById('check-terms').checked || !document.getElementById('check-privacy').checked) {
@@ -79,7 +96,7 @@ window.addEventListener('click', async (e) => {
         location.reload();
     }
 
-    // TOGGLE DASHBOARD
+    // TOGGLE GIORNI DASHBOARD
     if (e.target.classList.contains('day-toggle')) {
         e.target.classList.toggle('active');
         const dayId = e.target.id.replace('btn-', '');
@@ -87,18 +104,18 @@ window.addEventListener('click', async (e) => {
         if (sDiv) sDiv.style.display = e.target.classList.contains('active') ? 'flex' : 'none';
     }
 
-    // SLOT
+    // SELEZIONE SLOT
     if (e.target.classList.contains('slot-btn')) {
         e.target.classList.toggle('selected');
     }
 
-    // IMPOSTAZIONI (⚙️)
+    // APRI SETTINGS
     if (e.target.id === 'btn-open-settings' || e.target.closest('#btn-open-settings')) {
         const panel = document.getElementById('settings-panel');
         panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
     }
 
-    // CAMBIO GIORNI NELLE IMPOSTAZIONI
+    // CAMBIO GIORNI (SETTINGS)
     if (e.target.classList.contains('set-day-btn')) {
         const day = e.target.dataset.day;
         const userRef = doc(db, "users", auth.currentUser.uid);
@@ -116,7 +133,7 @@ window.addEventListener('click', async (e) => {
         location.reload(); 
     }
 
-    // REGISTRAZIONE GIORNI
+    // REGISTRAZIONE GIORNI (INITIAL)
     if (e.target.classList.contains('reg-day-btn')) {
         const day = e.target.dataset.day;
         if (regSelectedDays.includes(day)) {
@@ -129,79 +146,46 @@ window.addEventListener('click', async (e) => {
     }
 });
 
-// --- 5. SALVATAGGIO E INVIO WHATSAPP ---
+// --- 5. SALVATAGGIO ---
 
-// Registrazione Profilo
+// Salva Profilo
 document.getElementById('btn-save-profile').onclick = async () => {
     const nome = document.getElementById('reg-name').value;
     const tel = document.getElementById('reg-phone').value;
     if (!nome || !tel || regSelectedDays.length === 0) return alert("Dati incompleti!");
-    
     await setDoc(doc(db, "users", auth.currentUser.uid), {
-        nome, 
-        telefono: tel.replace(/\D/g, ''), 
-        giorniPreferiti: regSelectedDays, 
-        uid: auth.currentUser.uid
+        nome, telefono: tel.replace(/\D/g, ''), giorniPreferiti: regSelectedDays, uid: auth.currentUser.uid, temaColore: "#4285F4"
     });
     location.reload();
 };
 
-// Salvataggio Evento e Invio WhatsApp
+// Salva Evento e WhatsApp
 document.getElementById('btn-save-event').onclick = async () => {
     const sel = [];
     const groupedSlots = {};
-
-    // Raccogliamo gli slot selezionati
     document.querySelectorAll('.slot-btn.selected').forEach(b => {
-        const giorno = b.dataset.day;
-        const fascia = b.textContent.trim();
-        
-        sel.push({ giorno, fascia });
-
-        // Raggruppiamo per il messaggio WhatsApp
-        if (!groupedSlots[giorno]) {
-            groupedSlots[giorno] = [];
-        }
-        groupedSlots[giorno].push(fascia);
+        const g = b.dataset.day;
+        const f = b.textContent.trim();
+        sel.push({ giorno: g, fascia: f });
+        if (!groupedSlots[g]) groupedSlots[g] = [];
+        groupedSlots[g].push(f);
     });
 
-    if (sel.length === 0) return alert("Seleziona almeno un orario!");
+    if (sel.length === 0) return alert("Seleziona un orario!");
+    
+    const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+    const u = userSnap.data();
 
-    try {
-        // 1. Recupero dati utente da Firestore
-        const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
-        const u = userSnap.data();
+    await addDoc(collection(db, "eventi"), {
+        nomeCreatore: u.nome, telefonoCreatore: u.telefono, creatoDa: auth.currentUser.uid, slot: sel, dataCreazione: new Date()
+    });
 
-        // 2. Salvataggio su Firebase (Opzionale, ma utile per storico)
-        await addDoc(collection(db, "eventi"), {
-            nomeCreatore: u.nome,
-            telefonoCreatore: u.telefono,
-            creatoDa: auth.currentUser.uid,
-            slot: sel,
-            dataCreazione: new Date()
-        });
-
-        // 3. Costruzione messaggio WhatsApp
-        let messaggio = `Ciao! Sono *${u.nome}*, ecco le mie disponibilità per il weekend:\n\n`;
-        
-        for (const giorno in groupedSlots) {
-            messaggio += `📅 *${giorno}*: ${groupedSlots[giorno].join(", ")}\n`;
-        }
-        
-        messaggio += `\nOrganizziamo qualcosa? 🚀`;
-
-        // 4. Apertura WhatsApp
-        const waUrl = `https://wa.me/?text=${encodeURIComponent(messaggio)}`;
-        window.open(waUrl, '_blank');
-
-        // 5. Reset e feedback
-        alert("Disponibilità salvata e inviata!");
-        location.reload();
-
-    } catch (error) {
-        console.error("Errore nel salvataggio:", error);
-        alert("Ops! Qualcosa è andato storto durante l'invio.");
-    }
+    // WhatsApp logic
+    let msg = `Ciao! Sono *${u.nome}*, ecco le mie disponibilità:\n\n`;
+    for (const g in groupedSlots) { msg += `📅 *${g}*: ${groupedSlots[g].join(", ")}\n`; }
+    msg += `\nOrganizziamo? 🚀`;
+    
+    window.open(`https://wa.me/?text=${encodeURIComponent(msg)}`, '_blank');
+    alert("Inviato!");
+    location.reload();
 };
-
-
