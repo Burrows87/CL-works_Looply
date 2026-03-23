@@ -4,16 +4,13 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Looply - Organizza il tuo weekend</title>
-
     <link rel="icon" type="image/png" href="icon.png">
     <link rel="manifest" href="manifest.json">
     <meta name="theme-color" content="#4285F4">
-    
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="default">
     <meta name="apple-mobile-web-app-title" content="Looply">
     <link rel="apple-touch-icon" href="icon.png">
-
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -22,18 +19,16 @@
         <h1 style="font-size: 3.5rem; margin: 0; color: var(--primary-color); font-weight: 800;">Looply</h1>
         <p style="color: #666; margin-bottom: 40px;">I tuoi amici sono liberi quando lo sei tu.</p>
         
-        
         <div class="login-legal-box">
-    <label class="legal-label">
-        <input type="checkbox" id="check-terms">
-        Accetto i <a href="terms.html" target="_blank" class="legal-link">Termini</a>
-    </label>
-    <label class="legal-label">
-        <input type="checkbox" id="check-privacy">
-        Accetto la <a href="privacy.html" target="_blank" class="legal-link">Privacy</a>
-    </label>
+            <label class="legal-label">
+                <input type="checkbox" id="check-terms">
+                Accetto i <a href="terms.html" target="_blank" class="legal-link">Termini</a>
+            </label>
+            <label class="legal-label">
+                <input type="checkbox" id="check-privacy">
+                Accetto la <a href="privacy.html" target="_blank" class="legal-link">Privacy</a>
+            </label>
         </div>
-            
 
         <button id="btn-google-login" style="width:100%; max-width:320px; padding:16px; background:white; border:1px solid #ddd; border-radius:15px; display:flex; align-items:center; justify-content:center; gap:12px; font-weight:bold; cursor:pointer;">
             <img src="https://www.gstatic.com/firebasejs/ui/2.0.0/images/auth/google.svg" width="20"> Accedi con Google
@@ -45,7 +40,7 @@
         <input type="text" id="reg-name" placeholder="Il tuo nome">
         <input type="tel" id="reg-phone" placeholder="Cellulare (per WhatsApp)">
         <p style="font-weight:bold;">Scegli 3 giorni preferiti:</p>
-        <div id="reg-days-selection" style="display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; margin-bottom: 30px;">
+        <div id="reg-days-selection" class="days-grid-container">
             <button type="button" class="reg-day-btn" data-day="Lunedì">Lun</button>
             <button type="button" class="reg-day-btn" data-day="Martedì">Mar</button>
             <button type="button" class="reg-day-btn" data-day="Mercoledì">Mer</button>
@@ -63,36 +58,30 @@
             <button id="btn-open-settings" style="background:white; border:1px solid #eee; width: 45px; height: 45px; border-radius: 12px; cursor:pointer;">⚙️</button>
         </header>
 
-        <div id="settings-panel" style="display:none; position:fixed; top:85px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.15); z-index:999; width: 260px;">
-<p style="font-weight:bold;">Scegli 3 giorni preferiti:</p>
-<div id="reg-days-selection" class="days-grid-container">
-    <button type="button" class="reg-day-btn" data-day="Lunedì">Lun</button>
-    <button type="button" class="reg-day-btn" data-day="Martedì">Mar</button>
-    <button type="button" class="reg-day-btn" data-day="Mercoledì">Mer</button>
-    <button type="button" class="reg-day-btn" data-day="Giovedì">Gio</button>
-    <button type="button" class="reg-day-btn" data-day="Venerdì">Ven</button>
-    <button type="button" class="reg-day-btn" data-day="Sabato">Sab</button>
-    <button type="button" class="reg-day-btn" data-day="Domenica">Dom</button>
-</div>
-            
+        <div id="settings-panel" style="display:none; position:fixed; top:85px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.15); z-index:1001; width: 260px;">
+            <p style="font-weight:bold; margin-top:0;">I tuoi 3 giorni</p>
+            <div id="settings-days-selection" class="days-grid-container">
+                <button type="button" class="set-day-btn" data-day="Lunedì">Lun</button>
+                <button type="button" class="set-day-btn" data-day="Martedì">Mar</button>
+                <button type="button" class="set-day-btn" data-day="Mercoledì">Mer</button>
+                <button type="button" class="set-day-btn" data-day="Giovedì">Gio</button>
+                <button type="button" class="set-day-btn" data-day="Venerdì">Ven</button>
+                <button type="button" class="set-day-btn" data-day="Sabato">Sab</button>
+                <button type="button" class="set-day-btn" data-day="Domenica">Dom</button>
+            </div>
 
+            <p style="font-weight:bold;">Colore Tema</p>
+            <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+                <div class="color-dot" data-color="#4285F4" style="background: #4285F4;"></div>
+                <div class="color-dot" data-color="#EA4335" style="background: #EA4335;"></div>
+                <div class="color-dot" data-color="#FBBC05" style="background: #FBBC05;"></div>
+                <div class="color-dot" data-color="#34A853" style="background: #34A853;"></div>
+                <div class="color-dot" data-color="#8E44AD" style="background: #8E44AD;"></div>
+            </div>
 
-    <p style="font-weight:bold;">Colore Tema</p>
-    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
-        <div class="color-dot" data-color="#4285F4" style="background: #4285F4;"></div>
-        <div class="color-dot" data-color="#EA4335" style="background: #EA4335;"></div>
-        <div class="color-dot" data-color="#FBBC05" style="background: #FBBC05;"></div>
-        <div class="color-dot" data-color="#34A853" style="background: #34A853;"></div>
-        <div class="color-dot" data-color="#8E44AD" style="background: #8E44AD;"></div>
-    </div>
+            <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold; padding-top:10px; border-top:1px solid #eee;">Esci</button>
+        </div>
 
-    <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold; padding-top:10px; border-top:1px solid #eee;">Esci</button>
-</div>
-            
-
-
-
-    
         <div class="availability-container" id="availability-list">
             <div class="day-group"><button class="day-toggle" id="btn-Lunedì">Lunedì</button><div class="time-slots" id="slots-Lunedì"><button class="slot-btn" data-day="Lunedì">Mattina</button><button class="slot-btn" data-day="Lunedì">Pomeriggio</button><button class="slot-btn" data-day="Lunedì">Sera</button></div></div>
             <div class="day-group"><button class="day-toggle" id="btn-Martedì">Martedì</button><div class="time-slots" id="slots-Martedì"><button class="slot-btn" data-day="Martedì">Mattina</button><button class="slot-btn" data-day="Martedì">Pomeriggio</button><button class="slot-btn" data-day="Martedì">Sera</button></div></div>
