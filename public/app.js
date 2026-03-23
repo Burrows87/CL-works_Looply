@@ -49,6 +49,7 @@ const applyThemeColor = (color) => {
 // --- 4. AUTENTICAZIONE ---
 let isLoggingOut = false;
 let matchGiaMostrati = new Set(); 
+let regSelectedDays = []; // Per tenere traccia dei giorni scelti in registrazione
 
 onAuthStateChanged(auth, async (user) => {
     if (user && !isLoggingOut) {
@@ -57,52 +58,91 @@ onAuthStateChanged(auth, async (user) => {
 
         if (userDoc.exists() && userDoc.data().nome) {
             const dati = userDoc.data();
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (registrationScreen) registrationScreen.style.display = 'none';
-            if (dashboardScreen) dashboardScreen.style.display = 'block';
+            loginScreen.style.display = 'none';
+            registrationScreen.style.display = 'none';
+            dashboardScreen.style.display = 'block';
             
-            if (userDisplayName) userDisplayName.textContent = dati.nome;
+            userDisplayName.textContent = dati.nome;
             if (dati.themeColor) applyThemeColor(dati.themeColor);
+
+            // APERTURA AUTOMATICA GIORNI PREFERITI
+            if (dati.giorniPreferiti) {
+                dati.giorniPreferiti.forEach(giorno => {
+                    const btn = document.getElementById(`btn-${giorno}`);
+                    const slots = document.getElementById(`slots-${giorno}`);
+                    if (btn && slots) {
+                        btn.classList.add('active');
+                        slots.style.display = 'flex';
+                    }
+                });
+            }
 
             const qMiei = query(collection(db, "eventi"), where("creatoDa", "==", user.uid));
             onSnapshot(qMiei, (snapshot) => {
                 let mieiSlotAttuali = [];
-                snapshot.forEach(doc => {
-                    mieiSlotAttuali = mieiSlotAttuali.concat(doc.data().slot);
-                });
+                snapshot.forEach(docSnap => mieiSlotAttuali = mieiSlotAttuali.concat(docSnap.data().slot));
                 if (mieiSlotAttuali.length > 0) cercaMatchInTempoReale(mieiSlotAttuali);
             });
         } else {
-            if (loginScreen) loginScreen.style.display = 'none';
-            if (dashboardScreen) dashboardScreen.style.display = 'none';
-            if (registrationScreen) registrationScreen.style.display = 'block';
+            loginScreen.style.display = 'none';
+            dashboardScreen.style.display = 'none';
+            registrationScreen.style.display = 'block';
         }
     } else {
-        if (loginScreen) loginScreen.style.display = 'block';
-        if (dashboardScreen) dashboardScreen.style.display = 'none';
-        if (registrationScreen) registrationScreen.style.display = 'none';
+        loginScreen.style.display = 'block';
+        dashboardScreen.style.display = 'none';
+        registrationScreen.style.display = 'none';
     }
 });
 
+
+
 // --- 5. SALVATAGGIO PROFILO ED EVENTI ---
-const btnSaveProfile = document.getElementById('btn-save-profile');
+
+// Gestione clic bottoni giorni in REGISTRAZIONE
+document.querySelectorAll('.reg-day-btn').forEach(btn => {
+    btn.onclick = () => {
+        const day = btn.dataset.day;
+        if (regSelectedDays.includes(day)) {
+            regSelectedDays = regSelectedDays.filter(d => d !== day);
+            btn.classList.remove('selected');
+        } else {
+            if (regSelectedDays.length < 3) {
+                regSelectedDays.push(day);
+                btn.classList.add('selected');
+            } else {
+                alert("Puoi scegliere massimo 3 giorni!");
+            }
+        }
+    };
+});
+
 if (btnSaveProfile) {
     btnSaveProfile.onclick = async () => {
         const nomeScelto = document.getElementById('reg-name').value;
         const telScelto = document.getElementById('reg-phone').value;
         const user = auth.currentUser;
         if (!user) return;
+        if (regSelectedDays.length === 0) return alert("Scegli almeno un giorno!");
+
         let telPulito = telScelto.replace(/\D/g, '');
         if (telPulito.length === 10 && !telPulito.startsWith('39')) telPulito = '39' + telPulito;
-        if (nomeScelto.trim().length < 2 || telPulito.length < 10) return alert("Dati non validi.");
+
         try {
             await setDoc(doc(db, "users", user.uid), {
-                nome: nomeScelto.trim(), telefono: telPulito, email: user.email, uid: user.uid, dataCreazione: new Date()
+                nome: nomeScelto.trim(),
+                telefono: telPulito,
+                giorniPreferiti: regSelectedDays,
+                email: user.email,
+                uid: user.uid,
+                dataCreazione: new Date()
             });
             location.reload();
         } catch (e) { console.error(e); }
     };
 }
+
+
 
 const btnSaveEvent = document.getElementById('btn-save-event');
 if (btnSaveEvent) {
@@ -231,20 +271,48 @@ if (checkTerms && checkPrivacy) {
 // --- 8. IMPOSTAZIONI TEMA ---
 const btnSettings = document.getElementById('btn-open-settings');
 const panel = document.getElementById('settings-panel');
+
 if (btnSettings && panel) {
-    btnSettings.addEventListener('click', () => {
+    btnSettings.addEventListener('click', async () => {
         const isHidden = panel.style.display === 'none' || panel.style.display === '';
         panel.style.display = isHidden ? 'block' : 'none';
-        btnSettings.style.transform = isHidden ? 'rotate(90deg)' : 'rotate(0deg)';
+        
+        if (isHidden) {
+            const userDoc = await getDoc(doc(db, "users", auth.currentUser.uid));
+            const preferiti = userDoc.data().giorniPreferiti || [];
+            document.querySelectorAll('.set-day-btn').forEach(btn => {
+                btn.classList.toggle('selected', preferiti.includes(btn.dataset.day));
+            });
+        }
     });
 }
-document.querySelectorAll('.color-dot').forEach(dot => {
-    dot.addEventListener('click', async (e) => {
-        const color = e.target.getAttribute('data-color');
-        applyThemeColor(color);
-        if (auth.currentUser) await updateDoc(doc(db, "users", auth.currentUser.uid), { themeColor: color });
-    });
+
+// Gestione cambio giorni dalle IMPOSTAZIONI
+document.querySelectorAll('.set-day-btn').forEach(btn => {
+    btn.onclick = async () => {
+        const user = auth.currentUser;
+        const day = btn.dataset.day;
+        const userRef = doc(db, "users", user.uid);
+        const userDoc = await getDoc(userRef);
+        let giorni = userDoc.data().giorniPreferiti || [];
+
+        if (giorni.includes(day)) {
+            giorni = giorni.filter(d => d !== day);
+        } else {
+            if (giorni.length < 3) {
+                giorni.push(day);
+            } else {
+                return alert("Massimo 3 giorni!");
+            }
+        }
+        await updateDoc(userRef, { giorniPreferiti: giorni });
+        btn.classList.toggle('selected');
+        // Opzionale: location.reload() se vuoi che la dashboard si aggiorni subito
+    };
 });
+
+
+
 
 // --- 9. LOGIN ---
 if (googleLoginBtn) {
