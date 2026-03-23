@@ -12,7 +12,7 @@ body {
     margin: 0;
     background-color: var(--bg-color);
     color: var(--text-main);
-    -webkit-tap-highlight-color: transparent; /* Rimuove il flash blu al tocco su mobile */
+    -webkit-tap-highlight-color: transparent;
 }
 
 /* --- SCHERMATE --- */
@@ -39,7 +39,6 @@ body {
     box-shadow: 0 2px 4px rgba(0,0,0,0.03);
 }
 
-/* Stato selezionato per i giorni */
 .reg-day-btn.selected, .set-day-btn.selected {
     background: var(--primary-color) !important;
     color: white !important;
@@ -55,6 +54,7 @@ body {
     margin-bottom: 12px;
     box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     border: 1px solid rgba(0,0,0,0.03);
+    display: none; /* Nasconde di default, JS mostrerà i 3 preferiti */
 }
 
 .day-toggle {
@@ -79,17 +79,14 @@ body {
     transition: 0.3s;
 }
 
-.day-toggle.active {
-    color: var(--primary-color);
-}
-
+.day-toggle.active { color: var(--primary-color); }
 .day-toggle.active::after {
     content: '−';
     transform: rotate(180deg);
     color: var(--primary-color);
 }
 
-/* --- SLOT ORARI (MATTINA, POMERIGGIO, SERA) --- */
+/* --- SLOT ORARI --- */
 .time-slots {
     display: none;
     gap: 10px;
@@ -118,23 +115,48 @@ body {
     border-color: var(--primary-color);
 }
 
+/* --- NUOVA AREA AZIONE (FISSA IN BASSO) --- */
+.availability-container {
+    padding: 10px;
+    padding-bottom: 110px; /* Spazio per non coprire l'ultimo giorno col tasto invia */
+}
+
+.save-action-area {
+    position: fixed;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    width: 100%;
+    max-width: 500px; /* Allineato alla larghezza dello screen */
+    background: linear-gradient(to top, var(--bg-color) 70%, rgba(244, 247, 249, 0));
+    padding: 20px;
+    box-sizing: border-box;
+    z-index: 100;
+    display: flex;
+    justify-content: center;
+}
+
+#btn-save-event {
+    width: 100%;
+    padding: 16px;
+    background-color: var(--primary-color);
+    color: white;
+    border: none;
+    border-radius: 16px;
+    font-size: 1.1rem;
+    font-weight: 700;
+    cursor: pointer;
+    box-shadow: 0 8px 25px rgba(66, 133, 244, 0.3);
+    transition: all 0.2s ease;
+}
+
+#btn-save-event:active {
+    transform: scale(0.96);
+    box-shadow: 0 4px 10px rgba(66, 133, 244, 0.2);
+}
+
 /* --- ANIMAZIONI --- */
 @keyframes slideUp {
     from { opacity: 0; transform: translate(-50%, 20px); }
     to { opacity: 1; transform: translate(-50%, 0); }
-}
-
-/* --- UTILITY --- */
-#btn-save-event {
-    transition: transform 0.2s active;
-}
-
-#btn-save-event:active {
-    transform: scale(0.9);
-}
-
-/* --- LOGICA VISUALIZZAZIONE DINAMICA --- */
-/* Nasconde tutti i gruppi dei giorni all'avvio per mostrare solo i 3 preferiti tramite JS */
-.day-group {
-    display: none;
 }
