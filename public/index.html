@@ -72,6 +72,22 @@
                 <button class="set-day-btn" data-day="Sabato">Sab</button>
                 <button class="set-day-btn" data-day="Domenica">Dom</button>
             </div>
+            <div id="settings-panel" style="display:none; position:fixed; top:85px; right:20px; background:white; padding:20px; border-radius:20px; box-shadow:0 10px 40px rgba(0,0,0,0.15); z-index:1001; width: 260px;">
+    <p style="font-weight:bold; margin-top:0;">I tuoi 3 giorni</p>
+    <div id="settings-days-selection" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; margin-bottom: 20px;">
+        </div>
+
+    <p style="font-weight:bold;">Colore Tema</p>
+    <div style="display: flex; gap: 10px; margin-bottom: 20px;">
+        <div class="color-dot" data-color="#4285F4" style="background: #4285F4;"></div>
+        <div class="color-dot" data-color="#EA4335" style="background: #EA4335;"></div>
+        <div class="color-dot" data-color="#FBBC05" style="background: #FBBC05;"></div>
+        <div class="color-dot" data-color="#34A853" style="background: #34A853;"></div>
+        <div class="color-dot" data-color="#8E44AD" style="background: #8E44AD;"></div>
+    </div>
+    <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold; padding-top:10px; border-top:1px solid #eee;">Esci</button>
+            </div>
+            
             <button id="btn-logout" style="width:100%; color:red; background:none; border:none; cursor:pointer; font-weight:bold;">Esci</button>
         </div>
 
