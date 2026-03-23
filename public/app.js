@@ -19,7 +19,6 @@ const provider = new GoogleAuthProvider();
 
 // --- 2. STATO ---
 let isLoggingOut = false;
-let matchGiaMostrati = new Set();
 let regSelectedDays = [];
 
 // --- 3. AUTENTICAZIONE ---
@@ -39,8 +38,7 @@ onAuthStateChanged(auth, async (user) => {
                 if(dashSc) dashSc.style.display = 'block';
                 if(userDisp) userDisp.textContent = dati.nome;
                 
-                // Carica preferenze
-                if (dati.themeColor) document.documentElement.style.setProperty('--primary-color', dati.themeColor);
+                // Carica preferenze (apre i 3 giorni scelti)
                 if (dati.giorniPreferiti) {
                     dati.giorniPreferiti.forEach(g => {
                         const b = document.getElementById(`btn-${g}`);
@@ -61,36 +59,33 @@ onAuthStateChanged(auth, async (user) => {
     }
 });
 
-// --- 4. IL CUORE DEL PROBLEMA: LOGIN ---
-// Usiamo window.onclick per essere sicuri che l'evento venga catturato
+// --- 4. GESTIONE CLICK GLOBALE ---
 window.addEventListener('click', async (e) => {
-    // Se clicchi il bottone login
-    if (e.target.id === 'btn-google-login' || e.target.closest('#btn-google-login')) {
+    
+    // LOGIN GOOGLE
+    const loginBtn = e.target.closest('#btn-google-login');
+    if (loginBtn) {
         const cTerms = document.getElementById('check-terms');
         const cPrivacy = document.getElementById('check-privacy');
-
         if (cTerms && cPrivacy && (!cTerms.checked || !cPrivacy.checked)) {
             alert("Accetta Termini e Privacy per continuare!");
             return;
         }
-
         try {
-            console.log("Tentativo di login in corso...");
             await signInWithPopup(auth, provider);
         } catch (error) {
-            console.error(error);
             alert("Errore Google: " + error.message);
         }
     }
 
-    // Gestione Logout
+    // LOGOUT
     if (e.target.id === 'btn-logout') {
         isLoggingOut = true;
         await signOut(auth);
         location.reload();
     }
 
-    // Toggle Giorni in Dashboard
+    // TOGGLE GIORNI DASHBOARD
     if (e.target.classList.contains('day-toggle')) {
         e.target.classList.toggle('active');
         const dayId = e.target.id.replace('btn-', '');
@@ -98,15 +93,18 @@ window.addEventListener('click', async (e) => {
         if (sDiv) sDiv.style.display = e.target.classList.contains('active') ? 'flex' : 'none';
     }
 
-    // Selezione Slot
+    // SELEZIONE SLOT ORARI
     if (e.target.classList.contains('slot-btn')) {
         e.target.classList.toggle('selected');
     }
-});
 
-// --- 5. REGISTRAZIONE E SALVATAGGIO ---
-// Gestione giorni registrazione (delegata)
-window.addEventListener('click', (e) => {
+    // APERTURA SETTINGS (Ingranaggio)
+    if (e.target.id === 'btn-open-settings' || e.target.closest('#btn-open-settings')) {
+        const panel = document.getElementById('settings-panel');
+        if(panel) panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+    }
+
+    // SELEZIONE GIORNI REGISTRAZIONE
     if (e.target.classList.contains('reg-day-btn')) {
         const day = e.target.dataset.day;
         if (regSelectedDays.includes(day)) {
@@ -119,15 +117,50 @@ window.addEventListener('click', (e) => {
     }
 });
 
+// --- 5. SALVATAGGIO PROFILO ---
 const saveProf = document.getElementById('btn-save-profile');
 if (saveProf) {
     saveProf.onclick = async () => {
         const nome = document.getElementById('reg-name')?.value;
         const tel = document.getElementById('reg-phone')?.value;
         if (!nome || !tel || regSelectedDays.length === 0) return alert("Mancano dati!");
-        await setDoc(doc(db, "users", auth.currentUser.uid), {
-            nome, telefono: tel.replace(/\D/g, ''), giorniPreferiti: regSelectedDays, uid: auth.currentUser.uid
+        
+        try {
+            await setDoc(doc(db, "users", auth.currentUser.uid), {
+                nome: nome,
+                telefono: tel.replace(/\D/g, ''),
+                giorniPreferiti: regSelectedDays,
+                uid: auth.currentUser.uid
+            });
+            location.reload();
+        } catch(e) { alert("Errore salvataggio: " + e.message); }
+    };
+}
+
+// --- 6. SALVA DISPONIBILITÀ (Pulsante +) ---
+const btnSaveEvent = document.getElementById('btn-save-event');
+if (btnSaveEvent) {
+    btnSaveEvent.onclick = async () => {
+        const sel = [];
+        document.querySelectorAll('.slot-btn.selected').forEach(b => {
+            sel.push({ giorno: b.dataset.day, fascia: b.textContent.trim() });
         });
-        location.reload();
+        
+        if (sel.length === 0) return alert("Seleziona almeno un orario!");
+        
+        try {
+            const userSnap = await getDoc(doc(db, "users", auth.currentUser.uid));
+            const u = userSnap.data();
+            
+            await addDoc(collection(db, "eventi"), {
+                nomeCreatore: u.nome,
+                telefonoCreatore: u.telefono,
+                creatoDa: auth.currentUser.uid,
+                slot: sel,
+                dataCreazione: new Date()
+            });
+            alert("Disponibilità salvata! Verrai avvisato in caso di match.");
+            location.reload();
+        } catch(e) { alert("Errore: " + e.message); }
     };
 }
