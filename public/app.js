@@ -39,19 +39,35 @@ onAuthStateChanged(auth, async (user) => {
             const userDoc = await getDoc(userRef);
 
             // --- NUOVO: SE C'È UN INVITO, COLLEGA L'AMICO AL PROFILO ---
-            if (refInvitante) {
-                if (userDoc.exists()) {
-                    let amici = userDoc.data().mieiAmici || [];
-                    if (!amici.includes(refInvitante)) {
-                        amici.push(refInvitante);
-                        await updateDoc(userRef, { mieiAmici: amici });
-                        console.log("Amico collegato correttamente!");
-                    }
-                }
-                // Se l'utente non esiste ancora (si sta registrando ora), 
-                // il 'ref' verrà gestito durante il salvataggio del profilo (punto 6).
-            }
-            // ---------------------------------------------------------
+
+            // --- LOGICA DI COLLEGAMENTO POTENZIATA ---
+if (refInvitante && userDoc.exists()) {
+    const mioNumero = userDoc.data().telefono;
+    let iMieiAmici = userDoc.data().mieiAmici || [];
+
+    // 1. Aggiungo chi mi ha invitato alla MIA lista
+    if (!iMieiAmici.includes(refInvitante)) {
+        iMieiAmici.push(refInvitante);
+        await updateDoc(userRef, { mieiAmici: iMieiAmici });
+        console.log("Ho aggiunto il mio amico!");
+    }
+
+    // 2. RECIPROCITÀ: Aggiungo ME STESSO alla lista del mio amico
+    // Cerchiamo l'amico nel DB tramite il suo numero (refInvitante)
+    const qAmico = query(collection(db, "users"), where("telefono", "==", refInvitante));
+    const snapAmico = await getDocs(qAmico);
+    
+    snapAmico.forEach(async (docAmico) => {
+        let listaAmico = docAmico.data().mieiAmici || [];
+        if (!listaAmico.includes(mioNumero)) {
+            listaAmico.push(mioNumero);
+            await updateDoc(doc(db, "users", docAmico.id), { mieiAmici: listaAmico });
+            console.log("Il mio amico ora ha anche me in lista!");
+        }
+    });
+}
+            
+
 
             if (userDoc.exists() && userDoc.data().nome) {
                 const dati = userDoc.data();
@@ -187,27 +203,48 @@ if (e.target.id === 'btn-collega-amici' || e.target.closest('#btn-collega-amici'
 // --- 5. SALVATAGGIO ---
 
 // Salva Profilo con gestione Ref
+
 document.getElementById('btn-save-profile').onclick = async () => {
     const nome = document.getElementById('reg-name').value;
-    const tel = document.getElementById('reg-phone').value.replace(/\D/g, '');
+    // .replace(/\D/g, '') toglie tutto ciò che non è un numero (spazi, +, trattini)
+    const telRaw = document.getElementById('reg-phone').value.replace(/\D/g, '');
     
-    // Recuperiamo il ref dall'URL se presente
+    if (!nome || !telRaw || regSelectedDays.length === 0) return alert("Dati incompleti!");
+
+    // Standardizziamo il numero con il 39
+    const telefonoFinale = telRaw.startsWith('39') ? telRaw : '39' + telRaw;
+
+    // Recuperiamo il ref dall'URL
     const urlParams = new URLSearchParams(window.location.search);
     const refInvitante = urlParams.get('ref');
     let listaAmici = refInvitante ? [refInvitante] : [];
 
-    if (!nome || !tel || regSelectedDays.length === 0) return alert("Dati incompleti!");
-
     await setDoc(doc(db, "users", auth.currentUser.uid), {
         nome: nome,
-        telefono: tel.startsWith('39') ? tel : '39' + tel, // Standardizziamo col 39
+        telefono: telefonoFinale,
         giorniPreferiti: regSelectedDays,
         uid: auth.currentUser.uid,
         temaColore: "#4285F4",
-        mieiAmici: listaAmici // Salviamo subito il primo amico se presente
+        mieiAmici: listaAmici 
     });
+
+    // Se c'è un ref, dobbiamo anche aggiungere questo nuovo utente alla lista dell'invitante
+    if (refInvitante) {
+        const qAmico = query(collection(db, "users"), where("telefono", "==", refInvitante));
+        const snapAmico = await getDocs(qAmico);
+        snapAmico.forEach(async (docAmico) => {
+            let listaAmico = docAmico.data().mieiAmici || [];
+            if (!listaAmico.includes(telefonoFinale)) {
+                listaAmico.push(telefonoFinale);
+                await updateDoc(doc(db, "users", docAmico.id), { mieiAmici: listaAmico });
+            }
+        });
+    }
+
     location.reload();
 };
+
+
 
 
 document.getElementById('btn-save-event').onclick = async () => {
@@ -252,6 +289,7 @@ document.getElementById('btn-save-event').onclick = async () => {
     });
 
     // 3. IL MOMENTO DEL MATCH
+    // ... parte finale del match
     if (matchTrovato) {
         // EFFETTO TINDER: Popup solo se c'è match
         alert(`🔥 IT'S A MATCH!\nTu e ${matchTrovato.nome} siete liberi il ${matchTrovato.g} (${matchTrovato.f})!`);
@@ -267,5 +305,6 @@ document.getElementById('btn-save-event').onclick = async () => {
         location.reload();
     }
 };
+
 
 
